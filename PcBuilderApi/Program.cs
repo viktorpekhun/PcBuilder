@@ -1,6 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using PcBuilderApi.Data;
+using PcBuilderApi.Models;
+using PcBuilderApi.Repositories.Implementations;
+using PcBuilderApi.Repositories.Interfaces;
+using PcBuilderApi.Scrapers;
+using PcBuilderApi.Scrapers.Implementation;
+using PcBuilderApi.Services.Implementations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +16,16 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddOpenApi();
+
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+builder.Services.AddScoped<IComponentScraper<Cpu>, CpuScraper>();
+builder.Services.AddHttpClient<IPaginationScraper, PaginationScraper>();
+builder.Services.AddScoped<IProxyScraper, ProxyScraper>();
+
+builder.Services.AddScoped<ComponentScraperFactory>();
+
+builder.Services.AddScoped<ScraperService>();
 
 // Додаємо CORS перед викликом `Build()`
 builder.Services.AddCors(options =>
@@ -47,10 +63,12 @@ if (app.Environment.IsDevelopment())
 // Використовуємо CORS перед авторизацією
 app.UseHttpsRedirection();
 
-app.UseCors("AllowFrontend"); // Додаємо тут
+app.UseCors("AllowFrontend");
 
 app.UseAuthorization();
 
 app.MapControllers();
 
 app.Run();
+
+

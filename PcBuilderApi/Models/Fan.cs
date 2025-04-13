@@ -14,9 +14,8 @@ namespace PcBuilderApi.Models
         [Url]
         public string? PhotoUrl { get; set; }
 
-        [Required]
         [MaxLength(2000)]
-        public string Description { get; set; } = string.Empty;
+        public string? Description { get; set; }
 
         [Required]
         [MaxLength(100)]
