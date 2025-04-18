@@ -1,7 +1,7 @@
 ﻿namespace PcBuilderApi.Scrapers
 {
-    public interface IComponentScraper<TComponent>
+    public interface IComponentScraper<TComponent> where TComponent : class
     {
-        Task<TComponent?> ScrapeAsync(string url, HttpClient client);
+        Task<ScrapingResult<TComponent>> ScrapeAsync(string url, HttpClient client);
     }
 }

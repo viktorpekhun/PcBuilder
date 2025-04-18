@@ -1,6 +1,8 @@
 ﻿using HtmlAgilityPack;
 using PcBuilderApi.Models;
+using PcBuilderApi.Utilities;
 using System.Globalization;
+using System.Reflection.Metadata;
 using System.Text.RegularExpressions;
 
 namespace PcBuilderApi.Scrapers.Implementation
@@ -9,7 +11,7 @@ namespace PcBuilderApi.Scrapers.Implementation
     {
         private const string BaseUrl = "https://hotline.ua";
 
-        public async Task<Gpu?> ScrapeAsync(string url, HttpClient client)
+        public async Task<ScrapingResult<Gpu>> ScrapeAsync(string url, HttpClient client)
         {
 
             var html = await client.GetStringAsync(url);
@@ -17,6 +19,9 @@ namespace PcBuilderApi.Scrapers.Implementation
             htmlDoc.LoadHtml(html);
 
             var gpu = new Gpu();
+            var stores = new List<Store>();
+            var offers = new List<ProductOffer>();
+
 
             // Отримуємо назву моделі (та текст у дужках, якщо є)
             string modelInBrackets = "";
@@ -33,7 +38,7 @@ namespace PcBuilderApi.Scrapers.Implementation
             }
             else
             {
-                return null;
+                return new ScrapingResult<Gpu>(null, new List<Store>(), new List<ProductOffer>());
             }
 
             // Отримуємо опис без тексту в дужках
@@ -163,7 +168,7 @@ namespace PcBuilderApi.Scrapers.Implementation
             }
             else
             {
-                return null;
+                return new ScrapingResult<Gpu>(null, new List<Store>(), new List<ProductOffer>());
             }
 
             // Отримуємо URL зображення
@@ -174,20 +179,115 @@ namespace PcBuilderApi.Scrapers.Implementation
                 gpu.PhotoUrl = !string.IsNullOrEmpty(imgSrc) ? (imgSrc.StartsWith("/") ? $"{BaseUrl}{imgSrc}" : imgSrc) : null;
             }
 
-            var productOffersNode = htmlDoc.DocumentNode.SelectSingleNode("//div[contains(@class, 'list-container')]");
-            if (productOffersNode != null)
+            var offersContainer = htmlDoc.DocumentNode.SelectSingleNode("//div[contains(@class, 'list-container')]");
+            if (offersContainer != null)
             {
-                var lastNode = productOffersNode.SelectNodes(".//div").LastOrDefault();
-                foreach (var offerNode in lastNode.SelectNodes(".//div"))
+                var lastNode = offersContainer.SelectNodes("./div").LastOrDefault();
+                if (lastNode != null)
                 {
+                    foreach (var offerNode in lastNode.SelectNodes("./div"))
+                    {
+                        try
+                        {
+                            // Extract store information
+                            var storeNode = offerNode.SelectSingleNode(".//div[contains(@class, 'shop__header')]");
+                            if (storeNode == null) continue;
+                            var storeName = storeNode.InnerText.Trim();
 
+                            var storeALogoNode = offerNode.SelectSingleNode(".//a[contains(@class, 'shop__logo')]");
+
+                            var storeLogoNode = storeALogoNode.SelectSingleNode(".//img");
+                            var storeLogoUrl = storeLogoNode?.GetAttributeValue("src", null);
+                            if (!string.IsNullOrEmpty(storeLogoUrl) && storeLogoUrl.StartsWith("/"))
+                            {
+                                storeLogoUrl = $"{BaseUrl}{storeLogoUrl}";
+                            }
+
+                            // Extract store ratings
+                            var ratingNode = offerNode.SelectSingleNode(".//div[contains(@class, 'shop__rating')]");
+                            int likes = 0, dislikes = 0;
+                            if (ratingNode != null)
+                            {
+                                var likesNode = ratingNode.SelectSingleNode(".//span[contains(@class, 'shop__rating-icon--like')]");
+                                var dislikesNode = ratingNode.SelectSingleNode(".//span[contains(@class, 'shop__rating-icon--dislike')]");
+
+                                if (likesNode != null)
+                                {
+                                    var likesText = likesNode.InnerText.Trim();
+                                    int.TryParse(Regex.Match(likesText, @"\d+").Value, out likes);
+                                }
+
+                                if (dislikesNode != null)
+                                {
+                                    var dislikesText = dislikesNode.InnerText.Trim();
+                                    int.TryParse(Regex.Match(dislikesText, @"\d+").Value, out dislikes);
+                                }
+                            }
+
+                            // Create or find store
+                            var store = stores.FirstOrDefault(s => s.Name == storeName);
+                            if (store == null)
+                            {
+                                store = new Store
+                                {
+                                    Id = Guid.NewGuid(),
+                                    Name = storeName,
+                                    LogoUrl = storeLogoUrl,
+                                    Likes = likes,
+                                    Dislikes = dislikes
+                                };
+                                stores.Add(store);
+                            }
+
+                            // Extract price
+                            var priceNode = offerNode.SelectSingleNode(".//span[not(contains(@style, 'display: none')) and contains(@data-v-3777e10c, '') and contains(@data-v-0095f7a0, '')]");
+                            if (priceNode == null) continue;
+                            var text = HtmlEntity.DeEntitize(priceNode.InnerText);
+
+                            var priceValue = text.Replace("грн", "").Replace("\u00A0", "").Replace(" ", "").Trim();
+                            if (!decimal.TryParse(priceValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var price))
+                                continue;
+
+                            // Extract offer URL
+                            var offerLinkNode = offerNode.SelectSingleNode(".//a[contains(@href, '/go/price')]");
+                            if (offerLinkNode == null) continue;
+
+                            var offerUrl = offerLinkNode.GetAttributeValue("href", "");
+                            if (string.IsNullOrEmpty(offerUrl)) continue;
+
+                            if (offerUrl.StartsWith("/"))
+                                offerUrl = $"{BaseUrl}{offerUrl}";
+
+                            // Create product offer
+                            var offer = new ProductOffer
+                            {
+                                Id = Guid.NewGuid(),
+                                Price = price,
+                                ComponentType = SD.ComponentType.Gpu,
+                                ComponentId = gpu.Id, // Will be set when saving to DB
+                                ProductOfferUrl = offerUrl,
+                                StoreId = store.Id
+                            };
+
+                            offers.Add(offer);
+                        }
+                        catch (Exception ex)
+                        {
+                            // Log exception if needed, but continue with other offers
+                            Console.WriteLine($"Error scraping offer: {ex.Message}");
+                        }
+                    }
                 }
             }
+            gpu.Id = Guid.NewGuid();
 
-            return gpu;
+            return new ScrapingResult<Gpu>(gpu, stores, offers);
         }
 
-        private string ExtractText(HtmlNode node) => node.SelectSingleNode(".//text()")?.InnerText.Trim() ?? "";
+        private string ExtractText(HtmlNode node)
+        {
+            return HtmlEntity.DeEntitize(node?.InnerText ?? "").Trim();
+        }
 
         private int? ParseInt(string value) => int.TryParse(value, out var result) ? result : null;
 

@@ -19,7 +19,7 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-builder.Services.AddScoped<IComponentScraper<Cpu>, CpuScraper>();
+//builder.Services.AddScoped<IComponentScraper<Cpu>, CpuScraper>();
 builder.Services.AddScoped<IComponentScraper<Gpu>, GpuScraper>();
 builder.Services.AddHttpClient<IPaginationScraper, PaginationScraper>();
 builder.Services.AddScoped<IProxyScraper, ProxyScraper>();
