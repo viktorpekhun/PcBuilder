@@ -28,6 +28,8 @@ namespace PcBuilderApi.Data
         public DbSet<Ssd> Ssds { get; set; }
         public DbSet<Hdd> Hdds { get; set; }
         public DbSet<Fan> Fans { get; set; }
+        public DbSet<Store> Stores { get; set; }
+        public DbSet<ProductOffer> ProductOffers { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -110,6 +112,15 @@ namespace PcBuilderApi.Data
                 .WithMany(m => m.PowerSupplyPowerConnectors)
                 .HasForeignKey(cf => cf.PowerSupplyId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Store>()
+                .HasMany(s => s.ProductOffers)
+                .WithOne(po => po.Store)
+                .HasForeignKey(po => po.StoreId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ProductOffer>()
+                .HasIndex(po => new { po.ComponentId, po.ComponentType });
         }
     }
 }
