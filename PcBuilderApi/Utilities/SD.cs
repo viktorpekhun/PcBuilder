@@ -8,8 +8,18 @@
             Gpu,
             Ram,
             Motherboard,
-            Storage,
+            CpuCooler,
+            PcCase,
             PowerSupply,
+            Ssd,
+            Hdd,
+            Fan
+        }
+
+        public enum CompatibilityMessageType
+        {
+            Problem,
+            Warning
         }
     }
 }

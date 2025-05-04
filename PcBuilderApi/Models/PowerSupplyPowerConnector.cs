@@ -9,7 +9,7 @@ namespace PcBuilderApi.Models
         public Guid Id { get; set; }
 
         [Required]
-        [MaxLength(20)]
+        [MaxLength(50)]
         public string Type { get; set; } = string.Empty;
 
         [Required]

@@ -27,14 +27,14 @@ namespace PcBuilderApi.Models
         [MaxLength(300)]
         public string? Interface { get; set; }
 
-        [MaxLength(20)]
+        [MaxLength(50)]
         public string? NandType { get; set; }
         public bool IsTrimmSupported { get; set; }
 
-        [MaxLength(20)]
+        [MaxLength(50)]
         public string? FormFactor { get; set; }
 
-        [MaxLength(30)]
+        [MaxLength(50)]
         public string? Size { get; set; }
 
         public double? Weight { get; set; }
@@ -51,6 +51,7 @@ namespace PcBuilderApi.Models
         [Url]
         public string? FactoryLink { get; set; }
 
+        public List<PcBuild_Ssd> PcBuild_Ssds { get; set; } = new();
 
     }
 }

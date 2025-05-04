@@ -3,10 +3,15 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PcBuilderApi.Models
 {
-    public class Case_FanLocation
+    public class PcCaseFanLocation
     {
         [Key]
         public Guid Id { get; set; }
+
+        [Required]
+        [MaxLength(50)]
+        public string Name { get; set; } = string.Empty;
+
         [Required]
         public int FanSize { get; set; }
         [Required]
@@ -14,16 +19,11 @@ namespace PcBuilderApi.Models
 
 
         [Required]
-        public Guid CaseId { get; set; }
+        public Guid PcCaseId { get; set; }
 
-        [ForeignKey("CaseId")]
-        public Case Case { get; set; } = null!;
+        [ForeignKey("PcCaseId")]
+        public PcCase PcCase { get; set; } = null!;
 
-        [Required]
-        public Guid FanLocationId { get; set; }
-
-        [ForeignKey("FanLocationId")]
-        public FanLocation FanLocation { get; set; } = null!;
 
     }
 }

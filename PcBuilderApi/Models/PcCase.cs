@@ -2,7 +2,7 @@
 
 namespace PcBuilderApi.Models
 {
-    public class Case
+    public class PcCase
     {
         [Key]
         public Guid Id { get; set; }
@@ -21,23 +21,26 @@ namespace PcBuilderApi.Models
         [MaxLength(100)]
         public string Brand { get; set; } = string.Empty;
 
-        [MaxLength(20)]
+        [MaxLength(100)]
         public string? SizeStandard { get; set; }
 
-        [MaxLength(50)]
+        [MaxLength(100)]
         public string? SizeDimentions { get; set; }
-        public int? Weight { get; set; }
+        public double? Weight { get; set; }
         public int? PsuWattage { get; set; }
 
-        [MaxLength(20)]
+        [MaxLength(100)]
         public string? PsuLocation { get; set; }
 
         public double? MaxGpuLength { get; set; }
-        public double? MaxCpuCoolerHeigth { get; set; }
+        public double? MaxCpuCoolerHeight { get; set; }
         public bool HasDustFilters { get; set; }
 
         [MaxLength(200)]
         public string? BuiltInFans { get; set; }
+
+        [MaxLength(400)]
+        public string? AdditionalFanPlaces { get; set; }
         public int? Slot25Quant { get; set; }
         public int? Slot35Quant { get; set; }
         public int? Slot525Quant { get; set; }
@@ -51,7 +54,8 @@ namespace PcBuilderApi.Models
         [Url]
         public string? FactoryLink { get; set; }
 
-        public List<Case_FormFactor> Case_FormFactors { get; set; } = new();
-        public List<Case_FanLocation> Case_FanLocations { get; set; } = new();
+        public List<PcCaseFormFactor> PcCaseFormFactors { get; set; } = new();
+        public List<PcCaseFanLocation> PcCaseFanLocations { get; set; } = new();
+        public List<PcBuild> PcBuilds { get; set; } = new();
     }
 }

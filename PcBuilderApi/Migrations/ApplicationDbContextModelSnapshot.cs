@@ -22,138 +22,6 @@ namespace PcBuilderApi.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("PcBuilderApi.Models.Case", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Brand")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("BuiltInFans")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(3000)
-                        .HasColumnType("nvarchar(3000)");
-
-                    b.Property<int?>("ExpansionSlotQuant")
-                        .HasColumnType("int");
-
-                    b.Property<string>("FactoryLink")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("HasDustFilters")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("HasHeadphones")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("HasMicrophone")
-                        .HasColumnType("bit");
-
-                    b.Property<double?>("MaxCpuCoolerHeigth")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("MaxGpuLength")
-                        .HasColumnType("float");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("PhotoUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PsuLocation")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<int?>("PsuWattage")
-                        .HasColumnType("int");
-
-                    b.Property<string>("SizeDimentions")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("SizeStandard")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<int?>("Slot25Quant")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Slot35Quant")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Slot525Quant")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Usb")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int?>("Weight")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Cases");
-                });
-
-            modelBuilder.Entity("PcBuilderApi.Models.Case_FanLocation", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CaseId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("FanLocationId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("FanSize")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MaxFans")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CaseId");
-
-                    b.HasIndex("FanLocationId");
-
-                    b.ToTable("Case_FanLocation", (string)null);
-                });
-
-            modelBuilder.Entity("PcBuilderApi.Models.Case_FormFactor", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CaseId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("FormFactorId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CaseId");
-
-                    b.HasIndex("FormFactorId");
-
-                    b.ToTable("Case_FormFactor", (string)null);
-                });
-
             modelBuilder.Entity("PcBuilderApi.Models.Cpu", b =>
                 {
                     b.Property<Guid>("Id")
@@ -365,12 +233,12 @@ namespace PcBuilderApi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<double?>("AirFlowCfm")
+                    b.Property<double?>("AirflowCfm")
                         .HasColumnType("float");
 
                     b.Property<string>("BearingType")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Brand")
                         .IsRequired()
@@ -378,12 +246,12 @@ namespace PcBuilderApi.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Color")
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Connector")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Description")
                         .HasMaxLength(3000)
@@ -391,12 +259,6 @@ namespace PcBuilderApi.Migrations
 
                     b.Property<string>("FactoryLink")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<double?>("Height")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("Length")
-                        .HasColumnType("float");
 
                     b.Property<int?>("MaxSpeed")
                         .HasColumnType("int");
@@ -412,15 +274,24 @@ namespace PcBuilderApi.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
-                    b.Property<double?>("NoiseDb")
+                    b.Property<double?>("NoiseLevelDb")
                         .HasColumnType("float");
 
                     b.Property<string>("PhotoUrl")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<double?>("SizeHeight")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("SizeLength")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("SizeWidth")
+                        .HasColumnType("float");
+
                     b.Property<string>("SpeedControl")
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int?>("Voltage")
                         .HasColumnType("int");
@@ -431,44 +302,9 @@ namespace PcBuilderApi.Migrations
                     b.Property<double?>("Weight")
                         .HasColumnType("float");
 
-                    b.Property<double?>("Width")
-                        .HasColumnType("float");
-
                     b.HasKey("Id");
 
                     b.ToTable("Fans");
-                });
-
-            modelBuilder.Entity("PcBuilderApi.Models.FanLocation", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("FanLocations");
-                });
-
-            modelBuilder.Entity("PcBuilderApi.Models.FormFactor", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("FormFactors");
                 });
 
             modelBuilder.Entity("PcBuilderApi.Models.Gpu", b =>
@@ -575,9 +411,6 @@ namespace PcBuilderApi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("AverageLifetime")
-                        .HasColumnType("int");
-
                     b.Property<string>("Brand")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -596,12 +429,12 @@ namespace PcBuilderApi.Migrations
                     b.Property<string>("FactoryLink")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double?>("FormFactor")
-                        .HasColumnType("float");
+                    b.Property<string>("FormFactor")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Interface")
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -624,8 +457,8 @@ namespace PcBuilderApi.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("WritingTechnology")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
 
@@ -694,8 +527,8 @@ namespace PcBuilderApi.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Bluetooth")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Brand")
                         .IsRequired()
@@ -725,8 +558,8 @@ namespace PcBuilderApi.Migrations
                         .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Ethernet")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("FactoryLink")
                         .HasColumnType("nvarchar(max)");
@@ -742,6 +575,9 @@ namespace PcBuilderApi.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<int?>("PcleX1Quantity")
+                        .HasColumnType("int");
 
                     b.Property<string>("PhotoUrl")
                         .HasColumnType("nvarchar(max)");
@@ -769,12 +605,317 @@ namespace PcBuilderApi.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Wifi")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
 
                     b.ToTable("Motherboards");
+                });
+
+            modelBuilder.Entity("PcBuilderApi.Models.PcBuild", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("AverageRating")
+                        .HasPrecision(3, 2)
+                        .HasColumnType("decimal(3,2)");
+
+                    b.Property<Guid?>("CpuCooledId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CpuId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid?>("GpuId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("MotherboardId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<Guid?>("PcCaseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("PowerSupplyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CpuCooledId");
+
+                    b.HasIndex("CpuId");
+
+                    b.HasIndex("GpuId");
+
+                    b.HasIndex("MotherboardId");
+
+                    b.HasIndex("PcCaseId");
+
+                    b.HasIndex("PowerSupplyId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PcBuilds");
+                });
+
+            modelBuilder.Entity("PcBuilderApi.Models.PcBuild_Fan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("FanId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PcBuildId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FanId");
+
+                    b.HasIndex("PcBuildId");
+
+                    b.ToTable("PcBuild_Fan", (string)null);
+                });
+
+            modelBuilder.Entity("PcBuilderApi.Models.PcBuild_Hdd", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("HddId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PcBuildId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HddId");
+
+                    b.HasIndex("PcBuildId");
+
+                    b.ToTable("PcBuild_Hdd", (string)null);
+                });
+
+            modelBuilder.Entity("PcBuilderApi.Models.PcBuild_Ram", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PcBuildId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("RamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PcBuildId");
+
+                    b.HasIndex("RamId");
+
+                    b.ToTable("PcBuild_Ram", (string)null);
+                });
+
+            modelBuilder.Entity("PcBuilderApi.Models.PcBuild_Ssd", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PcBuildId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SsdId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PcBuildId");
+
+                    b.HasIndex("SsdId");
+
+                    b.ToTable("PcBuild_Ssd", (string)null);
+                });
+
+            modelBuilder.Entity("PcBuilderApi.Models.PcCase", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AdditionalFanPlaces")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.Property<string>("Brand")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("BuiltInFans")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
+
+                    b.Property<int?>("ExpansionSlotQuant")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FactoryLink")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("HasDustFilters")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HasHeadphones")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HasMicrophone")
+                        .HasColumnType("bit");
+
+                    b.Property<double?>("MaxCpuCoolerHeight")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("MaxGpuLength")
+                        .HasColumnType("float");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("PhotoUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PsuLocation")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("PsuWattage")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SizeDimentions")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("SizeStandard")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("Slot25Quant")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Slot35Quant")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Slot525Quant")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Usb")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<double?>("Weight")
+                        .HasColumnType("float");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PcCases");
+                });
+
+            modelBuilder.Entity("PcBuilderApi.Models.PcCaseFanLocation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("FanSize")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxFans")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("PcCaseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PcCaseId");
+
+                    b.ToTable("PcCaseFanLocations");
+                });
+
+            modelBuilder.Entity("PcBuilderApi.Models.PcCaseFormFactor", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<Guid>("PcCaseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PcCaseId");
+
+                    b.ToTable("PcCaseFormFactors");
                 });
 
             modelBuilder.Entity("PcBuilderApi.Models.PcleSlot", b =>
@@ -821,8 +962,8 @@ namespace PcBuilderApi.Migrations
                         .HasColumnType("float");
 
                     b.Property<string>("EfficiencyStandart")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("FactoryLink")
                         .HasColumnType("nvarchar(max)");
@@ -832,8 +973,8 @@ namespace PcBuilderApi.Migrations
 
                     b.Property<string>("FormFactor")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<bool>("HasApcf")
                         .HasColumnType("bit");
@@ -855,8 +996,8 @@ namespace PcBuilderApi.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<int?>("NoiseLevelMaxDb")
-                        .HasColumnType("int");
+                    b.Property<double?>("NoiseLevelMaxDb")
+                        .HasColumnType("float");
 
                     b.Property<string>("PhotoUrl")
                         .HasColumnType("nvarchar(max)");
@@ -865,8 +1006,8 @@ namespace PcBuilderApi.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Size")
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("Wattage")
                         .HasColumnType("int");
@@ -896,8 +1037,8 @@ namespace PcBuilderApi.Migrations
 
                     b.Property<string>("Type")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
 
@@ -919,6 +1060,7 @@ namespace PcBuilderApi.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("ProductOfferUrl")
@@ -949,15 +1091,15 @@ namespace PcBuilderApi.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Bufferization")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int?>("Capacity")
                         .HasColumnType("int");
 
                     b.Property<string>("Color")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Description")
                         .HasMaxLength(3000)
@@ -987,13 +1129,13 @@ namespace PcBuilderApi.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Timings")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Type")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<double?>("Voltage")
                         .HasColumnType("float");
@@ -1033,6 +1175,41 @@ namespace PcBuilderApi.Migrations
                     b.ToTable("RearPorts");
                 });
 
+            modelBuilder.Entity("PcBuilderApi.Models.Review", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PcBuildId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Rating")
+                        .HasPrecision(3, 2)
+                        .HasColumnType("decimal(3,2)");
+
+                    b.Property<string>("Text")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PcBuildId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Reviews");
+                });
+
             modelBuilder.Entity("PcBuilderApi.Models.Ssd", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1058,8 +1235,8 @@ namespace PcBuilderApi.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FormFactor")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Interface")
                         .HasMaxLength(300)
@@ -1080,8 +1257,8 @@ namespace PcBuilderApi.Migrations
                         .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("NandType")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("PhotoUrl")
                         .HasColumnType("nvarchar(max)");
@@ -1093,8 +1270,8 @@ namespace PcBuilderApi.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Size")
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("Wattage")
                         .HasColumnType("int");
@@ -1134,42 +1311,45 @@ namespace PcBuilderApi.Migrations
                     b.ToTable("Stores");
                 });
 
-            modelBuilder.Entity("PcBuilderApi.Models.Case_FanLocation", b =>
+            modelBuilder.Entity("PcBuilderApi.Models.User", b =>
                 {
-                    b.HasOne("PcBuilderApi.Models.Case", "Case")
-                        .WithMany("Case_FanLocations")
-                        .HasForeignKey("CaseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
 
-                    b.HasOne("PcBuilderApi.Models.FanLocation", "FanLocation")
-                        .WithMany("Case_FanLocations")
-                        .HasForeignKey("FanLocationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<DateTime>("CommentBanUntil")
+                        .HasColumnType("datetime2");
 
-                    b.Navigation("Case");
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
-                    b.Navigation("FanLocation");
-                });
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
-            modelBuilder.Entity("PcBuilderApi.Models.Case_FormFactor", b =>
-                {
-                    b.HasOne("PcBuilderApi.Models.Case", "Case")
-                        .WithMany("Case_FormFactors")
-                        .HasForeignKey("CaseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.HasOne("PcBuilderApi.Models.FormFactor", "FormFactor")
-                        .WithMany("Case_FormFactors")
-                        .HasForeignKey("FormFactorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<DateTime>("PostBanUntil")
+                        .HasColumnType("datetime2");
 
-                    b.Navigation("Case");
+                    b.Property<string>("RefreshToken")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Navigation("FormFactor");
+                    b.Property<DateTime>("RefreshTokenExpiryTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("PcBuilderApi.Models.CpuCoolerSocket", b =>
@@ -1227,6 +1407,151 @@ namespace PcBuilderApi.Migrations
                     b.Navigation("Motherboard");
                 });
 
+            modelBuilder.Entity("PcBuilderApi.Models.PcBuild", b =>
+                {
+                    b.HasOne("PcBuilderApi.Models.CpuCooler", "CpuCooler")
+                        .WithMany("PcBuilds")
+                        .HasForeignKey("CpuCooledId");
+
+                    b.HasOne("PcBuilderApi.Models.Cpu", "Cpu")
+                        .WithMany("PcBuilds")
+                        .HasForeignKey("CpuId");
+
+                    b.HasOne("PcBuilderApi.Models.Gpu", "Gpu")
+                        .WithMany("PcBuilds")
+                        .HasForeignKey("GpuId");
+
+                    b.HasOne("PcBuilderApi.Models.Motherboard", "Motherboard")
+                        .WithMany("PcBuilds")
+                        .HasForeignKey("MotherboardId");
+
+                    b.HasOne("PcBuilderApi.Models.PcCase", "PcCase")
+                        .WithMany("PcBuilds")
+                        .HasForeignKey("PcCaseId");
+
+                    b.HasOne("PcBuilderApi.Models.PowerSupply", "PowerSupply")
+                        .WithMany("PcBuilds")
+                        .HasForeignKey("PowerSupplyId");
+
+                    b.HasOne("PcBuilderApi.Models.User", "User")
+                        .WithMany("PcBuilds")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Cpu");
+
+                    b.Navigation("CpuCooler");
+
+                    b.Navigation("Gpu");
+
+                    b.Navigation("Motherboard");
+
+                    b.Navigation("PcCase");
+
+                    b.Navigation("PowerSupply");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PcBuilderApi.Models.PcBuild_Fan", b =>
+                {
+                    b.HasOne("PcBuilderApi.Models.Fan", "Fan")
+                        .WithMany("PcBuild_Fans")
+                        .HasForeignKey("FanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PcBuilderApi.Models.PcBuild", "PcBuild")
+                        .WithMany("PcBuild_Fans")
+                        .HasForeignKey("PcBuildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Fan");
+
+                    b.Navigation("PcBuild");
+                });
+
+            modelBuilder.Entity("PcBuilderApi.Models.PcBuild_Hdd", b =>
+                {
+                    b.HasOne("PcBuilderApi.Models.Hdd", "Hdd")
+                        .WithMany("PcBuild_Hdds")
+                        .HasForeignKey("HddId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PcBuilderApi.Models.PcBuild", "PcBuild")
+                        .WithMany("PcBuild_Hdds")
+                        .HasForeignKey("PcBuildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Hdd");
+
+                    b.Navigation("PcBuild");
+                });
+
+            modelBuilder.Entity("PcBuilderApi.Models.PcBuild_Ram", b =>
+                {
+                    b.HasOne("PcBuilderApi.Models.PcBuild", "PcBuild")
+                        .WithMany("PcBuild_Rams")
+                        .HasForeignKey("PcBuildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PcBuilderApi.Models.Ram", "Ram")
+                        .WithMany("PcBuild_Rams")
+                        .HasForeignKey("RamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PcBuild");
+
+                    b.Navigation("Ram");
+                });
+
+            modelBuilder.Entity("PcBuilderApi.Models.PcBuild_Ssd", b =>
+                {
+                    b.HasOne("PcBuilderApi.Models.PcBuild", "PcBuild")
+                        .WithMany("PcBuild_Ssds")
+                        .HasForeignKey("PcBuildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PcBuilderApi.Models.Ssd", "Ssd")
+                        .WithMany("PcBuild_Ssds")
+                        .HasForeignKey("SsdId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PcBuild");
+
+                    b.Navigation("Ssd");
+                });
+
+            modelBuilder.Entity("PcBuilderApi.Models.PcCaseFanLocation", b =>
+                {
+                    b.HasOne("PcBuilderApi.Models.PcCase", "PcCase")
+                        .WithMany("PcCaseFanLocations")
+                        .HasForeignKey("PcCaseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PcCase");
+                });
+
+            modelBuilder.Entity("PcBuilderApi.Models.PcCaseFormFactor", b =>
+                {
+                    b.HasOne("PcBuilderApi.Models.PcCase", "PcCase")
+                        .WithMany("PcCaseFormFactors")
+                        .HasForeignKey("PcCaseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PcCase");
+                });
+
             modelBuilder.Entity("PcBuilderApi.Models.PcleSlot", b =>
                 {
                     b.HasOne("PcBuilderApi.Models.Motherboard", "Motherboard")
@@ -1271,31 +1596,52 @@ namespace PcBuilderApi.Migrations
                     b.Navigation("Motherboard");
                 });
 
-            modelBuilder.Entity("PcBuilderApi.Models.Case", b =>
+            modelBuilder.Entity("PcBuilderApi.Models.Review", b =>
                 {
-                    b.Navigation("Case_FanLocations");
+                    b.HasOne("PcBuilderApi.Models.PcBuild", "PcBuild")
+                        .WithMany("Reviews")
+                        .HasForeignKey("PcBuildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("Case_FormFactors");
+                    b.HasOne("PcBuilderApi.Models.User", "User")
+                        .WithMany("Reviews")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PcBuild");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PcBuilderApi.Models.Cpu", b =>
+                {
+                    b.Navigation("PcBuilds");
                 });
 
             modelBuilder.Entity("PcBuilderApi.Models.CpuCooler", b =>
                 {
                     b.Navigation("CpuCoolerSockets");
+
+                    b.Navigation("PcBuilds");
                 });
 
-            modelBuilder.Entity("PcBuilderApi.Models.FanLocation", b =>
+            modelBuilder.Entity("PcBuilderApi.Models.Fan", b =>
                 {
-                    b.Navigation("Case_FanLocations");
-                });
-
-            modelBuilder.Entity("PcBuilderApi.Models.FormFactor", b =>
-                {
-                    b.Navigation("Case_FormFactors");
+                    b.Navigation("PcBuild_Fans");
                 });
 
             modelBuilder.Entity("PcBuilderApi.Models.Gpu", b =>
                 {
                     b.Navigation("GpuPowerConnectors");
+
+                    b.Navigation("PcBuilds");
+                });
+
+            modelBuilder.Entity("PcBuilderApi.Models.Hdd", b =>
+                {
+                    b.Navigation("PcBuild_Hdds");
                 });
 
             modelBuilder.Entity("PcBuilderApi.Models.Motherboard", b =>
@@ -1306,19 +1652,62 @@ namespace PcBuilderApi.Migrations
 
                     b.Navigation("M2Slots");
 
+                    b.Navigation("PcBuilds");
+
                     b.Navigation("PcleSlots");
 
                     b.Navigation("RearPorts");
                 });
 
+            modelBuilder.Entity("PcBuilderApi.Models.PcBuild", b =>
+                {
+                    b.Navigation("PcBuild_Fans");
+
+                    b.Navigation("PcBuild_Hdds");
+
+                    b.Navigation("PcBuild_Rams");
+
+                    b.Navigation("PcBuild_Ssds");
+
+                    b.Navigation("Reviews");
+                });
+
+            modelBuilder.Entity("PcBuilderApi.Models.PcCase", b =>
+                {
+                    b.Navigation("PcBuilds");
+
+                    b.Navigation("PcCaseFanLocations");
+
+                    b.Navigation("PcCaseFormFactors");
+                });
+
             modelBuilder.Entity("PcBuilderApi.Models.PowerSupply", b =>
                 {
+                    b.Navigation("PcBuilds");
+
                     b.Navigation("PowerSupplyPowerConnectors");
+                });
+
+            modelBuilder.Entity("PcBuilderApi.Models.Ram", b =>
+                {
+                    b.Navigation("PcBuild_Rams");
+                });
+
+            modelBuilder.Entity("PcBuilderApi.Models.Ssd", b =>
+                {
+                    b.Navigation("PcBuild_Ssds");
                 });
 
             modelBuilder.Entity("PcBuilderApi.Models.Store", b =>
                 {
                     b.Navigation("ProductOffers");
+                });
+
+            modelBuilder.Entity("PcBuilderApi.Models.User", b =>
+                {
+                    b.Navigation("PcBuilds");
+
+                    b.Navigation("Reviews");
                 });
 #pragma warning restore 612, 618
         }

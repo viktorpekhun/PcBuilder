@@ -24,21 +24,22 @@ namespace PcBuilderApi.Models
         [Required]
         public int Capacity { get; set; }
 
-        [MaxLength(30)]
+        [MaxLength(50)]
         public string? Interface { get; set; }
-        public double? FormFactor { get; set; }
+        public string? FormFactor { get; set; }
         public int? SpindleSpeed { get; set; }
         public int? Cache { get; set; }
         public int? Speed { get; set; }
 
-        [MaxLength(20)]
+        [MaxLength(50)]
         public string? WritingTechnology { get; set; }
-        public int? AverageLifetime { get; set; }
         public int? NoiceDb { get; set; }
         public int? Wattage { get; set; }
 
         [Url]
         public string? FactoryLink { get; set; }
+
+        public List<PcBuild_Hdd> PcBuild_Hdds { get; set; } = new();
 
     }
 }

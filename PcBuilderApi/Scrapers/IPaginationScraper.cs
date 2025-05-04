@@ -1,4 +1,7 @@
-﻿namespace PcBuilderApi.Scrapers
+﻿
+using static PcBuilderApi.Utilities.SD;
+
+namespace PcBuilderApi.Scrapers
 {
     public interface IPaginationScraper
     {

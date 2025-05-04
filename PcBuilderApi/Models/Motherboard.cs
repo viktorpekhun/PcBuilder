@@ -38,17 +38,18 @@ namespace PcBuilderApi.Models
         public int? Sata3Count { get; set; }
         public int? PowerMotherboard { get; set; }
         public int? FanQuantity { get; set; }
+        public int? PcleX1Quantity { get; set; }
 
-        [MaxLength(50)]
+        [MaxLength(100)]
         public string? Ethernet { get; set; }
 
         [MaxLength(100)]
         public string? Audio { get; set; }
 
-        [MaxLength(50)]
+        [MaxLength(100)]
         public string? Wifi { get; set; }
 
-        [MaxLength(50)]
+        [MaxLength(100)]
         public string? Bluetooth { get; set; }
 
         [MaxLength(255)]
@@ -70,6 +71,8 @@ namespace PcBuilderApi.Models
         public List<M2Slot> M2Slots { get; set; } = new();
         public List<RearPort> RearPorts { get; set; } = new();
         public List<InnerPort> InnerPorts { get; set; } = new();
+
+        public List<PcBuild> PcBuilds { get; set; } = new();
 
     }
 }

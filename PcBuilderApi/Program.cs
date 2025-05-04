@@ -6,7 +6,10 @@ using PcBuilderApi.Repositories.Implementations;
 using PcBuilderApi.Repositories.Interfaces;
 using PcBuilderApi.Scrapers;
 using PcBuilderApi.Scrapers.Implementation;
+using PcBuilderApi.Services.Compatibility;
+using PcBuilderApi.Services.Compatibility.Rules;
 using PcBuilderApi.Services.Implementations;
+using PcBuilderApi.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,14 +22,27 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-//builder.Services.AddScoped<IComponentScraper<Cpu>, CpuScraper>();
+builder.Services.AddScoped<IComponentScraper<Cpu>, CpuScraper>();
 builder.Services.AddScoped<IComponentScraper<Gpu>, GpuScraper>();
+builder.Services.AddScoped<IComponentScraper<Motherboard>, MotherboardScraper>();
+builder.Services.AddScoped<IComponentScraper<CpuCooler>, CpuCoolerScraper>();
+builder.Services.AddScoped<IComponentScraper<PcCase>, PcCaseScraper>();
+builder.Services.AddScoped<IComponentScraper<PowerSupply>, PowerSupplyScraper>();
+builder.Services.AddScoped<IComponentScraper<Ram>, RamScraper>();
+builder.Services.AddScoped<IComponentScraper<Ssd>, SsdScraper>();
+builder.Services.AddScoped<IComponentScraper<Hdd>, HddScraper>();
+builder.Services.AddScoped<IComponentScraper<Fan>, FanScraper>();
+
 builder.Services.AddHttpClient<IPaginationScraper, PaginationScraper>();
 builder.Services.AddScoped<IProxyScraper, ProxyScraper>();
 
 builder.Services.AddScoped<ComponentScraperFactory>();
 
+builder.Services.AddScoped<CompatibilityChecker>();
 builder.Services.AddScoped<ScraperService>();
+builder.Services.AddScoped<IPcBuildService, PcBuildService>();
+
+builder.Services.AddScoped<ICompatibilityRule, CpuMotherboardSocketRule>();
 
 // Додаємо CORS перед викликом `Build()`
 builder.Services.AddCors(options =>

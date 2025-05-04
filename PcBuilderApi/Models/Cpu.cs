@@ -60,5 +60,7 @@ namespace PcBuilderApi.Models
 
         [Url]
         public string? FactoryLink { get; set; }
+
+        public List<PcBuild> PcBuilds { get; set; } = new();
     }
 }

@@ -17,11 +17,9 @@ namespace PcBuilderApi.Data
         public DbSet<InnerPort> InnerPorts { get; set; }
         public DbSet<CpuCooler> CpuCoolers { get; set; }
         public DbSet<CpuCoolerSocket> CpuCoolerSockets { get; set; }
-        public DbSet<Case> Cases { get; set; }
-        public DbSet<FormFactor> FormFactors { get; set; }
-        public DbSet<Case_FormFactor> Case_FormFactors { get; set; }
-        public DbSet<FanLocation> FanLocations { get; set; }
-        public DbSet<Case_FanLocation> Case_FanLocations { get; set; }
+        public DbSet<PcCase> PcCases { get; set; }
+        public DbSet<PcCaseFormFactor> PcCaseFormFactors { get; set; }
+        public DbSet<PcCaseFanLocation> PcCaseFanLocations { get; set; }
         public DbSet<PowerSupply> PowerSupplies { get; set; }
         public DbSet<PowerSupplyPowerConnector> PowerSupplyPowerConnectors { get; set; }
         public DbSet<Ram> Rams { get; set; }
@@ -30,10 +28,19 @@ namespace PcBuilderApi.Data
         public DbSet<Fan> Fans { get; set; }
         public DbSet<Store> Stores { get; set; }
         public DbSet<ProductOffer> ProductOffers { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<PcBuild> PcBuilds { get; set; }
+        public DbSet<PcBuild_Ssd> PcBuild_Ssds { get; set; }
+        public DbSet<PcBuild_Hdd> PcBuild_Hdds { get; set; }
+        public DbSet<PcBuild_Ram> PcBuild_Rams { get; set; }
+        public DbSet<PcBuild_Fan> PcBuild_Fans { get; set; }
+        public DbSet<Review> Reviews { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
+
             modelBuilder.Entity<CpuPowerConnector>()
                 .HasOne(c => c.Motherboard)
                 .WithMany(m => m.CpuPowerConnectors)
@@ -81,30 +88,16 @@ namespace PcBuilderApi.Data
                 .HasForeignKey(c => c.CpuCoolerId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Case_FormFactor>()
-                .ToTable("Case_FormFactor")
-                .HasOne(cf => cf.Case)
-                .WithMany(c => c.Case_FormFactors)
-                .HasForeignKey(cf => cf.CaseId)
+            modelBuilder.Entity<PcCaseFormFactor>()
+                .HasOne(cf => cf.PcCase)
+                .WithMany(c => c.PcCaseFormFactors)
+                .HasForeignKey(cf => cf.PcCaseId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Case_FormFactor>()
-                .HasOne(cf => cf.FormFactor)
-                .WithMany(f => f.Case_FormFactors)
-                .HasForeignKey(cf => cf.FormFactorId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Case_FanLocation>()
-                .ToTable("Case_FanLocation")
-                .HasOne(cf => cf.Case)
-                .WithMany(c => c.Case_FanLocations)
-                .HasForeignKey(cf => cf.CaseId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Case_FanLocation>()
-                .HasOne(cf => cf.FanLocation)
-                .WithMany(f => f.Case_FanLocations)
-                .HasForeignKey(cf => cf.FanLocationId)
+            modelBuilder.Entity<PcCaseFanLocation>()
+                .HasOne(cf => cf.PcCase)
+                .WithMany(c => c.PcCaseFanLocations)
+                .HasForeignKey(cf => cf.PcCaseId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<PowerSupplyPowerConnector>()
@@ -121,6 +114,95 @@ namespace PcBuilderApi.Data
 
             modelBuilder.Entity<ProductOffer>()
                 .HasIndex(po => new { po.ComponentId, po.ComponentType });
+
+            modelBuilder.Entity<PcBuild>()
+                .HasOne(pb => pb.User)
+                .WithMany(u => u.PcBuilds)
+                .HasForeignKey(pb => pb.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PcBuild_Ssd>()
+                .ToTable("PcBuild_Ssd")
+                .HasOne(ps => ps.PcBuild)
+                .WithMany(pb => pb.PcBuild_Ssds)
+                .HasForeignKey(ps => ps.PcBuildId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PcBuild_Ssd>()
+                .HasOne(ps => ps.Ssd)
+                .WithMany(s => s.PcBuild_Ssds)
+                .HasForeignKey(ps => ps.SsdId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+
+            modelBuilder.Entity<PcBuild_Hdd>()
+                .ToTable("PcBuild_Hdd")
+                .HasOne(ps => ps.PcBuild)
+                .WithMany(pb => pb.PcBuild_Hdds)
+                .HasForeignKey(ps => ps.PcBuildId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PcBuild_Hdd>()
+                .HasOne(ps => ps.Hdd)
+                .WithMany(s => s.PcBuild_Hdds)
+                .HasForeignKey(ps => ps.HddId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+
+            modelBuilder.Entity<PcBuild_Ram>()
+                .ToTable("PcBuild_Ram")
+                .HasOne(ps => ps.PcBuild)
+                .WithMany(pb => pb.PcBuild_Rams)
+                .HasForeignKey(ps => ps.PcBuildId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PcBuild_Ram>()
+                .HasOne(ps => ps.Ram)
+                .WithMany(s => s.PcBuild_Rams)
+                .HasForeignKey(ps => ps.RamId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+
+            modelBuilder.Entity<PcBuild_Fan>()
+                .ToTable("PcBuild_Fan")
+                .HasOne(ps => ps.PcBuild)
+                .WithMany(pb => pb.PcBuild_Fans)
+                .HasForeignKey(ps => ps.PcBuildId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PcBuild_Fan>()
+                .HasOne(ps => ps.Fan)
+                .WithMany(s => s.PcBuild_Fans)
+                .HasForeignKey(ps => ps.FanId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.PcBuild)
+                .WithMany(pb => pb.Reviews)
+                .HasForeignKey(r => r.PcBuildId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.User)
+                .WithMany(u => u.Reviews)
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Review>()
+                .Property(u => u.Rating)
+                .HasPrecision(3, 2);
+
+            modelBuilder.Entity<PcBuild>()
+                .Property(u => u.AverageRating)
+                .HasPrecision(3, 2);
+
+            modelBuilder.Entity<PcBuild>()
+                .Property(p => p.Price)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<ProductOffer>()
+                .Property(p => p.Price)
+                .HasPrecision(18, 2);
         }
     }
 }

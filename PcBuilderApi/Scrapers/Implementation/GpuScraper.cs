@@ -1,12 +1,10 @@
-﻿using Acornima;
-using Acornima.Ast;
+﻿
 using HtmlAgilityPack;
-using Jint;
 using Newtonsoft.Json.Linq;
 using PcBuilderApi.Models;
 using PcBuilderApi.Utilities;
+using System.Collections.Concurrent;
 using System.Globalization;
-using System.Reflection.Metadata;
 using System.Text.RegularExpressions;
 
 namespace PcBuilderApi.Scrapers.Implementation
@@ -15,7 +13,7 @@ namespace PcBuilderApi.Scrapers.Implementation
     {
         private const string BaseUrl = "https://hotline.ua";
 
-        public async Task<ScrapingResult<Gpu>> ScrapeAsync(string url, HttpClient client)
+        public async Task<ScrapingResult<Gpu>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<Gpu> componentsFromDb, ConcurrentBag<Store> storesFromDb)
         {
 
             var html = await client.GetStringAsync(url);
@@ -27,8 +25,6 @@ namespace PcBuilderApi.Scrapers.Implementation
             var stores = new List<Store>();
             var offers = new List<ProductOffer>();
 
-
-            // Отримуємо назву моделі (та текст у дужках, якщо є)
             string modelInBrackets = "";
             var titleNode = htmlDoc.DocumentNode.SelectSingleNode("//h1[contains(@class, 'title__main')]");
             if (titleNode != null)
@@ -46,7 +42,6 @@ namespace PcBuilderApi.Scrapers.Implementation
                 return new ScrapingResult<Gpu>(null, new List<Store>(), new List<ProductOffer>());
             }
 
-            // Отримуємо опис без тексту в дужках
             var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//div[contains(@class, 'description__content')]");
             if (descriptionNode != null)
             {
@@ -58,10 +53,10 @@ namespace PcBuilderApi.Scrapers.Implementation
             }
 
 
-            var nuxtData = ExtractNuxtDataFromHtml(htmlDoc);
+            var nuxtData = NuxtScriptWorker.ExtractNuxtDataFromHtml(htmlDoc);
             if (nuxtData != null)
             {
-                var resultSpecs = FindTokenByKey(nuxtData, "productValues");
+                var resultSpecs = NuxtScriptWorker.FindTokenByKey(nuxtData, "productValues");
                 var edgesSpecs = resultSpecs?["edges"] as JArray;
                 if (edgesSpecs != null)
                 {
@@ -74,11 +69,11 @@ namespace PcBuilderApi.Scrapers.Implementation
 
                         switch (key)
                         {
-                            case "Бренд":
-                                gpu.Brand = value;
+                            case "vendor":
+                                gpu.Brand = value ?? string.Empty;
                                 break;
                             case "Виробник GPU":
-                                gpu.GpuManufacturer = value;
+                                gpu.GpuManufacturer = value ?? string.Empty;
                                 break;
                             case "Об'єм пам'яті, ГБ":
                                 gpu.Memory = ParseInt(value);
@@ -112,7 +107,7 @@ namespace PcBuilderApi.Scrapers.Implementation
                                 gpu.MemoryBus = ParseInt(value);
                                 break;
                             case "Розміри, мм":
-                                var normalized = value.Replace("х", "x").Replace("Х", "x").ToLower();
+                                var normalized = value?.Replace("х", "x").Replace("Х", "x").ToLower() ?? string.Empty;
                                 var matches = Regex.Matches(normalized, @"[\d.,]+");
 
                                 if (matches.Count >= 1)
@@ -133,12 +128,12 @@ namespace PcBuilderApi.Scrapers.Implementation
                                 {
                                     var connectors = new List<GpuPowerConnector>();
 
-                                    // Розбиваємо рядок на частини через "+" (наприклад: "2x8pin +1 x6pin")
-                                    var parts = value.Split('+', StringSplitOptions.RemoveEmptyEntries);
+                                    var parts = value?.Split('+', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+                                    
+                                    if (parts.Length == 0) break;
 
                                     foreach (var part in parts)
                                     {
-                                        // Витягуємо кількість і кількість пінів — наприклад, з "2x8pin" отримаємо 2 та 8
                                         var match = Regex.Match(part.Trim(), @"(\d+)\s*x\s*(\d+)", RegexOptions.IgnoreCase);
 
                                         if (match.Success)
@@ -150,7 +145,6 @@ namespace PcBuilderApi.Scrapers.Implementation
                                             {
                                                 Quantity = quantity,
                                                 Pins = pins
-                                                // GpuId буде встановлено пізніше при збереженні
                                             });
                                         }
                                     }
@@ -160,10 +154,19 @@ namespace PcBuilderApi.Scrapers.Implementation
                                 }
                             case "productOnVendorSite":
                                 {
-                                    gpu.FactoryLink = node?["value"]?.ToString().Trim();
+                                    gpu.FactoryLink = node?["url"]?.ToString().Trim();
                                     break;
                                 }
                         }
+                    }
+                    var existingGpu = componentsFromDb.FirstOrDefault(s => s.Name == gpu.Name);
+                    if (existingGpu != null)
+                    {
+                        gpu.Id = existingGpu.Id;
+                    }
+                    else
+                    {
+                        gpu.Id = Guid.NewGuid();
                     }
                 }
                 else
@@ -178,7 +181,6 @@ namespace PcBuilderApi.Scrapers.Implementation
 
 
 
-            // Отримуємо URL зображення
             var imageNode = htmlDoc.DocumentNode.SelectSingleNode("//img[contains(@class, 'zoom-gallery__canvas-img')]");
             if (imageNode != null)
             {
@@ -187,7 +189,7 @@ namespace PcBuilderApi.Scrapers.Implementation
             }
 
 
-            var resultOffers = FindTokenByKey(nuxtData, "offers");
+            var resultOffers = NuxtScriptWorker.FindTokenByKey(nuxtData, "offers");
             var edgesOffers = resultOffers?["edges"] as JArray;
             if (edgesOffers != null)
             {
@@ -196,9 +198,10 @@ namespace PcBuilderApi.Scrapers.Implementation
                     try
                     {
                         var node = edge["node"];
-                        // Extract store information
+                        if (node == null) continue;
 
                         var storeName = node?["firmTitle"]?.ToString().Trim();
+                        if (string.IsNullOrEmpty(storeName)) continue;
 
                         var storeLogoUrl = node?["firmLogo"]?.ToString().Trim();
                         if (!string.IsNullOrEmpty(storeLogoUrl) && storeLogoUrl.StartsWith("/"))
@@ -206,42 +209,49 @@ namespace PcBuilderApi.Scrapers.Implementation
                             storeLogoUrl = $"{BaseUrl}{storeLogoUrl}";
                         }
 
+                        int likes = node?["reviewsPositiveNumber"]?.Value<int?>() ?? 0;
+                        int dislikes = node?["reviewsNegativeNumber"]?.Value<int?>() ?? 0;
 
-
-                        int likes = node?["reviewsPositiveNumber"]?.Value<int>() ?? 0;
-                        int dislikes = node?["reviewsNegativeNumber"]?.Value<int>() ?? 0;
-
-                        
-                        // Create or find store
                         var store = stores.FirstOrDefault(s => s.Name == storeName);
+                        var storeFromDb = storesFromDb.FirstOrDefault(s => s.Name == storeName);
                         if (store == null)
                         {
+
                             store = new Store
                             {
-                                Id = Guid.NewGuid(),
                                 Name = storeName,
                                 LogoUrl = storeLogoUrl,
                                 Likes = likes,
                                 Dislikes = dislikes
                             };
+                            if (storeFromDb != null)
+                            {
+                                store.Id = storeFromDb.Id;
+                            }
+                            else
+                            {
+                                store.Id = Guid.NewGuid();
+                            }
                             stores.Add(store);
                         }
-                        
+
                         decimal price = node?["price"]?.Value<decimal>() ?? 0;
 
                         var offerUrl = node?["conversionUrl"]?.ToString().Trim();
                         if (string.IsNullOrEmpty(offerUrl)) continue;
 
-                        if (offerUrl.StartsWith("/"))
-                            offerUrl = $"{BaseUrl}{offerUrl}";
 
-                        // Create product offer
+                        if (!string.IsNullOrEmpty(offerUrl) && offerUrl.StartsWith("/"))
+                        {
+                            offerUrl = $"{BaseUrl}{offerUrl}";
+                        }
+
                         var offer = new ProductOffer
                         {
                             Id = Guid.NewGuid(),
                             Price = price,
                             ComponentType = SD.ComponentType.Gpu,
-                            ComponentId = gpu.Id, // Will be set when saving to DB
+                            ComponentId = gpu.Id,
                             ProductOfferUrl = offerUrl,
                             StoreId = store.Id
                         };
@@ -250,88 +260,21 @@ namespace PcBuilderApi.Scrapers.Implementation
                     }
                     catch (Exception ex)
                     {
-                        // Log exception if needed, but continue with other offers
                         Console.WriteLine($"Error scraping offer: {ex.Message}");
                     }
                 }
                 
             }
-            gpu.Id = Guid.NewGuid();
+            
 
             return new ScrapingResult<Gpu>(gpu, stores, offers);
         }
 
+        private int? ParseInt(string? value) => int.TryParse(value, out var result) ? result : null;
 
-        public JObject? ExtractNuxtDataFromHtml(HtmlDocument doc)
+        private double? ParseDouble(string? value)
         {
-
-            // Шукаємо <script> з window.__NUXT__
-            var scriptNode = doc.DocumentNode
-                .SelectSingleNode("//script[contains(text(), 'window.__NUXT__')]");
-
-            if (scriptNode == null)
-                return null;
-
-            string script = scriptNode.InnerHtml;
-
-            // Шукаємо функцію (function(...) { ... })(...)
-            var match = Regex.Match(script, @"window\.__NUXT__\s*=\s*(\(function[\s\S]*?\}\s*\(.*?\)\))");
-
-            if (!match.Success)
-                return null;
-
-            string jsExpression = match.Groups[1].Value;
-
-            try
-            {
-                var engine = new Engine();
-                var result = engine.Evaluate(jsExpression).ToObject();
-
-
-                // Перетворимо на JObject для зручності
-                return JObject.FromObject(result);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Помилка при виконанні JS: {ex.Message}");
-                return null;
-            }
-        }
-
-        public JToken? FindTokenByKey(JToken? container, string key)
-        {
-            if (container == null)
-                return null;
-
-            if (container.Type == JTokenType.Object)
-            {
-                foreach (var prop in (JObject)container)
-                {
-                    if (prop.Key == key)
-                        return prop.Value;
-
-                    var found = FindTokenByKey(prop.Value, key);
-                    if (found != null)
-                        return found;
-                }
-            }
-            else if (container.Type == JTokenType.Array)
-            {
-                foreach (var item in (JArray)container)
-                {
-                    var found = FindTokenByKey(item, key);
-                    if (found != null)
-                        return found;
-                }
-            }
-            return null;
-        }
-
-
-        private int? ParseInt(string value) => int.TryParse(value, out var result) ? result : null;
-
-        private double? ParseDouble(string value)
-        {
+            if (value == null) return null;
             value = value.Replace(',', '.');
             return double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var result) ? result : null;
         }

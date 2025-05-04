@@ -22,7 +22,7 @@ namespace PcBuilderApi.Models
         public string Brand { get; set; } = string.Empty;
 
         [Required]
-        [MaxLength(20)]
+        [MaxLength(50)]
         public string FormFactor { get; set; } = string.Empty;
 
         [Required]
@@ -34,19 +34,20 @@ namespace PcBuilderApi.Models
         public int? InputMaxVoltage { get; set; }
         public bool HasApcf { get; set; }
 
-        [MaxLength(20)]
+        [MaxLength(50)]
         public string? EfficiencyStandart { get; set; }
         public double? EfficiencyPercent { get; set; }
         public bool? IsModular { get; set; }
-        public int? NoiseLevelMaxDb { get; set; }
+        public double? NoiseLevelMaxDb { get; set; }
 
-        [MaxLength(30)]
+        [MaxLength(50)]
         public string? Size { get; set; }
 
         [Url]
         public string? FactoryLink { get; set; }
 
         public List<PowerSupplyPowerConnector> PowerSupplyPowerConnectors { get; set; } = new();
+        public List<PcBuild> PcBuilds { get; set; } = new();
 
     }
 }

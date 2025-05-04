@@ -42,11 +42,11 @@ namespace PcBuilderApi.Models
 
         public int? MemoryBus { get; set; }
 
-        public double? SizeLength { get; set; }//
+        public double? SizeLength { get; set; }
 
-        public double? SizeWidth { get; set; }//
+        public double? SizeWidth { get; set; }
 
-        public double? SizeHeight { get; set; }//
+        public double? SizeHeight { get; set; }
 
         public int? Wattage { get; set; }
 
@@ -55,6 +55,8 @@ namespace PcBuilderApi.Models
         [Url]
         public string? FactoryLink { get; set; }
 
-        public List<GpuPowerConnector> GpuPowerConnectors { get; set; } = new();//
+        public List<GpuPowerConnector> GpuPowerConnectors { get; set; } = new();
+
+        public List<PcBuild> PcBuilds { get; set; } = new();
     }
 }

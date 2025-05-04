@@ -54,5 +54,7 @@ namespace PcBuilderApi.Models
         public string? FactoryLink { get; set; }
 
         public List<CpuCoolerSocket> CpuCoolerSockets { get; set; } = new();
+
+        public List<PcBuild> PcBuilds { get; set; } = new();
     }
 }

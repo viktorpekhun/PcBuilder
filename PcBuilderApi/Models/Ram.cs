@@ -22,7 +22,7 @@ namespace PcBuilderApi.Models
         public string Brand { get; set; } = string.Empty;
 
         [Required]
-        [MaxLength(20)]
+        [MaxLength(50)]
         public string Type { get; set; } = string.Empty;
 
         [Required]
@@ -30,23 +30,23 @@ namespace PcBuilderApi.Models
         public int? Capacity { get; set; }
         public int? ModuleQuantity { get; set; }
 
-        [MaxLength(20)]
+        [MaxLength(50)]
         public string? Timings { get; set; }
         public double? Voltage { get; set; }
         public bool Xmp { get; set; }
         public bool Ecc { get; set; }
         public bool Expo { get; set; }
 
-        [MaxLength(20)]
+        [MaxLength(50)]
         public string? Bufferization { get; set; }
 
-        [MaxLength(20)]
+        [MaxLength(50)]
         public string? Color { get; set; }
         public int? Wattage { get; set; }
 
         [Url]
         public string? FactoryLink { get; set; }
 
-
+        public List<PcBuild_Ram> PcBuild_Rams { get; set; } = new();
     }
 }
