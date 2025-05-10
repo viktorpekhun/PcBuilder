@@ -1,42 +1,19 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace PcBuilderApi.Models
+﻿
+namespace PcBuilderApi.Dtos.CpuCoolerDtos
 {
-    public class CpuCooler
+    public class CpuCoolerDto
     {
-        [Key]
         public Guid Id { get; set; }
-
-        [Required]
-        [MaxLength(255)]
         public string Name { get; set; } = string.Empty;
-
-        [Url]
         public string? PhotoUrl { get; set; }
-
-        [MaxLength(3000)]
         public string? Description { get; set; }
-
-        [Required]
-        [MaxLength(100)]
         public string Brand { get; set; } = string.Empty;
-
-        [Required]
-        [MaxLength(100)]
         public string Type { get; set; } = string.Empty;
-
         public int? FanCount { get; set; }
         public double? FanSize { get; set; }
-
-        [MaxLength(100)]
         public string? RadiatorMaterial { get; set; }
-
-        [MaxLength(100)]
         public string? SpeedControl { get; set; }
-
-        [MaxLength(100)]
         public string? PowerConnector { get; set; }
-
         public int? MaxPowerDissipation { get; set; }
         public int? MaxSpeed { get; set; }
         public int? MinSpeed { get; set; }
@@ -49,12 +26,14 @@ namespace PcBuilderApi.Models
         public double? Height { get; set; }
         public double? Weight { get; set; }
         public int? Wattage { get; set; }
-
-        [Url]
         public string? FactoryLink { get; set; }
 
-        public List<CpuCoolerSocket> CpuCoolerSockets { get; set; } = new();
+        public List<CpuCoolerSocketDto> CpuCoolerSockets { get; set; } = new();
+        public List<ProductOfferDto> ProductOffers { get; set; } = new();
+    }
 
-        public List<PcBuild> PcBuilds { get; set; } = new();
+    public class CpuCoolerSocketDto
+    {
+        public string SocketType { get; set; } = string.Empty;
     }
 }
