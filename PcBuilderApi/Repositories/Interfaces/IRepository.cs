@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using PcBuilderApi.Utilities.Filtering;
+using System.Linq.Expressions;
 
 namespace PcBuilderApi.Repositories.Interfaces
 {
@@ -10,5 +11,9 @@ namespace PcBuilderApi.Repositories.Interfaces
         Task<TEntity> GetFirstOrDefaultAsync(Expression<Func<TEntity, bool>> filter, string? includeProperties = null);
         Task<IEnumerable<TEntity>> GetAllAsync(string? includeProperties = null);
         Task<IEnumerable<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>> filter, string? includeProperties = null);
+        Task<(IEnumerable<TEntity> items, int totalCount)> GetFilteredAndPagedAsync(
+            ResourceParameters parameters,
+            Expression<Func<TEntity, bool>> additionalFilter = null,
+            string includeProperties = "");
     }
 }

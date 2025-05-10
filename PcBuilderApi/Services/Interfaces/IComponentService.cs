@@ -1,10 +1,11 @@
-﻿using static PcBuilderApi.Utilities.SD;
+﻿using PcBuilderApi.Utilities.Filtering;
+using static PcBuilderApi.Utilities.SD;
 
 namespace PcBuilderApi.Services.Interfaces
 {
     public interface IComponentService
     {
-        Task<IEnumerable<object>> GetAllByTypeAsync(ComponentType componentType);
+        Task<PagedResponse<object>> GetAllByTypeAsync(ComponentType componentType, ResourceParameters parameters);
 
         Task<object> GetByIdAsync(Guid id, ComponentType componentType);
     }
