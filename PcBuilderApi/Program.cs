@@ -1,6 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using PcBuilderApi.Data;
+using PcBuilderApi.Mappers.CpuMappers;
+using PcBuilderApi.Mappers.GpuMappers;
+using PcBuilderApi.Mappers.RamMappers;
+using PcBuilderApi.Mappers.MotherboardMappers;
+using PcBuilderApi.Mappers.SsdMappers;
+using PcBuilderApi.Mappers.HddMappers;
+using PcBuilderApi.Mappers.CpuCoolerMappers;
+using PcBuilderApi.Mappers.PowerSupplyMappers;
+using PcBuilderApi.Mappers.PcCaseMappers;
+using PcBuilderApi.Mappers.FanMappers;
+using PcBuilderApi.Mappers;
 using PcBuilderApi.Models;
 using PcBuilderApi.Repositories.Implementations;
 using PcBuilderApi.Repositories.Interfaces;
@@ -10,6 +21,7 @@ using PcBuilderApi.Services.Compatibility;
 using PcBuilderApi.Services.Compatibility.Rules;
 using PcBuilderApi.Services.Implementations;
 using PcBuilderApi.Services.Interfaces;
+using PcBuilderApi.Mappers.ProductOfferMappers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +34,7 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+// Scrapers
 builder.Services.AddScoped<IComponentScraper<Cpu>, CpuScraper>();
 builder.Services.AddScoped<IComponentScraper<Gpu>, GpuScraper>();
 builder.Services.AddScoped<IComponentScraper<Motherboard>, MotherboardScraper>();
@@ -35,13 +48,38 @@ builder.Services.AddScoped<IComponentScraper<Fan>, FanScraper>();
 
 builder.Services.AddHttpClient<IPaginationScraper, PaginationScraper>();
 builder.Services.AddScoped<IProxyScraper, ProxyScraper>();
-
 builder.Services.AddScoped<ComponentScraperFactory>();
 
+// Mappers
+builder.Services.AddScoped<IComponentMapper, CpuMapper>();
+builder.Services.AddScoped<IComponentMapper, GpuMapper>();
+builder.Services.AddScoped<IComponentMapper, RamMapper>();
+builder.Services.AddScoped<IComponentMapper, MotherboardMapper>();
+builder.Services.AddScoped<IComponentMapper, SsdMapper>();
+builder.Services.AddScoped<IComponentMapper, HddMapper>();
+builder.Services.AddScoped<IComponentMapper, CpuCoolerMapper>();
+builder.Services.AddScoped<IComponentMapper, PowerSupplyMapper>();
+builder.Services.AddScoped<IComponentMapper, PcCaseMapper>();
+builder.Services.AddScoped<IComponentMapper, FanMapper>();
+builder.Services.AddScoped<IComponentListMapper, CpuListMapper>();
+builder.Services.AddScoped<IComponentListMapper, GpuListMapper>();
+builder.Services.AddScoped<IComponentListMapper, RamListMapper>();
+builder.Services.AddScoped<IComponentListMapper, MotherboardListMapper>();
+builder.Services.AddScoped<IComponentListMapper, SsdListMapper>();
+builder.Services.AddScoped<IComponentListMapper, HddListMapper>();
+builder.Services.AddScoped<IComponentListMapper, CpuCoolerListMapper>();
+builder.Services.AddScoped<IComponentListMapper, PowerSupplyListMapper>();
+builder.Services.AddScoped<IComponentListMapper, PcCaseListMapper>();
+builder.Services.AddScoped<IComponentListMapper, FanListMapper>();
+builder.Services.AddAutoMapper(typeof(ProductOfferProfile));
+
+// Services
 builder.Services.AddScoped<CompatibilityChecker>();
 builder.Services.AddScoped<ScraperService>();
 builder.Services.AddScoped<IPcBuildService, PcBuildService>();
+builder.Services.AddScoped<IComponentService, ComponentService>();
 
+// Compatibility rules
 builder.Services.AddScoped<ICompatibilityRule, CpuMotherboardSocketRule>();
 
 // Додаємо CORS перед викликом `Build()`
@@ -58,9 +96,9 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "My API",
+        Title = "PcBuilder API",
         Version = "v1",
-        Description = "Документація API для мого застосунку"
+        Description = "API documentation for PcBuilder App"
     });
 });
 

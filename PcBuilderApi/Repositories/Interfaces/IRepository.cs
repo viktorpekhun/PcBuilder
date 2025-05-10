@@ -9,5 +9,6 @@ namespace PcBuilderApi.Repositories.Interfaces
         Task DeleteAsync(TEntity entity);
         Task<TEntity> GetFirstOrDefaultAsync(Expression<Func<TEntity, bool>> filter, string? includeProperties = null);
         Task<IEnumerable<TEntity>> GetAllAsync(string? includeProperties = null);
+        Task<IEnumerable<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>> filter, string? includeProperties = null);
     }
 }

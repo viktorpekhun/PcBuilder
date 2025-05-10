@@ -161,7 +161,7 @@ namespace PcBuilderApi.Scrapers.Implementation
                                 else
                                     motherboard.Bluetooth = value ?? string.Empty;
                                 break;
-                            case "Виходи для монiтора":
+                            case "Виходи для монітора":
                                 if (string.Equals(value, "немає", StringComparison.OrdinalIgnoreCase))
                                     motherboard.VideoPorts = string.Empty;
                                 else

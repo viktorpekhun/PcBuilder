@@ -4,6 +4,7 @@ using PcBuilderApi.Repositories.Interfaces;
 using PcBuilderApi.Scrapers;
 using System.Collections.Concurrent;
 using System.Net;
+using static PcBuilderApi.Utilities.SD;
 
 namespace PcBuilderApi.Services.Implementations
 {
@@ -70,7 +71,7 @@ namespace PcBuilderApi.Services.Implementations
             return string.Join(",", includeProperties);
         }
 
-        public async Task ScrapeCategoryAsync<T>(string categoryUrl, Utilities.SD.ComponentType componentType) where T : class
+        public async Task ScrapeCategoryAsync<T>(string categoryUrl, ComponentType componentType) where T : class
         {
             Console.WriteLine("📦 Початок роботи TestScrapeCategoryAsync\n");
 

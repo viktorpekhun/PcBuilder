@@ -60,6 +60,18 @@ namespace PcBuilderApi.Repositories.Implementations
             return await query.FirstOrDefaultAsync();
         }
 
-        
+        public async Task<IEnumerable<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>> filter, string? includeProperties = null)
+        {
+            IQueryable<TEntity> query = _dbSet;
+            query = query.Where(filter);
+            if (!string.IsNullOrEmpty(includeProperties))
+            {
+                foreach (var property in includeProperties.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    query = query.Include(property);
+                }
+            }
+            return await query.ToListAsync();
+        }
     }
 }
