@@ -14,5 +14,6 @@
         public int? MaxReadSpeed { get; set; }
         public int? MaxWriteSpeed { get; set; }
         public decimal? AveragePrice { get; set; }
+        public int? OffersCount { get; set; }
     }
 }

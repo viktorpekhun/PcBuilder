@@ -23,5 +23,6 @@
         public int? MaxFrequency { get; set; }
 
         public decimal? AveragePrice { get; set; }
+        public int? OffersCount { get; set; }
     }
 }

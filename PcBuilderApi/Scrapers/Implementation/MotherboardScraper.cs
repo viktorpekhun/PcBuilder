@@ -517,7 +517,9 @@ namespace PcBuilderApi.Scrapers.Implementation
                         Console.WriteLine($"Error scraping offer: {ex.Message}");
                     }
                 }
-
+                var avgPrice = offers.Any() ? offers.Average(p => p.Price) : 0;
+                motherboard.AveragePrice = (decimal)avgPrice;
+                motherboard.OffersCount = offers.Count;
             }
 
 

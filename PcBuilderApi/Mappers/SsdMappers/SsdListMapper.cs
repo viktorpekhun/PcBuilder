@@ -9,15 +9,12 @@ namespace PcBuilderApi.Mappers.SsdMappers
     public class SsdListMapper : IComponentListMapper
     {
         public ComponentType ComponentType => ComponentType.Ssd;
-        public IEnumerable<object> MapAll(IEnumerable<object> entities, IEnumerable<ProductOffer> productOffers)
+        public IEnumerable<object> MapAll(IEnumerable<object> entities)
         {
             var ssds = entities.Cast<Ssd>();
-            var filteredOffers = productOffers.Where(p => p.ComponentType == ComponentType);
 
             return ssds.Select(ssd =>
             {
-                var offers = filteredOffers.Where(p => p.ComponentId == ssd.Id);
-                var avgPrice = offers.Any() ? offers.Average(p => p.Price) : 0;
 
                 return new SsdListDto
                 {
@@ -32,7 +29,8 @@ namespace PcBuilderApi.Mappers.SsdMappers
                     FormFactor = ssd.FormFactor,
                     MaxReadSpeed = ssd.MaxReadSpeed,
                     MaxWriteSpeed = ssd.MaxWriteSpeed,
-                    AveragePrice = avgPrice
+                    AveragePrice = ssd.AveragePrice,
+                    OffersCount = ssd.OffersCount,
                 };
             });
         }

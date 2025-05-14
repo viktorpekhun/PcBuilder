@@ -18,7 +18,7 @@ namespace PcBuilderApi.Services.Implementations
             _compatibilityChecker = compatibilityChecker;
         }
 
-        public async Task<List<CompatibilityResult>> AddComponentToBuildAsync(PcBuild pcBuild, Guid componentId, SD.ComponentType componentType)
+        public async Task<List<CompatibilityResult>> CheckComponentCompatibilityAsync(PcBuild pcBuild, Guid componentId, SD.ComponentType componentType)
         {
 
             object component = componentType switch

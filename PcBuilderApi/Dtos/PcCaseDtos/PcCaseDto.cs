@@ -26,7 +26,8 @@ namespace PcBuilderApi.Dtos.PcCaseDtos
         public bool HasHeadphones { get; set; }
         public bool HasMicrophone { get; set; }
         public string? FactoryLink { get; set; }
-
+        public decimal? AveragePrice { get; set; }
+        public int? OffersCount { get; set; }
         public List<PcCaseFormFactorDto> PcCaseFormFactors { get; set; } = new();
         public List<PcCaseFanLocationDto> PcCaseFanLocations { get; set; } = new();
         public List<ProductOfferDto> ProductOffers { get; set; } = new();

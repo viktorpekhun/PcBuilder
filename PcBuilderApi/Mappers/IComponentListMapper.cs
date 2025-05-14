@@ -6,6 +6,6 @@ namespace PcBuilderApi.Mappers
     public interface IComponentListMapper
     {
         ComponentType ComponentType { get; }
-        IEnumerable<object> MapAll(IEnumerable<object> entities, IEnumerable<ProductOffer> productOffers);
+        IEnumerable<object> MapAll(IEnumerable<object> entities);
     }
 }

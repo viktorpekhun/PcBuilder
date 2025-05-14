@@ -7,15 +7,12 @@ namespace PcBuilderApi.Mappers.CpuCoolerMappers
     public class CpuCoolerListMapper : IComponentListMapper
     {
         public ComponentType ComponentType => ComponentType.CpuCooler;
-        public IEnumerable<object> MapAll(IEnumerable<object> entities, IEnumerable<ProductOffer> productOffers)
+        public IEnumerable<object> MapAll(IEnumerable<object> entities)
         {
             var cpuCoolers = entities.Cast<CpuCooler>();
-            var filteredOffers = productOffers.Where(p => p.ComponentType == ComponentType);
 
             return cpuCoolers.Select(cpuCooler =>
             {
-                var offers = filteredOffers.Where(p => p.ComponentId == cpuCooler.Id);
-                var avgPrice = offers.Any() ? offers.Average(p => p.Price) : 0;
                 var cpuCoolerSocketDtos = cpuCooler.CpuCoolerSockets
                     .Select(c => new CpuCoolerSocketDto
                     {
@@ -39,7 +36,8 @@ namespace PcBuilderApi.Mappers.CpuCoolerMappers
                     Length = cpuCooler.Length,
                     Width = cpuCooler.Width,
                     Height = cpuCooler.Height,
-                    AveragePrice = avgPrice,
+                    AveragePrice = cpuCooler.AveragePrice,
+                    OffersCount = cpuCooler.OffersCount,
                     CpuCoolerSockets = cpuCoolerSocketDtos
                 };
             });

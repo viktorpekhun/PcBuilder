@@ -43,6 +43,8 @@ namespace PcBuilderApi.Dtos.GpuDtos
         public int? PsuReccomended { get; set; }
 
         public string? FactoryLink { get; set; }
+        public decimal? AveragePrice { get; set; }
+        public int? OffersCount { get; set; }
 
         public List<GpuPowerConnectorDto> GpuPowerConnectors { get; set; } = new();
 

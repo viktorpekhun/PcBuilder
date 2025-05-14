@@ -22,6 +22,7 @@
         public string? FormFactor { get; set; }
         public string? SizeDimentions { get; set; }
         public decimal? AveragePrice { get; set; }
+        public int? OffersCount { get; set; }
         public List<PcleSlotDto> PcleSlots { get; set; } = new();
     }
 }

@@ -7,15 +7,12 @@ namespace PcBuilderApi.Mappers.RamMappers
     public class RamListMapper : IComponentListMapper
     {
         public ComponentType ComponentType => ComponentType.Ram;
-        public IEnumerable<object> MapAll(IEnumerable<object> entities, IEnumerable<ProductOffer> productOffers)
+        public IEnumerable<object> MapAll(IEnumerable<object> entities)
         {
             var rams = entities.Cast<Ram>();
-            var filteredOffers = productOffers.Where(p => p.ComponentType == ComponentType);
 
             return rams.Select(ram =>
             {
-                var offers = filteredOffers.Where(p => p.ComponentId == ram.Id);
-                var avgPrice = offers.Any() ? offers.Average(p => p.Price) : 0;
 
                 return new RamListDto
                 {
@@ -29,7 +26,8 @@ namespace PcBuilderApi.Mappers.RamMappers
                     Timings = ram.Timings,
                     Voltage = ram.Voltage,
                     Xmp = ram.Xmp,
-                    AveragePrice = avgPrice
+                    AveragePrice = ram.AveragePrice,
+                    OffersCount = ram.OffersCount,
                 };
             });
         }

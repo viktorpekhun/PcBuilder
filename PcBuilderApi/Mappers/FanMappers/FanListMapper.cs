@@ -9,15 +9,12 @@ namespace PcBuilderApi.Mappers.FanMappers
     public class FanListMapper : IComponentListMapper
     {
         public ComponentType ComponentType => ComponentType.Fan;
-        public IEnumerable<object> MapAll(IEnumerable<object> entities, IEnumerable<ProductOffer> productOffers)
+        public IEnumerable<object> MapAll(IEnumerable<object> entities)
         {
             var fans = entities.Cast<Fan>();
-            var filteredOffers = productOffers.Where(p => p.ComponentType == ComponentType);
 
             return fans.Select(fan =>
             {
-                var offers = filteredOffers.Where(p => p.ComponentId == fan.Id);
-                var avgPrice = offers.Any() ? offers.Average(p => p.Price) : 0;
 
                 return new FanListDto
                 {
@@ -35,7 +32,8 @@ namespace PcBuilderApi.Mappers.FanMappers
                     SizeLength = fan.SizeLength,
                     SizeWidth = fan.SizeWidth,
                     SizeHeight = fan.SizeHeight,
-                    AveragePrice = avgPrice
+                    AveragePrice = fan.AveragePrice,
+                    OffersCount = fan.OffersCount,
                 };
             });
         }

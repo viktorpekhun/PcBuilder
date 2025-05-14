@@ -53,6 +53,9 @@ namespace PcBuilderApi.Models
         [Url]
         public string? FactoryLink { get; set; }
 
+        public decimal? AveragePrice { get; set; }
+        public int? OffersCount { get; set; }
+
         public List<CpuCoolerSocket> CpuCoolerSockets { get; set; } = new();
 
         public List<PcBuild> PcBuilds { get; set; } = new();

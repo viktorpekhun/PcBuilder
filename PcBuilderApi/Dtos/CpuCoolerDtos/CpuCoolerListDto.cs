@@ -21,6 +21,7 @@ namespace PcBuilderApi.Dtos.CpuCoolerDtos
         public double? Width { get; set; }
         public double? Height { get; set; }
         public decimal? AveragePrice { get; set; }
+        public int? OffersCount { get; set; }
 
         public List<CpuCoolerSocketDto> CpuCoolerSockets { get; set; } = new();
     }

@@ -8,14 +8,11 @@ namespace PcBuilderApi.Mappers.MotherboardMappers
     public class MotherboardListMapper : IComponentListMapper
     {
         public ComponentType ComponentType => ComponentType.Motherboard;
-        public IEnumerable<object> MapAll(IEnumerable<object> entities, IEnumerable<ProductOffer> productOffers)
+        public IEnumerable<object> MapAll(IEnumerable<object> entities)
         {
             var motherboards = entities.Cast<Motherboard>();
-            var filteredOffers = productOffers.Where(p => p.ComponentType == ComponentType);
             return motherboards.Select(motherboard =>
             {
-                var offers = filteredOffers.Where(p => p.ComponentId == motherboard.Id);
-                var avgPrice = offers.Any() ? offers.Average(p => p.Price) : 0;
                 var pcleSlotDtos = motherboard.PcleSlots
                     .Select(c => new PcleSlotDto
                     {
@@ -38,7 +35,8 @@ namespace PcBuilderApi.Mappers.MotherboardMappers
                     DimmCapacity = motherboard.DimmCapacity,
                     FormFactor = motherboard.FormFactor,
                     SizeDimentions = motherboard.SizeDimentions,
-                    AveragePrice = avgPrice,
+                    AveragePrice = motherboard.AveragePrice,
+                    OffersCount = motherboard.OffersCount,
                     PcleSlots = pcleSlotDtos
                 };
             });
