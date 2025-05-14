@@ -12,7 +12,7 @@ namespace PcBuilderApi.Services.Interfaces
         Task<List<PcBuild>> GetAllBuildsAsync();
         Task<List<PcBuild>> GetUserBuildsAsync(Guid userId);
         Task<bool> UpdateBuildAsync(PcBuild pcBuild);
-        Task<List<CompatibilityResult>> AddComponentToBuildAsync(PcBuild pcBuild, Guid componentId, ComponentType componentType);
+        Task<List<CompatibilityResult>> CheckComponentCompatibilityAsync(PcBuild pcBuild, Guid componentId, ComponentType componentType);
         Task<bool> RemoveComponentFromBuildAsync(PcBuild pcBuild, Guid componentId, ComponentType componentType);
     }
 }

@@ -322,9 +322,11 @@ namespace PcBuilderApi.Scrapers.Implementation
                         Console.WriteLine($"Error scraping offer: {ex.Message}");
                     }
                 }
-
+                var avgPrice = offers.Any() ? offers.Average(p => p.Price) : 0;
+                cpuCooler.AveragePrice = (decimal)avgPrice;
+                cpuCooler.OffersCount = offers.Count;
             }
-
+            
 
             return new ScrapingResult<CpuCooler>(cpuCooler, stores, offers);
         }

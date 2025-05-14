@@ -12,5 +12,6 @@
         public int? Cores { get; set; }
         public int? Threads { get; set; }
         public decimal? AveragePrice { get; set; }
+        public int? OffersCount { get; set; }
     }
 }

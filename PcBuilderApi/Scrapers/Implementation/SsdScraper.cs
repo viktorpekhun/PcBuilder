@@ -83,7 +83,7 @@ namespace PcBuilderApi.Scrapers.Implementation
                                 ssd.NandType = value ?? string.Empty;
                                 break;
                             case "Підтримка TRIM":
-                                if (value.ToLower() == "є")
+                                if (value?.ToLower() == "є")
                                     ssd.IsTrimmSupported = true;
                                 else
                                     ssd.IsTrimmSupported = false;
@@ -231,7 +231,9 @@ namespace PcBuilderApi.Scrapers.Implementation
                         Console.WriteLine($"Error scraping offer: {ex.Message}");
                     }
                 }
-
+                var avgPrice = offers.Any() ? offers.Average(p => p.Price) : 0;
+                ssd.AveragePrice = (decimal)avgPrice;
+                ssd.OffersCount = offers.Count;
             }
 
 

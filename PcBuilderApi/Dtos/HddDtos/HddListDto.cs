@@ -12,5 +12,6 @@
         public int? SpindleSpeed { get; set; }
         public int? Cache { get; set; }
         public decimal? AveragePrice{ get; set; }
+        public int? OffersCount { get; set; }
     }
 }
