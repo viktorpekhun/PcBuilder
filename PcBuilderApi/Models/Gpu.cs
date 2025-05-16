@@ -25,6 +25,10 @@ namespace PcBuilderApi.Models
         [MaxLength(100)]
         public string GpuManufacturer { get; set; } = string.Empty;
 
+        [Required]
+        [MaxLength(100)]
+        public string GpuModel { get; set; } = string.Empty;
+
         public int? Memory { get; set; }
 
         [MaxLength(20)]
@@ -54,6 +58,8 @@ namespace PcBuilderApi.Models
 
         [Url]
         public string? FactoryLink { get; set; }
+        public decimal? AveragePrice { get; set; }
+        public int? OffersCount { get; set; }
 
         public List<GpuPowerConnector> GpuPowerConnectors { get; set; } = new();
 

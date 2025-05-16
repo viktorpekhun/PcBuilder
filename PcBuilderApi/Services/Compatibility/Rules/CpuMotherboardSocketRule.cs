@@ -17,6 +17,11 @@ namespace PcBuilderApi.Services.Compatibility.Rules
 
             if (cpu == null || motherboard == null)
             {
+                return result;
+            }
+
+            if (string.IsNullOrEmpty(pcBuild.Cpu.Socket) || string.IsNullOrEmpty(pcBuild.Motherboard.Socket))
+            {
                 result.Messages.Add(new CompatibilityMessage
                 {
                     Type = CompatibilityMessageType.Warning,

@@ -22,7 +22,8 @@ namespace PcBuilderApi.Dtos.PowerSupplyDtos
         public double? NoiseLevelMaxDb { get; set; }
         public string? Size { get; set; }
         public string? FactoryLink { get; set; }
-
+        public decimal? AveragePrice { get; set; }
+        public int? OffersCount { get; set; }
         public List<PowerSupplyPowerConnectorDto> PowerSupplyPowerConnectors { get; set; } = new();
         public List<ProductOfferDto> ProductOffers { get; set; } = new();
     }

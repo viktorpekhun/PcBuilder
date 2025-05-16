@@ -7,15 +7,12 @@ namespace PcBuilderApi.Mappers.CpuMappers
     public class CpuListMapper : IComponentListMapper
     {
         public ComponentType ComponentType => ComponentType.Cpu;
-        public IEnumerable<object> MapAll(IEnumerable<object> entities, IEnumerable<ProductOffer> productOffers)
+        public IEnumerable<object> MapAll(IEnumerable<object> entities)
         {
             var cpus = entities.Cast<Cpu>();
-            var filteredOffers = productOffers.Where(p => p.ComponentType == ComponentType);
 
             return cpus.Select(cpu =>
             {
-                var offers = filteredOffers.Where(p => p.ComponentId == cpu.Id);
-                var avgPrice = offers.Any() ? offers.Average(p => p.Price) : 0;
 
                 return new CpuListDto
                 {
@@ -28,7 +25,8 @@ namespace PcBuilderApi.Mappers.CpuMappers
                     MaxFrequency = cpu.MaxFrequency,
                     Cores = cpu.Cores,
                     Threads = cpu.Threads,
-                    AveragePrice = avgPrice
+                    AveragePrice = cpu.AveragePrice,
+                    OffersCount = cpu.OffersCount,
                 };
             });
         }

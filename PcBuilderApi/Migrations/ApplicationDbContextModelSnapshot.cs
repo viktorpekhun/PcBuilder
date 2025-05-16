@@ -28,6 +28,10 @@ namespace PcBuilderApi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<decimal?>("AveragePrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<double?>("BasicFrequency")
                         .HasColumnType("float");
 
@@ -68,6 +72,9 @@ namespace PcBuilderApi.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<int?>("OffersCount")
+                        .HasColumnType("int");
+
                     b.Property<string>("PhotoUrl")
                         .HasColumnType("nvarchar(max)");
 
@@ -99,6 +106,10 @@ namespace PcBuilderApi.Migrations
 
                     b.Property<double?>("AirflowCfm")
                         .HasColumnType("float");
+
+                    b.Property<decimal?>("AveragePrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Brand")
                         .IsRequired()
@@ -143,6 +154,9 @@ namespace PcBuilderApi.Migrations
 
                     b.Property<double?>("NoiseLevelDb")
                         .HasColumnType("float");
+
+                    b.Property<int?>("OffersCount")
+                        .HasColumnType("int");
 
                     b.Property<string>("PhotoUrl")
                         .HasColumnType("nvarchar(max)");
@@ -236,6 +250,10 @@ namespace PcBuilderApi.Migrations
                     b.Property<double?>("AirflowCfm")
                         .HasColumnType("float");
 
+                    b.Property<decimal?>("AveragePrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("BearingType")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -277,6 +295,9 @@ namespace PcBuilderApi.Migrations
                     b.Property<double?>("NoiseLevelDb")
                         .HasColumnType("float");
 
+                    b.Property<int?>("OffersCount")
+                        .HasColumnType("int");
+
                     b.Property<string>("PhotoUrl")
                         .HasColumnType("nvarchar(max)");
 
@@ -313,6 +334,10 @@ namespace PcBuilderApi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<decimal?>("AveragePrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("Brand")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -329,6 +354,11 @@ namespace PcBuilderApi.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("GpuManufacturer")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("GpuModel")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -353,6 +383,9 @@ namespace PcBuilderApi.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<int?>("OffersCount")
+                        .HasColumnType("int");
 
                     b.Property<int?>("PcleLane")
                         .HasColumnType("int");
@@ -411,6 +444,10 @@ namespace PcBuilderApi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<decimal?>("AveragePrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("Brand")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -442,6 +479,9 @@ namespace PcBuilderApi.Migrations
                         .HasColumnType("nvarchar(255)");
 
                     b.Property<int?>("NoiceDb")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("OffersCount")
                         .HasColumnType("int");
 
                     b.Property<string>("PhotoUrl")
@@ -526,6 +566,10 @@ namespace PcBuilderApi.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<decimal?>("AveragePrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("Bluetooth")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -575,6 +619,9 @@ namespace PcBuilderApi.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<int?>("OffersCount")
+                        .HasColumnType("int");
 
                     b.Property<int?>("PcleX1Quantity")
                         .HasColumnType("int");
@@ -792,6 +839,10 @@ namespace PcBuilderApi.Migrations
                         .HasMaxLength(400)
                         .HasColumnType("nvarchar(400)");
 
+                    b.Property<decimal?>("AveragePrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("Brand")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -830,6 +881,9 @@ namespace PcBuilderApi.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<int?>("OffersCount")
+                        .HasColumnType("int");
 
                     b.Property<string>("PhotoUrl")
                         .HasColumnType("nvarchar(max)");
@@ -949,6 +1003,10 @@ namespace PcBuilderApi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<decimal?>("AveragePrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("Brand")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -998,6 +1056,9 @@ namespace PcBuilderApi.Migrations
 
                     b.Property<double?>("NoiseLevelMaxDb")
                         .HasColumnType("float");
+
+                    b.Property<int?>("OffersCount")
+                        .HasColumnType("int");
 
                     b.Property<string>("PhotoUrl")
                         .HasColumnType("nvarchar(max)");
@@ -1085,6 +1146,10 @@ namespace PcBuilderApi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<decimal?>("AveragePrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("Brand")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -1124,6 +1189,9 @@ namespace PcBuilderApi.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<int?>("OffersCount")
+                        .HasColumnType("int");
 
                     b.Property<string>("PhotoUrl")
                         .HasColumnType("nvarchar(max)");
@@ -1219,6 +1287,10 @@ namespace PcBuilderApi.Migrations
                     b.Property<double?>("AverageLifeTime")
                         .HasColumnType("float");
 
+                    b.Property<decimal?>("AveragePrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("Brand")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -1259,6 +1331,9 @@ namespace PcBuilderApi.Migrations
                     b.Property<string>("NandType")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("OffersCount")
+                        .HasColumnType("int");
 
                     b.Property<string>("PhotoUrl")
                         .HasColumnType("nvarchar(max)");

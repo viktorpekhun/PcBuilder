@@ -15,6 +15,7 @@ namespace PcBuilderApi.Dtos.GpuDtos
         public string Brand { get; set; } = string.Empty;
 
         public string GpuManufacturer { get; set; } = string.Empty;
+        public string GpuModel { get; set; } = string.Empty;
 
         public int? Memory { get; set; }
 
@@ -43,6 +44,8 @@ namespace PcBuilderApi.Dtos.GpuDtos
         public int? PsuReccomended { get; set; }
 
         public string? FactoryLink { get; set; }
+        public decimal? AveragePrice { get; set; }
+        public int? OffersCount { get; set; }
 
         public List<GpuPowerConnectorDto> GpuPowerConnectors { get; set; } = new();
 

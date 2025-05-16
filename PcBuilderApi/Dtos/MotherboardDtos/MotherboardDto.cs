@@ -44,6 +44,8 @@ namespace PcBuilderApi.Dtos.MotherboardDtos
         public int? Wattage { get; set; }
 
         public string? FactoryLink { get; set; }
+        public decimal? AveragePrice { get; set; }
+        public int? OffersCount { get; set; }
 
         public List<CpuPowerConnectorDto> CpuPowerConnectors { get; set; } = new();
         public List<PcleSlotDto> PcleSlots { get; set; } = new();

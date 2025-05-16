@@ -382,6 +382,7 @@ namespace PcBuilderApi.Scrapers.Implementation
 
                         }
                     }
+
                     if (motherboard.FormFactor != null && motherboard.FormFactor != "" && motherboard.FormFactor != string.Empty)
                     {
                         switch (motherboard.FormFactor.ToLower())
@@ -517,7 +518,9 @@ namespace PcBuilderApi.Scrapers.Implementation
                         Console.WriteLine($"Error scraping offer: {ex.Message}");
                     }
                 }
-
+                var avgPrice = offers.Any() ? offers.Average(p => p.Price) : 0;
+                motherboard.AveragePrice = (decimal)avgPrice;
+                motherboard.OffersCount = offers.Count;
             }
 
 

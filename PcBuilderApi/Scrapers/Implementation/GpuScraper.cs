@@ -75,6 +75,9 @@ namespace PcBuilderApi.Scrapers.Implementation
                             case "Виробник GPU":
                                 gpu.GpuManufacturer = value ?? string.Empty;
                                 break;
+                            case "GPU":
+                                gpu.GpuModel = value ?? string.Empty;
+                                break;
                             case "Об'єм пам'яті, ГБ":
                                 gpu.Memory = ParseInt(value);
                                 break;
@@ -158,6 +161,10 @@ namespace PcBuilderApi.Scrapers.Implementation
                                     break;
                                 }
                         }
+                    }
+                    if (string.IsNullOrEmpty(gpu.GpuModel))
+                    {
+                        return new ScrapingResult<Gpu>(null, new List<Store>(), new List<ProductOffer>());
                     }
                     var existingGpu = componentsFromDb.FirstOrDefault(s => s.Name == gpu.Name);
                     if (existingGpu != null)
@@ -263,7 +270,9 @@ namespace PcBuilderApi.Scrapers.Implementation
                         Console.WriteLine($"Error scraping offer: {ex.Message}");
                     }
                 }
-                
+                var avgPrice = offers.Any() ? offers.Average(p => p.Price) : 0;
+                gpu.AveragePrice = (decimal)avgPrice;
+                gpu.OffersCount = offers.Count;
             }
             
 

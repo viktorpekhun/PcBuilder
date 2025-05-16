@@ -109,7 +109,7 @@ namespace PcBuilderApi.Scrapers.Implementation
                                     ram.Ecc = false;
                                 break;
                             case "Підтримка AMD EXPO":
-                                if (value.ToLower() == "є")
+                                if (value?.ToLower() == "є")
                                     ram.Expo = true;
                                 else
                                     ram.Expo = false;
@@ -238,7 +238,9 @@ namespace PcBuilderApi.Scrapers.Implementation
                         Console.WriteLine($"Error scraping offer: {ex.Message}");
                     }
                 }
-
+                var avgPrice = offers.Any() ? offers.Average(p => p.Price) : 0;
+                ram.AveragePrice = (decimal)avgPrice;
+                ram.OffersCount = offers.Count;
             }
 
 

@@ -7,15 +7,12 @@ namespace PcBuilderApi.Mappers.HddMappers
     public class HddListMapper : IComponentListMapper
     {
         public ComponentType ComponentType => ComponentType.Hdd;
-        public IEnumerable<object> MapAll(IEnumerable<object> entities, IEnumerable<ProductOffer> productOffers)
+        public IEnumerable<object> MapAll(IEnumerable<object> entities)
         {
             var hdds = entities.Cast<Hdd>();
-            var filteredOffers = productOffers.Where(p => p.ComponentType == ComponentType);
 
             return hdds.Select(hdd =>
             {
-                var offers = filteredOffers.Where(p => p.ComponentId == hdd.Id);
-                var avgPrice = offers.Any() ? offers.Average(p => p.Price) : 0;
 
                 return new HddListDto
                 {
@@ -28,7 +25,8 @@ namespace PcBuilderApi.Mappers.HddMappers
                     FormFactor = hdd.FormFactor,
                     SpindleSpeed = hdd.SpindleSpeed,
                     Cache = hdd.Cache,
-                    AveragePrice = avgPrice
+                    AveragePrice = hdd.AveragePrice,
+                    OffersCount = hdd.OffersCount,
                 };
             });
         }

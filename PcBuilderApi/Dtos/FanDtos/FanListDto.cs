@@ -17,5 +17,6 @@
         public double? SizeWidth { get; set; }
         public double? SizeHeight { get; set; }
         public decimal? AveragePrice { get; set; }
+        public int? OffersCount { get; set; }
     }
 }

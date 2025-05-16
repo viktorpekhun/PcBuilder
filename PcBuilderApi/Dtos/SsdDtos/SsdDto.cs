@@ -23,6 +23,8 @@ namespace PcBuilderApi.Dtos.SsdDtos
         public double? AverageLifeTime { get; set; }
         public int Wattage { get; set; }
         public string? FactoryLink { get; set; }
+        public decimal? AveragePrice { get; set; }
+        public int? OffersCount { get; set; }
         public List<ProductOfferDto> ProductOffers { get; set; } = new();
     }
 }

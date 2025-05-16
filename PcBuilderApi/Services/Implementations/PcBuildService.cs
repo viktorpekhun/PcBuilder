@@ -1,4 +1,5 @@
-﻿using PcBuilderApi.Models;
+﻿using PcBuilderApi.Dtos.PcBuildDtos;
+using PcBuilderApi.Models;
 using PcBuilderApi.Repositories.Interfaces;
 using PcBuilderApi.Services.Compatibility;
 using PcBuilderApi.Services.Interfaces;
@@ -18,135 +19,91 @@ namespace PcBuilderApi.Services.Implementations
             _compatibilityChecker = compatibilityChecker;
         }
 
-        public async Task<List<CompatibilityResult>> AddComponentToBuildAsync(PcBuild pcBuild, Guid componentId, SD.ComponentType componentType)
+        public async Task<List<CompatibilityResult>> CheckComponentsCompatibilityAsync(ComponentsCompatibilityDto dto)
         {
 
-            object component = componentType switch
-            {
-                SD.ComponentType.Cpu => await _unitOfWork.Repository<Cpu>().GetFirstOrDefaultAsync(c => c.Id == componentId),
-                SD.ComponentType.Gpu => await _unitOfWork.Repository<Gpu>().GetFirstOrDefaultAsync(m => m.Id == componentId),
-                SD.ComponentType.Ram => await _unitOfWork.Repository<Ram>().GetFirstOrDefaultAsync(g => g.Id == componentId),
-                SD.ComponentType.Motherboard => await _unitOfWork.Repository<Motherboard>().GetFirstOrDefaultAsync(g => g.Id == componentId),
-                SD.ComponentType.CpuCooler => await _unitOfWork.Repository<CpuCooler>().GetFirstOrDefaultAsync(g => g.Id == componentId),
-                SD.ComponentType.PcCase => await _unitOfWork.Repository<PcCase>().GetFirstOrDefaultAsync(g => g.Id == componentId),
-                SD.ComponentType.PowerSupply => await _unitOfWork.Repository<PowerSupply>().GetFirstOrDefaultAsync(g => g.Id == componentId),
-                SD.ComponentType.Ssd => await _unitOfWork.Repository<Ssd>().GetFirstOrDefaultAsync(g => g.Id == componentId),
-                SD.ComponentType.Hdd => await _unitOfWork.Repository<Hdd>().GetFirstOrDefaultAsync(g => g.Id == componentId),
-                SD.ComponentType.Fan => await _unitOfWork.Repository<Fan>().GetFirstOrDefaultAsync(g => g.Id == componentId),
-                _ => throw new InvalidOperationException("Unsupported component type")
-            };
+            var tempBuild = new PcBuild();
 
-            switch (componentType)
+            if (dto.CpuId.HasValue)
+                tempBuild.Cpu = await _unitOfWork.Repository<Cpu>().GetFirstOrDefaultAsync(c => c.Id == dto.CpuId.Value);
+
+            if (dto.MotherboardId.HasValue)
+                tempBuild.Motherboard = await _unitOfWork.Repository<Motherboard>().GetFirstOrDefaultAsync(m => m.Id == dto.MotherboardId.Value, includeProperties: "CpuPowerConnectors,PcleSlots,M2Slots");
+
+            if (dto.GpuId.HasValue)
+                tempBuild.Gpu = await _unitOfWork.Repository<Gpu>().GetFirstOrDefaultAsync(g => g.Id == dto.GpuId.Value, includeProperties: "GpuPowerConnectors");
+
+            if (dto.PowerSupplyId.HasValue)
+                tempBuild.PowerSupply = await _unitOfWork.Repository<PowerSupply>().GetFirstOrDefaultAsync(p => p.Id == dto.PowerSupplyId.Value, includeProperties: "PowerSupplyPowerConnectors");
+
+            if (dto.CpuCoolerId.HasValue)
+                tempBuild.CpuCooler = await _unitOfWork.Repository<CpuCooler>().GetFirstOrDefaultAsync(c => c.Id == dto.CpuCoolerId.Value, includeProperties: "CpuCoolerSockets");
+
+            if (dto.PcCaseId.HasValue)
+                tempBuild.PcCase = await _unitOfWork.Repository<PcCase>().GetFirstOrDefaultAsync(c => c.Id == dto.PcCaseId.Value, includeProperties: "PcCaseFormFactors,PcCaseFanLocations");
+
+            foreach (var ramDto in dto.Rams)
             {
-                case SD.ComponentType.Cpu:
-                    pcBuild.Cpu = (Cpu)component;
-                    break;
-                case SD.ComponentType.Gpu:
-                    pcBuild.Gpu = (Gpu)component;
-                    break;
-                case SD.ComponentType.Motherboard:
-                    pcBuild.Motherboard = (Motherboard)component;
-                    break;
-                case SD.ComponentType.CpuCooler:
-                    pcBuild.CpuCooler = (CpuCooler)component;
-                    break;
-                case SD.ComponentType.PcCase:
-                    pcBuild.PcCase = (PcCase)component;
-                    break;
-                case SD.ComponentType.PowerSupply:
-                    pcBuild.PowerSupply = (PowerSupply)component;
-                    break;
-                case SD.ComponentType.Ram:
+                var ram = await _unitOfWork.Repository<Ram>().GetFirstOrDefaultAsync(r => r.Id == ramDto.ComponentId);
+                if (ram != null)
+                {
+                    tempBuild.PcBuild_Rams.Add(new PcBuild_Ram
                     {
-                        var ram = (Ram)component;
-                        var existing = pcBuild.PcBuild_Rams.FirstOrDefault(x => x.RamId == ram.Id);
-                        if (existing != null)
-                        {
-                            existing.Quantity++;
-                        }
-                        else
-                        {
-                            pcBuild.PcBuild_Rams.Add(new PcBuild_Ram
-                            {
-                                RamId = ram.Id,
-                                Ram = ram,
-                                PcBuildId = pcBuild.Id,
-                                PcBuild = pcBuild,
-                                Quantity = 1
-                            });
-                        }
-                        break;
-                    }
-                case SD.ComponentType.Ssd:
-                    {
-                        var ssd = (Ssd)component;
-                        var existing = pcBuild.PcBuild_Ssds.FirstOrDefault(x => x.SsdId == ssd.Id);
-                        if (existing != null)
-                        {
-                            existing.Quantity++;
-                        }
-                        else
-                        {
-                            pcBuild.PcBuild_Ssds.Add(new PcBuild_Ssd
-                            {
-                                SsdId = ssd.Id,
-                                Ssd = ssd,
-                                PcBuildId = pcBuild.Id,
-                                PcBuild = pcBuild,
-                                Quantity = 1
-                            });
-                        }
-                        break;
-                    }
-                case SD.ComponentType.Hdd:
-                    {
-                        var hdd = (Hdd)component;
-                        var existing = pcBuild.PcBuild_Hdds.FirstOrDefault(x => x.HddId == hdd.Id);
-                        if (existing != null)
-                        {
-                            existing.Quantity++;
-                        }
-                        else
-                        {
-                            pcBuild.PcBuild_Hdds.Add(new PcBuild_Hdd
-                            {
-                                HddId = hdd.Id,
-                                Hdd = hdd,
-                                PcBuildId = pcBuild.Id,
-                                PcBuild = pcBuild,
-                                Quantity = 1
-                            });
-                        }
-                        break;
-                    }
-                case SD.ComponentType.Fan:
-                    {
-                        var fan = (Fan)component;
-                        var existing = pcBuild.PcBuild_Fans.FirstOrDefault(x => x.FanId == fan.Id);
-                        if (existing != null)
-                        {
-                            existing.Quantity++;
-                        }
-                        else
-                        {
-                            pcBuild.PcBuild_Fans.Add(new PcBuild_Fan
-                            {
-                                FanId = fan.Id,
-                                Fan = fan,
-                                PcBuildId = pcBuild.Id,
-                                PcBuild = pcBuild,
-                                Quantity = 1
-                            });
-                        }
-                        break;
-                    }
-                default:
-                    throw new InvalidOperationException("Unsupported component type");
+                        Ram = ram,
+                        RamId = ram.Id,
+                        PcBuild = tempBuild,
+                        Quantity = ramDto.Quantity
+                    });
+                }
             }
 
-            var result = _compatibilityChecker.CheckAll(pcBuild);
+            foreach (var ssdDto in dto.Ssds)
+            {
+                var ssd = await _unitOfWork.Repository<Ssd>().GetFirstOrDefaultAsync(s => s.Id == ssdDto.ComponentId);
+                if (ssd != null)
+                {
+                    tempBuild.PcBuild_Ssds.Add(new PcBuild_Ssd
+                    {
+                        Ssd = ssd,
+                        SsdId = ssd.Id,
+                        PcBuild = tempBuild,
+                        Quantity = ssdDto.Quantity
+                    });
+                }
+            }
 
-            return result;
+            foreach (var hddDto in dto.Hdds)
+            {
+                var hdd = await _unitOfWork.Repository<Hdd>().GetFirstOrDefaultAsync(h => h.Id == hddDto.ComponentId);
+                if (hdd != null)
+                {
+                    tempBuild.PcBuild_Hdds.Add(new PcBuild_Hdd
+                    {
+                        Hdd = hdd,
+                        HddId = hdd.Id,
+                        PcBuild = tempBuild,
+                        Quantity = hddDto.Quantity
+                    });
+                }
+            }
+
+            foreach (var fanDto in dto.Fans)
+            {
+                var fan = await _unitOfWork.Repository<Fan>().GetFirstOrDefaultAsync(f => f.Id == fanDto.ComponentId);
+                if (fan != null)
+                {
+                    tempBuild.PcBuild_Fans.Add(new PcBuild_Fan
+                    {
+                        Fan = fan,
+                        FanId = fan.Id,
+                        PcBuild = tempBuild,
+                        Quantity = fanDto.Quantity
+                    });
+                }
+            }
+
+            var results = _compatibilityChecker.CheckAll(tempBuild);
+            return results;
         }
 
         public Task<bool> DeleteBuildAsync(Guid pcBuildId)
@@ -165,11 +122,6 @@ namespace PcBuilderApi.Services.Implementations
         }
 
         public Task<List<PcBuild>> GetUserBuildsAsync(Guid userId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<bool> RemoveComponentFromBuildAsync(PcBuild pcBuild, Guid componentId, SD.ComponentType componentType)
         {
             throw new NotImplementedException();
         }

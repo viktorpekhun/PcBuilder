@@ -186,7 +186,7 @@ namespace PcBuilderApi.Scrapers.Implementation
                                     foreach (var formFactorName in formFactors)
                                     {
                                         string newFormFactorName = formFactorName.ToLower();
-                                        if (newFormFactorName == "extended atx" || newFormFactorName == "e-atx")
+                                        if (newFormFactorName == "extended atx" || newFormFactorName == "e-atx" || newFormFactorName == "eatx")
                                         {
                                             newFormFactorName = "E-ATX";
                                         }
@@ -379,7 +379,9 @@ namespace PcBuilderApi.Scrapers.Implementation
                         Console.WriteLine($"Error scraping offer: {ex.Message}");
                     }
                 }
-
+                var avgPrice = offers.Any() ? offers.Average(p => p.Price) : 0;
+                pcCase.AveragePrice = (decimal)avgPrice;
+                pcCase.OffersCount = offers.Count;
             }
 
 

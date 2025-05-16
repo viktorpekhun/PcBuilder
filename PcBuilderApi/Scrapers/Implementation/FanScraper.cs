@@ -4,7 +4,6 @@ using PcBuilderApi.Models;
 using PcBuilderApi.Utilities;
 using System.Collections.Concurrent;
 using System.Globalization;
-using System.Runtime.Intrinsics.X86;
 using System.Text.RegularExpressions;
 
 namespace PcBuilderApi.Scrapers.Implementation
@@ -237,6 +236,9 @@ namespace PcBuilderApi.Scrapers.Implementation
                         Console.WriteLine($"Error scraping offer: {ex.Message}");
                     }
                 }
+                var avgPrice = offers.Any() ? offers.Average(p => p.Price) : 0;
+                fan.AveragePrice = (decimal)avgPrice;
+                fan.OffersCount = offers.Count;
             }
 
             return new ScrapingResult<Fan>(fan, stores, offers);

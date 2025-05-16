@@ -13,6 +13,7 @@
         public bool HasDustFilters { get; set; }
         public string? Usb { get; set; }
         public decimal? AveragePrice { get; set; }
+        public int? OffersCount { get; set; }
 
         public List<PcCaseFormFactorDto> PcCaseFormFactors { get; set; } = new();
     }

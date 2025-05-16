@@ -46,8 +46,7 @@ namespace PcBuilderApi.Services.Implementations
                 _ => throw new ArgumentException("Unsupported component type")
             };
 
-            var offers = await _unitOfWork.Repository<ProductOffer>().GetAllAsync(p => p.ComponentType == componentType);
-            var mappedItems = mapper.MapAll(componentEntities, offers).ToList();
+            var mappedItems = mapper.MapAll(componentEntities).ToList();
 
             return new PagedResponse<object>(mappedItems, totalCount, parameters);
         }

@@ -11,6 +11,7 @@
         public string Brand { get; set; } = string.Empty;
 
         public string GpuManufacturer { get; set; } = string.Empty;
+        public string GpuModel { get; set; } = string.Empty;
 
         public int? Memory { get; set; }
 
@@ -23,5 +24,6 @@
         public int? MaxFrequency { get; set; }
 
         public decimal? AveragePrice { get; set; }
+        public int? OffersCount { get; set; }
     }
 }

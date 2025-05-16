@@ -80,6 +80,7 @@ namespace PcBuilderApi.Data
             modelBuilder.Entity<CpuCooler>(entity =>
             {
                 entity.ToTable(t => t.HasCheckConstraint("CHK_CpuCooler_Type", "Type IN ('Air', 'Water')"));
+
             });
 
             modelBuilder.Entity<CpuCoolerSocket>()
@@ -202,6 +203,46 @@ namespace PcBuilderApi.Data
 
             modelBuilder.Entity<ProductOffer>()
                 .Property(p => p.Price)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Cpu>()
+                .Property(p => p.AveragePrice)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Gpu>()
+                .Property(p => p.AveragePrice)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Ram>()
+                .Property(p => p.AveragePrice)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Motherboard>()
+                .Property(p => p.AveragePrice)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<CpuCooler>()
+                .Property(p => p.AveragePrice)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<PcCase>()
+                .Property(p => p.AveragePrice)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<PowerSupply>()
+                .Property(p => p.AveragePrice)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Ssd>()
+                .Property(p => p.AveragePrice)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Hdd>()
+                .Property(p => p.AveragePrice)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Fan>()
+                .Property(p => p.AveragePrice)
                 .HasPrecision(18, 2);
         }
     }
