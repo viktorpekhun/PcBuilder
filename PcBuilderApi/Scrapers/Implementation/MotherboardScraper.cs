@@ -382,6 +382,7 @@ namespace PcBuilderApi.Scrapers.Implementation
 
                         }
                     }
+
                     if (motherboard.FormFactor != null && motherboard.FormFactor != "" && motherboard.FormFactor != string.Empty)
                     {
                         switch (motherboard.FormFactor.ToLower())

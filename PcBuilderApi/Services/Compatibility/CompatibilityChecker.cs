@@ -13,10 +13,9 @@ namespace PcBuilderApi.Services.Compatibility
 
         public List<CompatibilityResult> CheckAll(PcBuild pcBuild)
         {
-            return _rules
-                .Select(rule => rule.Check(pcBuild))
-                .Where(result => !result.IsCompatible)
-                .ToList();
+            return _rules.Select(rule => rule.Check(pcBuild))
+                 .Where(result => result.Messages.Any())
+                 .ToList();
         }
     }
 }

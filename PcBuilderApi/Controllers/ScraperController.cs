@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PcBuilderApi.Models;
 using PcBuilderApi.Services.Implementations;
+using PcBuilderApi.Services.Interfaces;
 using static PcBuilderApi.Utilities.SD;
 
 namespace PcBuilderApi.Controllers
@@ -10,10 +11,12 @@ namespace PcBuilderApi.Controllers
     public class ScraperController : ControllerBase
     {
         private readonly ScraperService _scraperService;
+        private readonly IDataCorrectionService _dataCorrectionService;
 
-        public ScraperController(ScraperService scraperService)
+        public ScraperController(ScraperService scraperService, IDataCorrectionService dataCorrectionService)
         {
             _scraperService = scraperService;
+            _dataCorrectionService = dataCorrectionService;
         }
 
         [HttpPost("cpu")]
@@ -26,9 +29,17 @@ namespace PcBuilderApi.Controllers
         [HttpPost("gpu")]
         public async Task<IActionResult> ScrapeGpus()
         {
-            //await _scraperService.ScrapeCategoryAsync<Gpu>("https://hotline.ua/ua/computer/videokarty/3991-36447-36449-36450-41408-43657-86245-380200-586473-643446-678073-21168069", ComponentType.Gpu);
-            await _scraperService.ScrapeCategoryAsync<Gpu>("https://hotline.ua/ua/computer/videokarty/123146-294529-371577-609215/", ComponentType.Gpu);
+            await _scraperService.ScrapeCategoryAsync<Gpu>("https://hotline.ua/ua/computer/videokarty/3991-36447-36449-36450-41408-43657-86245-380200-586473-643446-678073-21168069", ComponentType.Gpu);
+            //await _scraperService.ScrapeCategoryAsync<Gpu>("https://hotline.ua/ua/computer/videokarty/123146-294529-371577-609215/", ComponentType.Gpu);
+            await _dataCorrectionService.CorrectGpuModels();
             return Ok("Scraping completed for GPUs");
+        }
+
+        [HttpPost("correct_gpu")]
+        public async Task<IActionResult> CorrectGpu()
+        {
+            await _dataCorrectionService.CorrectGpuModels();
+            return Ok("GPU models corrected");
         }
 
         [HttpPost("motherboard")]

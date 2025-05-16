@@ -221,14 +221,21 @@ namespace PcBuilderApi.Scrapers.Implementation
                             case "Роз'єми дод. живлення для відеокарт":
                                 {
                                     var connectors = new List<PowerSupplyPowerConnector>();
-                                    
-                                    if (value.ToLower().Contains("1x12vhpwr"))
+                                    if (value.ToLower().Contains("16"))
                                     {
-                                        value = value.ToLower().Replace("1x12vhpwr", "1x16pin");
+                                        value = value.ToLower().Replace("16", "12+4");
+                                        if (value.ToLower().Contains("(12vhpwr)"))
+                                        {
+                                            value = value.ToLower().Replace("(12vhpwr)", "");
+                                        }
                                     }
                                     if (value.ToLower().Contains("(12vhpwr)"))
                                     {
-                                        value = value.ToLower().Replace("(12vhpwr)", "1x16pin");
+                                        value = value.ToLower().Replace("(12vhpwr)", "1x12+4pin");
+                                    }
+                                    if (value.ToLower().Contains("12vhpwr"))
+                                    {
+                                        value = value.ToLower().Replace("12vhpwr", "12+4pin");
                                     }
                                     var gpuMatch = Regex.Match(value, @"\(([^)]+)\)|^([^\(\)]+)$");
                                     var gpuMatchResult = gpuMatch.Groups[1].Success ? gpuMatch.Groups[1].Value : gpuMatch.Groups[2].Value;
