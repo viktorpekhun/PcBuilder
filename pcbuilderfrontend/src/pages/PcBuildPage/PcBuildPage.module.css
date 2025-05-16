@@ -1,0 +1,108 @@
+/* Main container for the page */
+.build-components-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background-color: #f0f0f0;
+    min-height: 100vh; /* Ensures it stretches to the full height of the viewport */
+    box-sizing: border-box;
+}
+
+/* Page title */
+.build-components-page h1 {
+    font-size: 2rem;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Table styling */
+.build-components-table {
+    width: 80%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    background-color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.build-components-table th,
+.build-components-table td {
+    padding: 12px 16px;
+    text-align: center;
+    border: 1px solid #ddd;
+}
+
+.build-components-table th {
+    background-color: #4CAF50;
+    color: white;
+    font-weight: bold;
+}
+
+.build-components-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.build-components-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Selected component container */
+.selected-component {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #f8f8f8;
+    gap: 8px;
+}
+
+.selected-component img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.component-name {
+    font-weight: bold;
+    color: #333;
+}
+
+/* Buttons */
+button {
+    padding: 8px 12px;
+    font-size: 1rem;
+    color: white;
+    background-color: #4CAF50;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+button a {
+    color: white;
+    text-decoration: none;
+}
+
+button a:hover {
+    text-decoration: underline;
+}
+
+/* Back to PC Build button */
+.build-components-page button {
+    margin-top: 20px;
+}
