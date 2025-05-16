@@ -78,9 +78,23 @@ builder.Services.AddScoped<CompatibilityChecker>();
 builder.Services.AddScoped<ScraperService>();
 builder.Services.AddScoped<IPcBuildService, PcBuildService>();
 builder.Services.AddScoped<IComponentService, ComponentService>();
+builder.Services.AddScoped<IDataCorrectionService, DataCorrectionService>();
 
 // Compatibility rules
 builder.Services.AddScoped<ICompatibilityRule, CpuMotherboardSocketRule>();
+builder.Services.AddScoped<ICompatibilityRule, CpuCoolerCpuPowerDissipationRule>();
+builder.Services.AddScoped<ICompatibilityRule, CpuCoolerMotherboardSocketRule>();
+builder.Services.AddScoped<ICompatibilityRule, CpuCoolerPcCaseSizeRule>();
+builder.Services.AddScoped<ICompatibilityRule, GpuMotherboardPcleRule>();
+builder.Services.AddScoped<ICompatibilityRule, HddMotherboardSocketRule>();
+builder.Services.AddScoped<ICompatibilityRule, SsdMotherboardSocketRule>();
+builder.Services.AddScoped<ICompatibilityRule, FanPcCaseCompatibilityRule>();
+builder.Services.AddScoped<ICompatibilityRule, FanMotherboardSocketRule>();
+builder.Services.AddScoped<ICompatibilityRule, RamMotherboardRule>();
+builder.Services.AddScoped<ICompatibilityRule, PcCaseGpuLengthRule>();
+builder.Services.AddScoped<ICompatibilityRule, PowerSupplyGpuConnectorRule>();
+builder.Services.AddScoped<ICompatibilityRule, PowerSupplyCpuConnectorRule>();
+builder.Services.AddScoped<ICompatibilityRule, RequiredPowerSupplyRule>();
 
 // Додаємо CORS перед викликом `Build()`
 builder.Services.AddCors(options =>

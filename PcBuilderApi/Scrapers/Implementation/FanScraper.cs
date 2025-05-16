@@ -4,7 +4,6 @@ using PcBuilderApi.Models;
 using PcBuilderApi.Utilities;
 using System.Collections.Concurrent;
 using System.Globalization;
-using System.Runtime.Intrinsics.X86;
 using System.Text.RegularExpressions;
 
 namespace PcBuilderApi.Scrapers.Implementation

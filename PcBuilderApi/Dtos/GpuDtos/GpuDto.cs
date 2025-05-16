@@ -15,6 +15,7 @@ namespace PcBuilderApi.Dtos.GpuDtos
         public string Brand { get; set; } = string.Empty;
 
         public string GpuManufacturer { get; set; } = string.Empty;
+        public string GpuModel { get; set; } = string.Empty;
 
         public int? Memory { get; set; }
 

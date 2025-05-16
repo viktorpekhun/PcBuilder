@@ -25,6 +25,10 @@ namespace PcBuilderApi.Models
         [MaxLength(100)]
         public string GpuManufacturer { get; set; } = string.Empty;
 
+        [Required]
+        [MaxLength(100)]
+        public string GpuModel { get; set; } = string.Empty;
+
         public int? Memory { get; set; }
 
         [MaxLength(20)]

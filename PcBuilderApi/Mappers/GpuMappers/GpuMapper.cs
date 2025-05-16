@@ -36,6 +36,7 @@ namespace PcBuilderApi.Mappers.GpuMappers
                 Description = gpu.Description,
                 Brand = gpu.Brand,
                 GpuManufacturer = gpu.GpuManufacturer,
+                GpuModel = gpu.GpuModel,
                 Memory = gpu.Memory,
                 MemoryType = gpu.MemoryType,
                 PcleVersion = gpu.PcleVersion,
