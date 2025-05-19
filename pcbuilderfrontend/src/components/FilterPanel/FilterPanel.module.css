@@ -1,0 +1,80 @@
+.filterPanel {
+    background-color: #f8f8f8;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 300px;
+}
+
+.filtersContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.filterGroup {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.filterGroup h4 {
+    margin: 0 0 8px 0;
+    font-size: 1rem;
+    color: #333;
+}
+
+.checkboxGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.checkboxLabel {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+}
+
+.rangeGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.rangeGroup label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.rangeInput {
+    width: 70px;
+    padding: 4px;
+    margin-left: 8px;
+}
+
+.dropdown {
+    width: 100%;
+    padding: 6px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+.clearButton {
+    margin-top: 15px;
+    padding: 8px 12px;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    width: 100%;
+}
+
+.clearButton:hover {
+    background-color: #d32f2f;
+}
