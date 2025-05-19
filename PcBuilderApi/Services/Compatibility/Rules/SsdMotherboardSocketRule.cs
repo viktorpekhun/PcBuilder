@@ -15,7 +15,7 @@ namespace PcBuilderApi.Services.Compatibility.Rules
             var motherboard = pcBuild.Motherboard;
 
 
-            if (pcBuild_Ssds.IsNullOrEmpty() || motherboard == null)
+            if (pcBuild_Ssds == null || !pcBuild_Ssds.Any() || motherboard == null)
             {
                 return result;
             }
@@ -29,7 +29,7 @@ namespace PcBuilderApi.Services.Compatibility.Rules
                 {
                     continue;
                 }
-                if (ssd.Interface == null || (motherboard.M2Slots.IsNullOrEmpty() && ssd.Interface.ToLower().Contains("m.2")))
+                if (ssd.Interface == null || ((motherboard.M2Slots==null || !motherboard.M2Slots.Any()) && ssd.Interface.ToLower().Contains("m.2")))
                 {
                     result.Messages.Add(new CompatibilityMessage
                     {

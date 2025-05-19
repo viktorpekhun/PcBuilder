@@ -12,13 +12,13 @@ namespace PcBuilderApi.Services.Compatibility.Rules
             CompatibilityResult result = new CompatibilityResult();
             var pcBuild_Fans = pcBuild.PcBuild_Fans;
             var pcCase = pcBuild.PcCase;
-            if (pcBuild_Fans.IsNullOrEmpty() || pcCase == null)
+            if (pcBuild_Fans == null || !pcBuild_Fans.Any() || pcCase == null)
             {
                 return result;
             }
             var pcCaseFanSlots = pcCase.PcCaseFanLocations;
 
-            if (pcCaseFanSlots.IsNullOrEmpty())
+            if (pcCaseFanSlots == null || !pcCaseFanSlots.Any())
             {
                 result.Messages.Add(new CompatibilityMessage
                 {

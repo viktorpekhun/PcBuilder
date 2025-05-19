@@ -23,7 +23,7 @@ namespace PcBuilderApi.Services.Compatibility.Rules
 
             var cpuCoolerSockets = cpuCooler.CpuCoolerSockets;
 
-            if (string.IsNullOrEmpty(motherboard.Socket) || cpuCoolerSockets.IsNullOrEmpty())
+            if (string.IsNullOrEmpty(motherboard.Socket) || cpuCoolerSockets == null || !cpuCoolerSockets.Any())
             {
                 result.Messages.Add(new CompatibilityMessage
                 {
@@ -32,7 +32,7 @@ namespace PcBuilderApi.Services.Compatibility.Rules
                 });
                 return result;
             }
-            
+
             bool isCompatible = false;
 
             foreach (var socket in cpuCoolerSockets)
@@ -47,7 +47,7 @@ namespace PcBuilderApi.Services.Compatibility.Rules
                     break;
                 }
             }
-            if (!isCompatible) 
+            if (!isCompatible)
             {
                 result.Messages.Add(new CompatibilityMessage
                 {
