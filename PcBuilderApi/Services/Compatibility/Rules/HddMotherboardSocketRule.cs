@@ -13,7 +13,7 @@ namespace PcBuilderApi.Services.Compatibility.Rules
             var pcBuild_Hdds = pcBuild.PcBuild_Hdds;
             var motherboard = pcBuild.Motherboard;
 
-            if (pcBuild_Hdds.IsNullOrEmpty() || motherboard == null)
+            if (pcBuild_Hdds == null || !pcBuild_Hdds.Any() || motherboard == null)
             {
                 return result;
             }

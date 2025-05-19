@@ -22,6 +22,9 @@ using PcBuilderApi.Services.Compatibility.Rules;
 using PcBuilderApi.Services.Implementations;
 using PcBuilderApi.Services.Interfaces;
 using PcBuilderApi.Mappers.ProductOfferMappers;
+using Swashbuckle.AspNetCore.Filters;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -79,6 +82,8 @@ builder.Services.AddScoped<ScraperService>();
 builder.Services.AddScoped<IPcBuildService, PcBuildService>();
 builder.Services.AddScoped<IComponentService, ComponentService>();
 builder.Services.AddScoped<IDataCorrectionService, DataCorrectionService>();
+builder.Services.AddSingleton<ITokenProviderService, TokenProviderService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Compatibility rules
 builder.Services.AddScoped<ICompatibilityRule, CpuMotherboardSocketRule>();
@@ -102,7 +107,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend",
         policy => policy.WithOrigins("http://localhost:5173") // URL Vite
                         .AllowAnyMethod()
-                        .AllowAnyHeader());
+                        .AllowAnyHeader()
+                        .AllowCredentials());
 });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -114,6 +120,28 @@ builder.Services.AddSwaggerGen(options =>
         Version = "v1",
         Description = "API documentation for PcBuilder App"
     });
+    options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+    options.OperationFilter<SecurityRequirementsOperationFilter>();
+});
+
+builder.Services.AddAuthentication("Bearer").AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        ValidateLifetime = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+            builder.Configuration.GetSection("Jwt:Secret").Value!)),
+        ValidateAudience = false,
+        ValidateIssuer = false,
+        ClockSkew = TimeSpan.Zero
+    };
 });
 
 var app = builder.Build();
@@ -134,9 +162,11 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapFallbackToFile("/index.html");
 
 app.Run();
 

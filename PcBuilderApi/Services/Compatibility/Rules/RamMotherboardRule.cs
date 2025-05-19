@@ -12,7 +12,7 @@ namespace PcBuilderApi.Services.Compatibility.Rules
             CompatibilityResult result = new CompatibilityResult();
             var pcBuild_Rams = pcBuild.PcBuild_Rams;
             var motherboard = pcBuild.Motherboard;
-            if (pcBuild_Rams.IsNullOrEmpty() || motherboard == null)
+            if (pcBuild_Rams == null || !pcBuild_Rams.Any() || motherboard == null)
             {
                 return result;
             }

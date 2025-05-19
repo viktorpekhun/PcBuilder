@@ -19,7 +19,7 @@ namespace PcBuilderApi.Services.Compatibility.Rules
 
             var pcleSlots = motherboard.PcleSlots;
 
-            if (gpu.PcleVersion == null || pcleSlots.IsNullOrEmpty())
+            if (gpu.PcleVersion == null || pcleSlots == null || !pcleSlots.Any())
             {
                 result.Messages.Add(new CompatibilityMessage
                 {

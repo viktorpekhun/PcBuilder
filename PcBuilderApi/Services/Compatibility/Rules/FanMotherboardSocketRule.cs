@@ -12,7 +12,7 @@ namespace PcBuilderApi.Services.Compatibility.Rules
             CompatibilityResult result = new CompatibilityResult();
             var pcBuild_Fans = pcBuild.PcBuild_Fans;
             var motherboard = pcBuild.Motherboard;
-            if (pcBuild_Fans.IsNullOrEmpty() || motherboard == null)
+            if (pcBuild_Fans==null || !pcBuild_Fans.Any() || motherboard == null)
             {
                 return result;
             }

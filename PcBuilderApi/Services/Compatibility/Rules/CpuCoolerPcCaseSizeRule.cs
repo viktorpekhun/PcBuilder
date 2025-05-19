@@ -40,7 +40,7 @@ namespace PcBuilderApi.Services.Compatibility.Rules
             else
             {
                 var pcCaseFanLocations = pcCase.PcCaseFanLocations;
-                if (cpuCooler.FanCount == null || cpuCooler.FanSize == null || pcCaseFanLocations.IsNullOrEmpty())
+                if (cpuCooler.FanCount == null || cpuCooler.FanSize == null || pcCaseFanLocations == null || !pcCaseFanLocations.Any())
                 {
                     result.Messages.Add(new CompatibilityMessage
                     {
