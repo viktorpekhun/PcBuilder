@@ -84,6 +84,8 @@ namespace PcBuilderApi.Mappers.MotherboardMappers
                 SizeDimentions = motherboard.SizeDimentions,
                 Wattage = motherboard.Wattage,
                 FactoryLink = motherboard.FactoryLink,
+                AveragePrice = motherboard.AveragePrice,
+                OffersCount = motherboard.OffersCount,
                 CpuPowerConnectors = cpuPowerConnectorDtos,
                 PcleSlots = pcleSlotDtos,
                 M2Slots = m2SlotDtos,

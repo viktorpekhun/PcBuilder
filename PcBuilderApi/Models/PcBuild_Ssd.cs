@@ -16,6 +16,10 @@ namespace PcBuilderApi.Models
         [ForeignKey("SsdId")]
         public Ssd Ssd { get; set; } = null!;
 
+        public Guid? ProductOfferId { get; set; }
+        [ForeignKey("ProductOfferId")]
+        public ProductOffer? ProductOffer { get; set; }
+
         [Required]
         public Guid PcBuildId { get; set; }
         [ForeignKey("PcBuildId")]

@@ -41,6 +41,8 @@ namespace PcBuilderApi.Mappers.RamMappers
                 Color = ram.Color,
                 Wattage = ram.Wattage,
                 FactoryLink = ram.FactoryLink,
+                AveragePrice = ram.AveragePrice,
+                OffersCount = ram.OffersCount,
                 ProductOffers = offerDtos
             };
         }

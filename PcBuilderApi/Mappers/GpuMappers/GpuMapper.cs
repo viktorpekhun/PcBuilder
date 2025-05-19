@@ -51,6 +51,8 @@ namespace PcBuilderApi.Mappers.GpuMappers
                 Wattage = gpu.Wattage,
                 PsuReccomended = gpu.PsuReccomended,
                 FactoryLink = gpu.FactoryLink,
+                AveragePrice = gpu.AveragePrice,
+                OffersCount = gpu.OffersCount,
                 GpuPowerConnectors = gpuPowerConnectorsDtos,
                 ProductOffers = offerDtos
             };

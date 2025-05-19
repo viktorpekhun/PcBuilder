@@ -45,6 +45,8 @@ namespace PcBuilderApi.Mappers.SsdMappers
                 AverageLifeTime = ssd.AverageLifeTime,
                 Wattage = ssd.Wattage,
                 FactoryLink = ssd.FactoryLink,
+                AveragePrice = ssd.AveragePrice,
+                OffersCount = ssd.OffersCount,
                 ProductOffers = offerDtos
             };
         }

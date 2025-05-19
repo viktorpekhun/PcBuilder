@@ -60,6 +60,8 @@ namespace PcBuilderApi.Mappers.PcCaseMappers
                 HasHeadphones = pcCase.HasHeadphones,
                 HasMicrophone = pcCase.HasMicrophone,
                 FactoryLink = pcCase.FactoryLink,
+                AveragePrice = pcCase.AveragePrice,
+                OffersCount = pcCase.OffersCount,
                 PcCaseFormFactors = pcCaseFormFactorDtos,
                 PcCaseFanLocations = pcCaseFanLocationDtos,
                 ProductOffers = offerDtos
