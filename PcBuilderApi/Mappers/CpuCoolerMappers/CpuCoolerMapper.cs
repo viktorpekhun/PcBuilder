@@ -53,6 +53,8 @@ namespace PcBuilderApi.Mappers.CpuCoolerMappers
                 Weight = cpuCooler.Weight,
                 Wattage = cpuCooler.Wattage,
                 FactoryLink = cpuCooler.FactoryLink,
+                AveragePrice = cpuCooler.AveragePrice,
+                OffersCount = cpuCooler.OffersCount,
                 CpuCoolerSockets = cpuCoolerSocketDtos,
                 ProductOffers = offerDtos
             };

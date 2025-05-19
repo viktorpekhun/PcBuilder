@@ -40,6 +40,8 @@ namespace PcBuilderApi.Mappers.CpuMappers
                 IntegratedGraphics = cpu.IntegratedGraphics,
                 Complectation = cpu.Complectation,
                 FactoryLink = cpu.FactoryLink,
+                AveragePrice = cpu.AveragePrice,
+                OffersCount = cpu.OffersCount,
                 ProductOffers = offerDtos
             };
         }

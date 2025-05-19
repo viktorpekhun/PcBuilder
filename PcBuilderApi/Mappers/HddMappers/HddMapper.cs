@@ -39,6 +39,8 @@ namespace PcBuilderApi.Mappers.HddMappers
                 NoiceDb = hdd.NoiceDb,
                 Wattage = hdd.Wattage,
                 FactoryLink = hdd.FactoryLink,
+                AveragePrice = hdd.AveragePrice,
+                OffersCount = hdd.OffersCount,
                 ProductOffers = offerDtos
             };
         }

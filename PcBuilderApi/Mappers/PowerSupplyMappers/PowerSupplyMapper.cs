@@ -52,6 +52,8 @@ namespace PcBuilderApi.Mappers.PowerSupplyMappers
                 NoiseLevelMaxDb = powerSupply.NoiseLevelMaxDb,
                 Size = powerSupply.Size,
                 FactoryLink = powerSupply.FactoryLink,
+                AveragePrice = powerSupply.AveragePrice,
+                OffersCount = powerSupply.OffersCount,
                 PowerSupplyPowerConnectors = powerSupplyPowerConnectorDtos,
                 ProductOffers = offerDtos
             };

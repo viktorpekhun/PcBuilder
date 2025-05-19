@@ -44,6 +44,8 @@ namespace PcBuilderApi.Mappers.FanMappers
                 Weight = fan.Weight,
                 Wattage = fan.Wattage,
                 FactoryLink = fan.FactoryLink,
+                AveragePrice = fan.AveragePrice,
+                OffersCount = fan.OffersCount,
                 ProductOffers = offerDtos
             };
         }
