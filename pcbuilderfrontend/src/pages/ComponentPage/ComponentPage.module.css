@@ -1,0 +1,262 @@
+.component-page {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.back-button {
+    padding: 8px 16px;
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+.back-button:hover {
+    background-color: #5a6268;
+}
+
+.component-details {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.component-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 16px;
+}
+
+.component-header h1 {
+    font-size: 24px;
+    margin: 0;
+}
+
+.add-button {
+    padding: 10px 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.add-button:hover {
+    background-color: #0069d9;
+}
+
+.component-main {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.component-image {
+    flex: 0 0 350px;
+    height: 350px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.component-image img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.no-image {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.component-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.component-price {
+    margin-bottom: 20px;
+}
+
+.component-price h2 {
+    font-size: 22px;
+    color: #333;
+}
+
+.component-specs {
+    background-color: #f8f9fa;
+    padding: 16px;
+    border-radius: 4px;
+}
+
+.component-specs h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 18px;
+}
+
+.specs-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.specs-table td {
+    padding: 8px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.specs-table td:first-child {
+    font-weight: 500;
+    width: 40%;
+}
+
+.offers-section {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.offers-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+}
+
+.offers-table th {
+    background-color: #f8f9fa;
+    padding: 12px;
+    text-align: left;
+    font-weight: bold;
+    border-bottom: 2px solid #ddd;
+}
+
+.offers-table td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.store-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.store-logo {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+
+.offer-price {
+    font-weight: bold;
+}
+
+.view-offer-btn {
+    padding: 6px 12px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    cursor: pointer;
+}
+
+.view-offer-btn:hover {
+    background-color: #218838;
+}
+
+.loading, .error {
+    text-align: center;
+    padding: 40px;
+    font-size: 18px;
+}
+
+.error {
+    color: #dc3545;
+}
+
+@media (max-width: 768px) {
+    .component-main {
+        flex-direction: column;
+    }
+
+    .component-image {
+        flex: 0 0 auto;
+        max-width: 100%;
+    }
+}
+
+
+.component-description {
+    margin-top: 20px;
+    line-height: 1.5;
+}
+
+.component-description h3 {
+    font-size: 18px;
+    margin-bottom: 12px;
+}
+
+.store-rating {
+    display: flex;
+    gap: 10px;
+}
+
+.likes {
+    color: #28a745;
+}
+
+.dislikes {
+    color: #dc3545;
+}
+
+.selected-offer-row {
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.offers-table tbody tr {
+    cursor: pointer;
+}
+
+.offers-table tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+.add-offer-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+    white-space: nowrap;
+}
+
+.add-offer-btn:hover {
+    background-color: #0069d9;
+}
+
+.offers-table td {
+    vertical-align: middle;
+}
+
+.offers-table td:last-child {
+    text-align: center;
+}

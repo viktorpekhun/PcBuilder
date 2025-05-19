@@ -23,9 +23,19 @@ export const getComponents = async (type, params = {}) => {
     if (params.searchQuery) queryParams.append('searchQuery', params.searchQuery);
     try {
         const response = await axios.get(`${PRODUCT_URL}/${type}?${queryParams}`);
-        return response.data; // axios автоматично розпарсить JSON
+        return response.data;
     } catch (error) {
         console.error("Failed to fetch components:", error);
         throw new Error(`Failed to fetch ${type} components`);
+    }
+};
+
+export const getComponentById = async (type, id) => {
+    try {
+        const response = await axios.get(`${PRODUCT_URL}/${type}/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error(`Error fetching ${type} component by ID:`, error);
+        throw error;
     }
 };

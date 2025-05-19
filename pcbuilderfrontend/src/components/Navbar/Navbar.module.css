@@ -1,0 +1,115 @@
+.navbar {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding: 0 80px;
+    box-sizing: border-box;
+    width: 100%;
+    height: 56px;
+    background: #68633B;
+}
+
+.navbar-items {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0;
+
+    width: 100%;
+    min-width: 1105px;
+    height: 64px;
+}
+
+.navigation-items {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+
+    width: 561px;
+    height: 64px;
+}
+
+.nav-item {
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 12px 16px;
+    gap: 10px;
+    color: #E2E7DB;
+    height: 64px;
+    border-right: 1px solid #E2E7DB;
+    filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
+}
+
+.nav-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-item:active {
+    background-color: rgba(0, 0, 0, 0.01);
+}
+
+.nav-item:first-child {
+    border-left: 1px solid #E2E7DB;
+    border-right: 1px solid #E2E7DB;
+}
+
+.nav-item:last-child {
+    border-right: 1px solid #E2E7DB;
+}
+
+.nav-item a {
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 22px;
+    color: #E2E7DB;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    text-align: center;
+}
+
+.login-items {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0;
+    gap: 8px;
+
+    width: 183px;
+    height: 35px;
+}
+
+.login, .register {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 16px;
+    gap: 10px;
+    height: 35px;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 19px;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 0 4px 1px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+}
+
+.login {
+    width: 64px;
+    background: #E2E7DB;
+    color: #262B31;
+}
+
+.register {
+    width: 111px;
+    background: #A68059;
+    color: #E2E7DB;
+}

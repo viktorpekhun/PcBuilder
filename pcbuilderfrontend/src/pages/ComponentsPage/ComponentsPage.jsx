@@ -13,7 +13,6 @@ function ComponentsPage() {
     const [error, setError] = useState(null);
     const [filters, setFilters] = useState({});
 
-    // Get the filter config for the current component type
     const filterConfig = filterConfigs[type] || {
         title: `${type.toUpperCase()} Filters`,
         filters: []
@@ -71,37 +70,6 @@ function ComponentsPage() {
         fetchComponents(newFilters);
     };
 
-    const selectComponent = (component) => {
-        try {
-            // Your existing selectComponent code...
-            let selectedComponents = {};
-            const savedComponents = localStorage.getItem('selectedComponents');
-
-            if (savedComponents) {
-                try {
-                    selectedComponents = JSON.parse(savedComponents);
-                } catch (e) {
-                    console.error("Error parsing saved components:", e);
-                }
-            }
-
-            if (!selectedComponents || typeof selectedComponents !== 'object') {
-                selectedComponents = {};
-            }
-
-            if (!component.name) {
-                component.name = "Unknown Component";
-            }
-
-            selectedComponents[type] = component;
-            localStorage.setItem('selectedComponents', JSON.stringify(selectedComponents));
-            navigate('/');
-        } catch (err) {
-            console.error("Error selecting component:", err);
-            alert("There was a problem selecting this component. Please try again.");
-        }
-    };
-
     if (loading && !components.length) return <div>Loading {type} components...</div>;
     if (error) return <div>{error}</div>;
 
@@ -135,7 +103,8 @@ function ComponentsPage() {
                         <tbody>
                         {components.map(component => (
                             <tr key={component.id} className={styles['component-row']}>
-                                <td className={styles['component-image']}>
+                                <td className={styles['component-image']}
+                                    onClick={() => navigate(`/components/${type}/${component.id}`)}>
                                     {component.photoUrl ? (
                                         <img
                                             src={component.photoUrl}
@@ -146,16 +115,21 @@ function ComponentsPage() {
                                         <div className={styles['no-image']}>No image</div>
                                     )}
                                 </td>
-                                <td className={styles['component-name']}>{component.name}</td>
+                                <td
+                                    className={styles['component-name']}
+                                    onClick={() => navigate(`/components/${type}/${component.id}`)}
+                                >
+                                    {component.name}
+                                </td>
                                 <td className={styles['component-price']}>
                                     {component.averagePrice} uah
                                 </td>
                                 <td className={styles['component-actions']}>
                                     <button
-                                        onClick={() => selectComponent(component)}
+                                        onClick={() => navigate(`/components/${type}/${component.id}`)}
                                         className={styles['select-button']}
                                     >
-                                        Select
+                                        View Details
                                     </button>
                                 </td>
                             </tr>
