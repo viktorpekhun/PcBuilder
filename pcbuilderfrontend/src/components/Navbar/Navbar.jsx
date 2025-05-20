@@ -1,7 +1,19 @@
 import styles from "./Navbar.module.css";
-import { Link } from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
+import useAuth from "../../hooks/useAuth.js";
+import useLogout from "../../hooks/useLogout.js";
 
 export default function Navbar() {
+    const {auth} = useAuth();
+    const navigate = useNavigate();
+    const logout = useLogout();
+
+
+    const signOut = async () => {
+        await logout();
+        navigate('/');
+    }
+
     return (
         <nav className={styles['navbar']}>
             <div className={styles['navbar-items']}>
@@ -32,8 +44,21 @@ export default function Navbar() {
                     </li>
                 </ul>
                 <div className={styles['login-items']}>
-                    <button className={styles['login']}>Вхід</button>
-                    <button className={styles['register']}>Реєстрація</button>
+                    {auth?.username ? (
+                        <>
+                            <p>Привіт, {auth.username}</p>
+                            <button onClick={signOut} className={'button-secondary'}>Вихід</button>
+                        </>
+                    ) : (
+                        <>
+                            <button className={styles['login']}>
+                                <Link to={`/login`} >Вхід</Link>
+                            </button>
+                            <button className={styles['register']}>
+                                <Link to={`/register`}>Реєстрація</Link>
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
         </nav>
