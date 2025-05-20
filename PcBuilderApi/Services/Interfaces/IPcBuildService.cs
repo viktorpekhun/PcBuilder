@@ -7,11 +7,11 @@ namespace PcBuilderApi.Services.Interfaces
 {
     public interface IPcBuildService
     {
-        Task<bool> SaveBuildAsync(PcBuild pcBuild);
-        Task<bool> DeleteBuildAsync(Guid pcBuildId);
-        Task<PcBuild?> GetBuildByIdAsync(Guid pcBuildId);
+        Task<bool> SaveBuildAsync(PcBuildInputDto buildDto, Guid userId);
+        Task<bool> DeleteBuildAsync(Guid pcBuildId, Guid userId);
+        Task<PcBuildRequestDto?> GetBuildByIdAsync(Guid pcBuildId);
         Task<List<PcBuild>> GetAllBuildsAsync();
-        Task<List<PcBuild>> GetUserBuildsAsync(Guid userId);
+        Task<List<PcBuildListDto>> GetUserBuildsAsync(Guid userId);
         Task<bool> UpdateBuildAsync(PcBuild pcBuild);
         Task<List<CompatibilityResult>> CheckComponentsCompatibilityAsync(ComponentsCompatibilityDto dto);
         

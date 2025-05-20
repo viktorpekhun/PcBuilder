@@ -14,9 +14,9 @@
         public List<ComponentQuantityDto> Hdds { get; set; } = new();
         public List<ComponentQuantityDto> Fans { get; set; } = new();
     }
-    public class ComponentQuantityDto
-    {
-        public Guid ComponentId { get; set; }
-        public int Quantity { get; set; } = 1;
-    }
+    //public class ComponentQuantityDto
+    //{
+    //    public Guid ComponentId { get; set; }
+    //    public int Quantity { get; set; } = 1;
+    //}
 }
