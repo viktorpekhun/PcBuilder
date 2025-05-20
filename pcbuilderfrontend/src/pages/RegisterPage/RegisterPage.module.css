@@ -1,0 +1,100 @@
+.register-container section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 460px;
+    margin: auto;
+    padding: 1rem 2rem 1rem;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border: 2px solid #7c7c7c;
+}
+
+
+.register-container section h1 {
+    font-size: 2rem;
+    color: #865F20;
+    margin-bottom: 1.5rem;
+    text-align: center;
+
+}
+
+
+.register-container .errmsg {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    width: 100%;
+}
+
+.register-container .offscreen {
+    position: absolute;
+    left: -9999px;
+}
+
+
+.register-container form {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+
+.register-container label {
+    font-size: 1rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.register-container input[type="text"],
+.register-container input[type="password"] {
+    font-size: 1rem;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.register-container p {
+    font-size: 0.9rem;
+    color: #333;
+    text-align: center;
+}
+
+.register-container .line {
+    color: #3498db;
+}
+
+.register-container .line a {
+    color: #3498db;
+    font-weight: bold;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.register-container .line a:hover {
+    color: #2980b9;
+}
+
+
+.register-container .persistCheck {
+    font-size: 0.75rem;
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-end;
+}
+
+.register-container .persistCheck label {
+    margin: 0;
+}
+
+.register-container [type="checkbox"] {
+    height: 20px;
+    width: 20px;
+    margin: 0 5px 2px 2px;
+}

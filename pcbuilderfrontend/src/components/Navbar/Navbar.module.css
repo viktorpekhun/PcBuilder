@@ -81,9 +81,14 @@
     align-items: center;
     padding: 0;
     gap: 8px;
-
     width: 183px;
     height: 35px;
+}
+
+.login-items p{
+    color: #E2E7DB;
+    font-size: 14px;
+    font-weight: bold;
 }
 
 .login, .register {
@@ -97,19 +102,38 @@
     font-size: 14px;
     line-height: 19px;
     border: none;
-    border-radius: 8px;
+    border-radius: 4px;
     box-shadow: 0 0 4px 1px rgba(0, 0, 0, 0.25);
     cursor: pointer;
+    transition: filter 0.2s ease;
 }
 
+.login:hover{
+    filter: brightness(90%);
+}
+
+.register:hover{
+    filter: brightness(110%);
+}
+
+
 .login {
-    width: 64px;
+    width: fit-content;
     background: #E2E7DB;
     color: #262B31;
 }
 
+.login a{
+    color: #262B31;
+    text-decoration: none;
+}
+
 .register {
-    width: 111px;
+    width: fit-content;
     background: #A68059;
+
+}
+.register a{
+    text-decoration: none;
     color: #E2E7DB;
 }
