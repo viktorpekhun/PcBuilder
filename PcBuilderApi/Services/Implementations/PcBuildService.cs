@@ -168,34 +168,37 @@ namespace PcBuilderApi.Services.Implementations
 
                     // Count all components
                     
-                    Cpu = build.Cpu != null ? new ComponentPreviewDto
+                    Cpu = (build.Cpu != null && build.CpuOfferId != null) ? new ComponentPreviewDto
                     {
                         Id = build.Cpu.Id,
                         Name = build.Cpu.Name,
                         Price = cpuInfo.Item1,
+                        OfferId = (Guid)build.CpuOfferId,
                         StoreName = cpuInfo.Item2,
                         ImageUrl = build.Cpu.PhotoUrl
                     } : null,
 
                     // Get GPU preview if exists
-                    Gpu = build.Gpu != null ? new ComponentPreviewDto
+                    Gpu = (build.Gpu != null && build.GpuOfferId != null) ? new ComponentPreviewDto
                     {
                         Id = build.Gpu.Id,
                         Name = build.Gpu.Name,
                         Price = gpuInfo.Item1,
+                        OfferId = (Guid)build.GpuOfferId,
                         StoreName = gpuInfo.Item2,
                         ImageUrl = build.Gpu.PhotoUrl
                     } : null,
 
-                    Motherboard = build.Motherboard != null ? new ComponentPreviewDto
+                    Motherboard = (build.Motherboard != null && build.MotherboardOfferId != null) ? new ComponentPreviewDto
                     {
                         Id = build.Motherboard.Id,
                         Name = build.Motherboard.Name,
                         Price = motherboardInfo.Item1,
+                        OfferId = (Guid)build.MotherboardOfferId,
                         StoreName = motherboardInfo.Item2,
                         ImageUrl = build.Motherboard.PhotoUrl
                     } : null,
-                    CpuCooler = build.CpuCooler != null ? new ComponentPreviewDto
+                    CpuCooler = (build.CpuCooler != null && build.CpuCoolerOfferId != null) ? new ComponentPreviewDto
                     {
                         Id = build.CpuCooler.Id,
                         Name = build.CpuCooler.Name,
@@ -203,19 +206,21 @@ namespace PcBuilderApi.Services.Implementations
                         StoreName = cpuCoolerInfo.Item2,
                         ImageUrl = build.CpuCooler.PhotoUrl
                     } : null,
-                    PowerSupply = build.PowerSupply != null ? new ComponentPreviewDto
+                    PowerSupply = (build.PowerSupply != null && build.PowerSupplyOfferId != null) ? new ComponentPreviewDto
                     {
                         Id = build.PowerSupply.Id,
                         Name = build.PowerSupply.Name,
                         Price = powerSupplyInfo.Item1,
+                        OfferId = (Guid)build.PowerSupplyOfferId,
                         StoreName = powerSupplyInfo.Item2,
                         ImageUrl = build.PowerSupply.PhotoUrl
                     } : null,
-                    PcCase = build.PcCase != null ? new ComponentPreviewDto
+                    PcCase = (build.PcCase != null && build.PcCaseOfferId != null) ? new ComponentPreviewDto
                     {
                         Id = build.PcCase.Id,
                         Name = build.PcCase.Name,
                         Price = pcCaseInfo.Item1,
+                        OfferId = (Guid)build.PcCaseOfferId,
                         StoreName = pcCaseInfo.Item2,
                         ImageUrl = build.PcCase.PhotoUrl
                     } : null
@@ -227,6 +232,7 @@ namespace PcBuilderApi.Services.Implementations
                     foreach (var pcBuildRam in build.PcBuild_Rams)
                     {
                         // If navigation property is loaded, use it directly
+                        if(pcBuildRam.ProductOfferId == null) continue;
                         Ram ram = pcBuildRam.Ram;
                         if (ram == null)
                         {
@@ -234,7 +240,7 @@ namespace PcBuilderApi.Services.Implementations
                             ram = await _unitOfWork.Repository<Ram>().GetFirstOrDefaultAsync(r => r.Id == pcBuildRam.RamId);
                             if (ram == null) continue;
                         }
-
+                        
                         // Get price
                         var ramInfo = await GetComponentPriceAndStore(pcBuildRam.RamId, pcBuildRam.ProductOfferId);
 
@@ -244,6 +250,7 @@ namespace PcBuilderApi.Services.Implementations
                             Name = ram.Name,
                             Quantity = pcBuildRam.Quantity,
                             StoreName = ramInfo.Item2,
+                            OfferId = (Guid)pcBuildRam.ProductOfferId,
                             TotalPrice = ramInfo.Item1 * pcBuildRam.Quantity,
                             ImageUrl = ram.PhotoUrl
                         });
@@ -256,6 +263,7 @@ namespace PcBuilderApi.Services.Implementations
                     foreach (var pcBuildSsd in build.PcBuild_Ssds)
                     {
                         // If navigation property is loaded, use it directly
+                        if (pcBuildSsd.ProductOfferId == null) continue;
                         Ssd ssd = pcBuildSsd.Ssd;
                         if (ssd == null)
                         {
@@ -273,6 +281,7 @@ namespace PcBuilderApi.Services.Implementations
                             Name = ssd.Name,
                             Quantity = pcBuildSsd.Quantity,
                             StoreName = ssdInfo.Item2,
+                            OfferId = (Guid)pcBuildSsd.ProductOfferId,
                             TotalPrice = ssdInfo.Item1 * pcBuildSsd.Quantity,
                             ImageUrl = ssd.PhotoUrl
                         });
@@ -285,6 +294,7 @@ namespace PcBuilderApi.Services.Implementations
                     foreach (var pcBuildHdd in build.PcBuild_Hdds)
                     {
                         // If navigation property is loaded, use it directly
+                        if (pcBuildHdd.ProductOfferId == null) continue;
                         Hdd hdd = pcBuildHdd.Hdd;
                         if (hdd == null)
                         {
@@ -302,6 +312,7 @@ namespace PcBuilderApi.Services.Implementations
                             Name = hdd.Name,
                             Quantity = pcBuildHdd.Quantity,
                             StoreName = hddInfo.Item2,
+                            OfferId = (Guid)pcBuildHdd.ProductOfferId,
                             TotalPrice = hddInfo.Item1 * pcBuildHdd.Quantity,
                             ImageUrl = hdd.PhotoUrl
                         });
@@ -314,6 +325,7 @@ namespace PcBuilderApi.Services.Implementations
                     foreach (var pcBuildFan in build.PcBuild_Fans)
                     {
                         // If navigation property is loaded, use it directly
+                        if (pcBuildFan.ProductOfferId == null) continue;
                         Fan fan = pcBuildFan.Fan;
                         if (fan == null)
                         {
@@ -331,6 +343,7 @@ namespace PcBuilderApi.Services.Implementations
                             Name = fan.Name,
                             Quantity = pcBuildFan.Quantity,
                             StoreName = fanInfo.Item2,
+                            OfferId = (Guid)pcBuildFan.ProductOfferId,
                             TotalPrice = fanInfo.Item1 * pcBuildFan.Quantity,
                             ImageUrl = fan.PhotoUrl
                         });
@@ -695,8 +708,6 @@ namespace PcBuilderApi.Services.Implementations
             {
                 return 0;
             }
-
-
         }
     }
 }
