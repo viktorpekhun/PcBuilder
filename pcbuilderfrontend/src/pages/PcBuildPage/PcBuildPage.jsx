@@ -1,15 +1,20 @@
-import {Link, useNavigate} from "react-router-dom";
+import {Link, useLocation, useNavigate} from "react-router-dom";
 import {useEffect, useRef, useState} from "react";
 import axios from "../../api/axios.jsx";
 import styles from './PcBuildPage.module.css';
 import { getComponentById } from "../../services/componentService.js";
+import useAuth from "../../hooks/useAuth.js";
+import useAxiosPrivate from "../../hooks/useAxiosPrivate.js";
+import SaveBuildModal from "../../components/SaveBuildModal/SaveBuildModal.jsx";
 
 
 const CHECK_URL = '/api/pcBuild/check'
+const SAVE_BUILD_URL = '/api/pcBuild/save';
 function CompatibilityCheck({ selectedComponentIds }) {
     const [compatibilityResults, setCompatibilityResults] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+
 
     useEffect(() => {
         // Only check compatibility if we have at least some components selected
@@ -156,7 +161,18 @@ function PcBuildPage() {
     const [initialLoadComplete, setInitialLoadComplete] = useState(false);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const location = useLocation();
     const isInitialMount = useRef(true);
+    const [saveModal, setSaveModal] = useState({
+        isOpen: false
+    });
+    const [saveStatus, setSaveStatus] = useState({
+        loading: false,
+        error: null,
+        success: false
+    });
+    const { auth } = useAuth();
+    const axiosPrivate = useAxiosPrivate();
 
     // Configuration for component types - single vs multi
     const componentTypes = [
@@ -286,7 +302,6 @@ function PcBuildPage() {
         }
     }, [selectedComponents, initialLoadComplete]);
 
-
     // Save component IDs to localStorage when they change
     useEffect(() => {
         if (!initialLoadComplete) {
@@ -301,7 +316,10 @@ function PcBuildPage() {
         }
     }, [selectedComponents, initialLoadComplete]);
 
-    // Remove a single component
+    if (loading && !initialLoadComplete) {
+        return <div className={styles['loading-indicator']}>Loading your build...</div>;
+    }
+
     const removeComponent = (type) => {
         console.log("Removing component type:", type);
         setSelectedComponents(prev => ({
@@ -310,7 +328,6 @@ function PcBuildPage() {
         }));
     };
 
-    // Remove a multi-component by ID
     const removeMultiComponent = (type, componentId) => {
         console.log(`Removing ${type} with ID: ${componentId}`);
         setSelectedComponents(prev => ({
@@ -406,10 +423,6 @@ function PcBuildPage() {
         );
     };
 
-    if (loading && !initialLoadComplete) {
-        return <div className={styles['loading-indicator']}>Loading your build...</div>;
-    }
-
     // Calculate price for multi-components
     const renderMultiComponentStores = (components) => {
         if (components.length === 0) return "";
@@ -426,7 +439,6 @@ function PcBuildPage() {
             </div>
         );
     };
-
 
     const calculateComponentPrice = (component) => {
         return component.price * component.quantity;
@@ -526,8 +538,131 @@ function PcBuildPage() {
         return result;
     };
 
+    const openSaveModal = () => {
+        if (!auth?.accessToken) {
+            // Now location is properly defined
+            navigate('/login', {
+                state: {
+                    from: location.pathname, // Use pathname instead of the entire location object
+                    message: 'Please log in to save your build.'
+                }
+            });
+            return;
+        }
+
+        setSaveModal({ isOpen: true });
+    };
+
+    // Function to handle saving the build
+    const handleSaveBuild = async (buildData) => {
+        // Check if there's at least one component selected
+        const hasComponents = Object.values(selectedComponents).some(
+            value => value !== null && (Array.isArray(value) ? value.length > 0 : true)
+        );
+
+        if (!hasComponents) {
+            setSaveStatus({
+                loading: false,
+                error: 'Please add at least one component to your build.',
+                success: false
+            });
+            return;
+        }
+
+        try {
+            setSaveStatus({ loading: true, error: null, success: false });
+
+            // Check if selected components have offer information
+            // const validateOffers = (component) => {
+            //     return component && component.offers && component.offers.length > 0 && component.selectedOffer.id;
+            // };
+
+            // Format data according to API requirements
+            const buildPayload = {
+                name: buildData.name,
+                description: buildData.description,
+
+                // Single components - include both componentId and offerId
+                cpuId: selectedComponents.cpu?.componentId || null,
+                cpuOfferId: componentData.cpu?.selectedOffer?.id || null,
+
+                motherboardId: selectedComponents.motherboard?.componentId || null,
+                motherboardOfferId: componentData.motherboard?.selectedOffer?.id || null,
+
+                gpuId: selectedComponents.gpu?.componentId || null,
+                gpuOfferId: componentData.gpu?.selectedOffer?.id || null,
+
+                powerSupplyId: selectedComponents.powerSupply?.componentId || null,
+                powerSupplyOfferId: componentData.powerSupply?.selectedOffer?.id || null,
+
+                cpuCoolerId: selectedComponents.cpuCooler?.componentId || null,
+                cpuCoolerOfferId: componentData.cpuCooler?.selectedOffer?.id || null,
+
+                pcCaseId: selectedComponents.pcCase?.componentId || null,
+                pcCaseOfferId: componentData.pcCase?.selectedOffer?.id || null,
+
+                // Multi-components - format as arrays with componentId, offerId, quantity
+                rams: componentData.rams?.map(item => ({
+                    componentId: item.id || item.componentId,
+                    offerId: item.selectedOfferId || null,
+                    quantity: item.quantity || 1
+                })) || [],
+
+                ssds: componentData.ssds?.map(item => ({
+                    componentId: item.id || item.componentId,
+                    offerId: item.selectedOfferId  || null,
+                    quantity: item.quantity || 1
+                })) || [],
+
+                hdds: componentData.hdds?.map(item => ({
+                    componentId: item.id || item.componentId,
+                    offerId: item.selectedOfferId  || null,
+                    quantity: item.quantity || 1
+                })) || [],
+
+                fans: componentData.fans?.map(item => ({
+                    componentId: item.id || item.componentId,
+                    offerId: item.selectedOfferId  || null,
+                    quantity: item.quantity || 1
+                })) || []
+            };
+
+            console.log("Saving build with payload:", buildPayload);
+
+            // Send the save request
+            await axiosPrivate.post(SAVE_BUILD_URL, buildPayload);
+
+            // Handle success
+            setSaveStatus({
+                loading: false,
+                error: null,
+                success: true
+            });
+
+            // Close the modal
+            setSaveModal({ isOpen: false });
+
+            // Navigate to user builds page or show success message
+            navigate('/user/builds', { state: { message: 'Build saved successfully!' } });
+
+        } catch (err) {
+            console.error("Error saving build:", err);
+            setSaveStatus({
+                loading: false,
+                error: err.response?.data?.message || 'Failed to save your build. Please try again.',
+                success: false
+            });
+        }
+    };
+
     return (
         <section className={styles['build-components-page']}>
+            <SaveBuildModal
+                isOpen={saveModal.isOpen}
+                onCancel={() => setSaveModal({ isOpen: false })}
+                onSave={handleSaveBuild}
+                isSaving={saveStatus.loading}
+            />
             <h1>Build Your PC</h1>
             <div className={styles['build-components-container']}>
                 <div className={styles['build-components-section']}>
@@ -630,9 +765,27 @@ function PcBuildPage() {
                         <h3>Total Price: {calculateTotalPrice()} UAH</h3>
                     </div>
                     <div>
-                        <button className={'button-primary'}>
-                            <Link to={'#'}>Зберегти</Link>
-                        </button>
+                        <div>
+                            <button
+                                className={'button-primary'}
+                                onClick={openSaveModal}
+                                disabled={saveStatus.loading}
+                            >
+                                {saveStatus.loading ? 'Saving...' : 'Save Build'}
+                            </button>
+
+                            {saveStatus.error && (
+                                <div className={styles['error-message']}>
+                                    {saveStatus.error}
+                                </div>
+                            )}
+
+                            {saveStatus.success && (
+                                <div className={styles['success-message']}>
+                                    Build saved successfully!
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
                 <CompatibilityCheck selectedComponentIds={convertToCompatibilityFormat()}/>

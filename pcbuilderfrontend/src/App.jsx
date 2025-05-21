@@ -10,6 +10,7 @@ import PersistLogin from "./components/PersistLogin.jsx";
 import RequireAuth from "./components/RequireAuth.jsx";
 import LoginPage from "./pages/LoginPage/LoginPage.jsx";
 import RegisterPage from "./pages/RegisterPage/RegisterPage.jsx";
+import UserBuildsPage from "./pages/UserBuildsPage/UserBuildsPage.jsx";
 
 function App() {
 
@@ -29,7 +30,7 @@ function App() {
 
                         <Route element={<PersistLogin />}>
                             <Route element={<RequireAuth />}>
-                                {/*тут захищені сторінки*/}
+                                <Route path="user/builds" element={<UserBuildsPage />} />
                             </Route>
                         </Route>
                     </Route>
