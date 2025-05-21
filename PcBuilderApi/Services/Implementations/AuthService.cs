@@ -183,7 +183,7 @@ namespace PcBuilderApi.Services.Implementations
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.None,
                 Expires = DateTime.Now.AddDays(expirationDays)
             };
 
@@ -196,7 +196,7 @@ namespace PcBuilderApi.Services.Implementations
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.None,
                 Expires = DateTime.Now.AddDays(-1)
             });
         }
