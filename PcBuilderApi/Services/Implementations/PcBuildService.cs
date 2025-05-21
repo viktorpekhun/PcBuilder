@@ -148,6 +148,13 @@ namespace PcBuilderApi.Services.Implementations
                     return null;
                 }
 
+                
+                var cpuInfo = await GetComponentPriceAndStore(build.CpuId, build.CpuOfferId);
+                var gpuInfo = await GetComponentPriceAndStore(build.GpuId, build.GpuOfferId);
+                var motherboardInfo = await GetComponentPriceAndStore(build.MotherboardId, build.MotherboardOfferId);
+                var cpuCoolerInfo = await GetComponentPriceAndStore(build.CpuCoolerId, build.CpuCoolerOfferId);
+                var powerSupplyInfo = await GetComponentPriceAndStore(build.PowerSupplyId, build.PowerSupplyOfferId);
+                var pcCaseInfo = await GetComponentPriceAndStore(build.PcCaseId, build.PcCaseOfferId);
                 var buildDto = new PcBuildRequestDto
                 {
                     Id = build.Id,
@@ -160,12 +167,13 @@ namespace PcBuilderApi.Services.Implementations
                     UserId = build.UserId,
 
                     // Count all components
-
+                    
                     Cpu = build.Cpu != null ? new ComponentPreviewDto
                     {
                         Id = build.Cpu.Id,
                         Name = build.Cpu.Name,
-                        Price = await GetComponentPrice(build.CpuId, build.CpuOfferId),
+                        Price = cpuInfo.Item1,
+                        StoreName = cpuInfo.Item2,
                         ImageUrl = build.Cpu.PhotoUrl
                     } : null,
 
@@ -174,7 +182,8 @@ namespace PcBuilderApi.Services.Implementations
                     {
                         Id = build.Gpu.Id,
                         Name = build.Gpu.Name,
-                        Price = await GetComponentPrice(build.GpuId, build.GpuOfferId),
+                        Price = gpuInfo.Item1,
+                        StoreName = gpuInfo.Item2,
                         ImageUrl = build.Gpu.PhotoUrl
                     } : null,
 
@@ -182,28 +191,32 @@ namespace PcBuilderApi.Services.Implementations
                     {
                         Id = build.Motherboard.Id,
                         Name = build.Motherboard.Name,
-                        Price = await GetComponentPrice(build.MotherboardId, build.MotherboardOfferId),
+                        Price = motherboardInfo.Item1,
+                        StoreName = motherboardInfo.Item2,
                         ImageUrl = build.Motherboard.PhotoUrl
                     } : null,
                     CpuCooler = build.CpuCooler != null ? new ComponentPreviewDto
                     {
                         Id = build.CpuCooler.Id,
                         Name = build.CpuCooler.Name,
-                        Price = await GetComponentPrice(build.CpuCoolerId, build.CpuCoolerOfferId),
+                        Price = cpuCoolerInfo.Item1,
+                        StoreName = cpuCoolerInfo.Item2,
                         ImageUrl = build.CpuCooler.PhotoUrl
                     } : null,
                     PowerSupply = build.PowerSupply != null ? new ComponentPreviewDto
                     {
                         Id = build.PowerSupply.Id,
                         Name = build.PowerSupply.Name,
-                        Price = await GetComponentPrice(build.PowerSupplyId, build.PowerSupplyOfferId),
+                        Price = powerSupplyInfo.Item1,
+                        StoreName = powerSupplyInfo.Item2,
                         ImageUrl = build.PowerSupply.PhotoUrl
                     } : null,
                     PcCase = build.PcCase != null ? new ComponentPreviewDto
                     {
                         Id = build.PcCase.Id,
                         Name = build.PcCase.Name,
-                        Price = await GetComponentPrice(build.PcCaseId, build.PcCaseOfferId),
+                        Price = pcCaseInfo.Item1,
+                        StoreName = pcCaseInfo.Item2,
                         ImageUrl = build.PcCase.PhotoUrl
                     } : null
 
@@ -223,14 +236,15 @@ namespace PcBuilderApi.Services.Implementations
                         }
 
                         // Get price
-                        decimal unitPrice = await GetComponentPrice(pcBuildRam.RamId, pcBuildRam.ProductOfferId);
+                        var ramInfo = await GetComponentPriceAndStore(pcBuildRam.RamId, pcBuildRam.ProductOfferId);
 
                         buildDto.Rams.Add(new MultiComponentPreviewDto
                         {
                             Id = pcBuildRam.RamId,
                             Name = ram.Name,
                             Quantity = pcBuildRam.Quantity,
-                            TotalPrice = unitPrice * pcBuildRam.Quantity,
+                            StoreName = ramInfo.Item2,
+                            TotalPrice = ramInfo.Item1 * pcBuildRam.Quantity,
                             ImageUrl = ram.PhotoUrl
                         });
                     }
@@ -251,14 +265,15 @@ namespace PcBuilderApi.Services.Implementations
                         }
 
                         // Get price
-                        decimal unitPrice = await GetComponentPrice(pcBuildSsd.SsdId, pcBuildSsd.ProductOfferId);
+                        var ssdInfo = await GetComponentPriceAndStore(pcBuildSsd.SsdId, pcBuildSsd.ProductOfferId);
 
                         buildDto.Ssds.Add(new MultiComponentPreviewDto
                         {
                             Id = pcBuildSsd.SsdId,
                             Name = ssd.Name,
                             Quantity = pcBuildSsd.Quantity,
-                            TotalPrice = unitPrice * pcBuildSsd.Quantity,
+                            StoreName = ssdInfo.Item2,
+                            TotalPrice = ssdInfo.Item1 * pcBuildSsd.Quantity,
                             ImageUrl = ssd.PhotoUrl
                         });
                     }
@@ -279,14 +294,15 @@ namespace PcBuilderApi.Services.Implementations
                         }
 
                         // Get price
-                        decimal unitPrice = await GetComponentPrice(pcBuildHdd.HddId, pcBuildHdd.ProductOfferId);
+                        var hddInfo = await GetComponentPriceAndStore(pcBuildHdd.HddId, pcBuildHdd.ProductOfferId);
 
                         buildDto.Hdds.Add(new MultiComponentPreviewDto
                         {
                             Id = pcBuildHdd.HddId,
                             Name = hdd.Name,
                             Quantity = pcBuildHdd.Quantity,
-                            TotalPrice = unitPrice * pcBuildHdd.Quantity,
+                            StoreName = hddInfo.Item2,
+                            TotalPrice = hddInfo.Item1 * pcBuildHdd.Quantity,
                             ImageUrl = hdd.PhotoUrl
                         });
                     }
@@ -307,14 +323,15 @@ namespace PcBuilderApi.Services.Implementations
                         }
 
                         // Get price
-                        decimal unitPrice = await GetComponentPrice(pcBuildFan.FanId, pcBuildFan.ProductOfferId);
+                        var fanInfo = await GetComponentPriceAndStore(pcBuildFan.FanId, pcBuildFan.ProductOfferId);
 
                         buildDto.Fans.Add(new MultiComponentPreviewDto
                         {
                             Id = pcBuildFan.FanId,
                             Name = fan.Name,
                             Quantity = pcBuildFan.Quantity,
-                            TotalPrice = unitPrice * pcBuildFan.Quantity,
+                            StoreName = fanInfo.Item2,
+                            TotalPrice = fanInfo.Item1 * pcBuildFan.Quantity,
                             ImageUrl = fan.PhotoUrl
                         });
                     }
@@ -641,6 +658,27 @@ namespace PcBuilderApi.Services.Implementations
             pcBuild.Price = totalPrice;
         }
 
+        private async Task<(decimal, string)> GetComponentPriceAndStore(Guid? componentId, Guid? offerId)
+        {
+            if (!componentId.HasValue)
+            {
+                return (0, string.Empty);
+            }
+
+
+            var offer = await _unitOfWork.Repository<ProductOffer>().GetFirstOrDefaultAsync(filter: o => o.Id == offerId,
+                includeProperties: "Store");
+            if (offer != null)
+            {
+                return (offer.Price, offer.Store.Name);
+            }
+            else
+            {
+                return (0, string.Empty);
+            }
+
+
+        }
         private async Task<decimal> GetComponentPrice(Guid? componentId, Guid? offerId)
         {
             if (!componentId.HasValue)
@@ -648,18 +686,17 @@ namespace PcBuilderApi.Services.Implementations
                 return 0;
             }
 
-            if (offerId.HasValue)
+            var offer = await _unitOfWork.Repository<ProductOffer>().GetFirstOrDefaultAsync(filter: o => o.Id == offerId);
+            if (offer != null)
             {
-                var offer = await _unitOfWork.Repository<ProductOffer>().GetFirstOrDefaultAsync(o => o.Id == offerId.Value);
-                return offer?.Price ?? 0;
+                return offer.Price;
+            }
+            else
+            {
+                return 0;
             }
 
-            // Use lowest price from available offers
-            var offers = await _unitOfWork.Repository<ProductOffer>()
-                .GetAllAsync(o => o.ComponentId == componentId.Value);
 
-            return offers.Any() ? offers.Min(o => o.Price) : 0;
         }
-
     }
 }

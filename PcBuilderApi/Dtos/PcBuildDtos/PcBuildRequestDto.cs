@@ -37,7 +37,7 @@
 
         public string Name { get; set; } = string.Empty;
         public string? ImageUrl { get; set; }
-
+        public string? StoreName { get; set; }
         public decimal? Price { get; set; }
 
     }
@@ -46,12 +46,12 @@
         public Guid Id { get; set; }
 
         public string Name { get; set; } = string.Empty;
-
+        public string? ImageUrl { get; set; }
         public int Quantity { get; set; }
 
+        public string? StoreName { get; set; }
         public decimal? TotalPrice { get; set; }
 
-        public string? ImageUrl { get; set; }
 
     }
 }
