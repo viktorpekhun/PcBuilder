@@ -84,7 +84,7 @@ namespace PcBuilderApi.Services.Compatibility.Rules
                     }
                 }
             }
-            summaryPower += summaryPower * 3 / 10;
+            summaryPower += 150;
 
             if (summaryPower > powerSupply.Wattage)
             {

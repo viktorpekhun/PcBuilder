@@ -9,7 +9,5 @@
         public decimal Price { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
-
     }
-    
 }

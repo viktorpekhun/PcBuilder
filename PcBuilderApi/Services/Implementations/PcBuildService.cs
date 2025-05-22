@@ -102,7 +102,22 @@ namespace PcBuilderApi.Services.Implementations
             }
 
             var results = _compatibilityChecker.CheckAll(tempBuild);
-            return results;
+            int GetResultPriority(CompatibilityResult result)
+            {
+                // Check if this result has any problem messages (type 0)
+                if (result.Messages.Any(m => m.Type == Utilities.SD.CompatibilityMessageType.Problem))
+                    return 0; // Highest priority
+
+                // Check if this result has any warning messages (type 1)
+                if (result.Messages.Any(m => m.Type == Utilities.SD.CompatibilityMessageType.Warning))
+                    return 1; // Second priority
+
+                // Other message types or no messages
+                return 2; // Lowest priority
+            }
+
+            // Sort results based on the priority
+            return results.OrderBy(GetResultPriority).ToList();
         }
 
         public async Task<bool> DeleteBuildAsync(Guid pcBuildId, Guid userId)
@@ -203,6 +218,7 @@ namespace PcBuilderApi.Services.Implementations
                         Id = build.CpuCooler.Id,
                         Name = build.CpuCooler.Name,
                         Price = cpuCoolerInfo.Item1,
+                        OfferId = (Guid)build.CpuCoolerOfferId,
                         StoreName = cpuCoolerInfo.Item2,
                         ImageUrl = build.CpuCooler.PhotoUrl
                     } : null,
@@ -362,7 +378,6 @@ namespace PcBuilderApi.Services.Implementations
         {
             try
             {
-                // Fetch user's builds with minimal includes for performance
                 var builds = await _unitOfWork.Repository<PcBuild>()
                     .GetAllAsync(
                         filter: b => b.UserId == userId
@@ -383,7 +398,11 @@ namespace PcBuilderApi.Services.Implementations
                     buildDtos.Add(buildDto);
                 }
 
-                return buildDtos;
+
+
+                return buildDtos
+                    .OrderByDescending(b => b.UpdatedAt)
+                    .ToList();
             }
             catch (Exception ex)
             {
@@ -391,43 +410,18 @@ namespace PcBuilderApi.Services.Implementations
             }
         }
 
-        public async Task<bool> SaveBuildAsync(PcBuildInputDto buildDto, Guid userId)
+        public async Task<bool> SaveBuildAsync(Guid userId,PcBuildInputDto buildDto)
         {
             try
             {
                 PcBuild pcBuild;
-                bool isNewBuild = !buildDto.Id.HasValue;
 
-                // If updating existing build, retrieve it and verify ownership
-                if (!isNewBuild)
+                pcBuild = new PcBuild
                 {
-                    pcBuild = await _unitOfWork.Repository<PcBuild>()
-                        .GetFirstOrDefaultAsync(
-                            b => b.Id == buildDto.Id.Value,
-                            includeProperties: "PcBuild_Rams,PcBuild_Ssds,PcBuild_Hdds,PcBuild_Fans"
-                        );
+                    UserId = userId,
+                    CreatedAt = DateTime.UtcNow
+                };
 
-                    if (pcBuild == null)
-                    {
-                        return false;
-                    }
-
-                    if (pcBuild.UserId != userId)
-                    {
-                        return false;
-                    }
-                }
-                else
-                {
-                    // Create new build
-                    pcBuild = new PcBuild
-                    {
-                        UserId = userId,
-                        CreatedAt = DateTime.UtcNow
-                    };
-                }
-
-                // Update basic properties
                 pcBuild.Name = buildDto.Name;
                 pcBuild.Description = buildDto.Description;
                 pcBuild.IsPublished = buildDto.IsPublished;
@@ -562,6 +556,194 @@ namespace PcBuilderApi.Services.Implementations
                     pcBuild.PcBuild_Hdds.Remove(hddToRemove);
                 }
 
+
+                var existingFans = pcBuild.PcBuild_Fans.ToDictionary(f => f.FanId, f => f);
+
+                // 2. Process each new Fan component
+                foreach (var fanDto in buildDto.Fans)
+                {
+                    if (existingFans.TryGetValue(fanDto.ComponentId, out var existingFan))
+                    {
+                        // Update existing Fan
+                        existingFan.Quantity = fanDto.Quantity;
+                        existingFan.ProductOfferId = fanDto.OfferId;
+                        existingFans.Remove(fanDto.ComponentId);
+                    }
+                    else
+                    {
+                        var fan = await _unitOfWork.Repository<Fan>().GetFirstOrDefaultAsync(f => f.Id == fanDto.ComponentId);
+                        if (fan != null)
+                        {
+                            pcBuild.PcBuild_Fans.Add(new PcBuild_Fan
+                            {
+                                FanId = fan.Id,
+                                PcBuild = pcBuild,
+                                PcBuildId = pcBuild.Id,
+                                Quantity = fanDto.Quantity,
+                                ProductOfferId = fanDto.OfferId
+                            });
+                        }
+                    }
+                }
+
+                foreach (var fanToRemove in existingFans.Values)
+                {
+                    pcBuild.PcBuild_Fans.Remove(fanToRemove);
+                }
+
+                // Calculate total price
+                await UpdateTotalPrice(pcBuild);
+
+                await _unitOfWork.Repository<PcBuild>().AddAsync(pcBuild);
+                await _unitOfWork.SaveAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateBuildAsync(Guid pcBuildId, PcBuildInputDto buildDto)
+        {
+            try
+            {
+                PcBuild pcBuild;
+
+                pcBuild = await _unitOfWork.Repository<PcBuild>()
+                        .GetFirstOrDefaultAsync(
+                            b => b.Id == pcBuildId,
+                            includeProperties: "PcBuild_Rams,PcBuild_Ssds,PcBuild_Hdds,PcBuild_Fans"
+                        );
+                if (pcBuild == null)
+                {
+                    return false;
+                }
+
+                // Update basic properties
+                pcBuild.Name = buildDto.Name;
+                pcBuild.Description = buildDto.Description;
+                pcBuild.IsPublished = buildDto.IsPublished;
+                pcBuild.UpdatedAt = DateTime.UtcNow;
+
+                // Update main components
+                pcBuild.CpuId = buildDto.CpuId;
+                pcBuild.GpuId = buildDto.GpuId;
+                pcBuild.MotherboardId = buildDto.MotherboardId;
+                pcBuild.CpuCoolerId = buildDto.CpuCoolerId;
+                pcBuild.PowerSupplyId = buildDto.PowerSupplyId;
+                pcBuild.PcCaseId = buildDto.PcCaseId;
+
+                // Update component offers
+                pcBuild.CpuOfferId = buildDto.CpuOfferId;
+                pcBuild.GpuOfferId = buildDto.GpuOfferId;
+                pcBuild.MotherboardOfferId = buildDto.MotherboardOfferId;
+                pcBuild.CpuCoolerOfferId = buildDto.CpuCoolerOfferId;
+                pcBuild.PowerSupplyOfferId = buildDto.PowerSupplyOfferId;
+                pcBuild.PcCaseOfferId = buildDto.PcCaseOfferId;
+
+                // Handle RAM components
+                var existingRams = pcBuild.PcBuild_Rams.ToDictionary(r => r.RamId, r => r);
+
+                // 2. Process each new RAM component
+                foreach (var ramDto in buildDto.Rams)
+                {
+                    if (existingRams.TryGetValue(ramDto.ComponentId, out var existingRam))
+                    {
+                        // Update existing RAM
+                        existingRam.Quantity = ramDto.Quantity;
+                        existingRam.ProductOfferId = ramDto.OfferId;
+                        existingRams.Remove(ramDto.ComponentId);
+                    }
+                    else
+                    {
+                        // Add new RAM
+                        var ram = await _unitOfWork.Repository<Ram>().GetFirstOrDefaultAsync(r => r.Id == ramDto.ComponentId);
+                        if (ram != null)
+                        {
+                            pcBuild.PcBuild_Rams.Add(new PcBuild_Ram
+                            {
+                                RamId = ram.Id,
+                                PcBuild = pcBuild,
+                                PcBuildId = pcBuild.Id,
+                                Quantity = ramDto.Quantity,
+                                ProductOfferId = ramDto.OfferId
+                            });
+                        }
+                    }
+                }
+
+                foreach (var ramToRemove in existingRams.Values)
+                {
+                    pcBuild.PcBuild_Rams.Remove(ramToRemove);
+                }
+
+
+                var existingSsds = pcBuild.PcBuild_Ssds.ToDictionary(s => s.SsdId, s => s);
+                foreach (var ssdDto in buildDto.Ssds)
+                {
+                    if (existingSsds.TryGetValue(ssdDto.ComponentId, out var existingSsd))
+                    {
+                        // Update existing SSD
+                        existingSsd.Quantity = ssdDto.Quantity;
+                        existingSsd.ProductOfferId = ssdDto.OfferId;
+                        existingSsds.Remove(ssdDto.ComponentId);
+                    }
+                    else
+                    {
+                        // Add new SSD
+                        var ssd = await _unitOfWork.Repository<Ssd>().GetFirstOrDefaultAsync(s => s.Id == ssdDto.ComponentId);
+                        if (ssd != null)
+                        {
+                            pcBuild.PcBuild_Ssds.Add(new PcBuild_Ssd
+                            {
+                                SsdId = ssd.Id,
+                                PcBuild = pcBuild,
+                                PcBuildId = pcBuild.Id,
+                                Quantity = ssdDto.Quantity,
+                                ProductOfferId = ssdDto.OfferId
+                            });
+                        }
+                    }
+                }
+
+                // 3. Remove SSDs that are no longer in the build
+                foreach (var ssdToRemove in existingSsds.Values)
+                {
+                    pcBuild.PcBuild_Ssds.Remove(ssdToRemove);
+                }
+
+                var existingHdds = pcBuild.PcBuild_Hdds.ToDictionary(h => h.HddId, h => h);
+
+                foreach (var hddDto in buildDto.Hdds)
+                {
+                    if (existingHdds.TryGetValue(hddDto.ComponentId, out var existingHdd))
+                    {
+                        existingHdd.Quantity = hddDto.Quantity;
+                        existingHdd.ProductOfferId = hddDto.OfferId;
+                        existingHdds.Remove(hddDto.ComponentId);
+                    }
+                    else
+                    {
+                        var hdd = await _unitOfWork.Repository<Hdd>().GetFirstOrDefaultAsync(h => h.Id == hddDto.ComponentId);
+                        if (hdd != null)
+                        {
+                            pcBuild.PcBuild_Hdds.Add(new PcBuild_Hdd
+                            {
+                                HddId = hdd.Id,
+                                PcBuild = pcBuild,
+                                PcBuildId = pcBuild.Id,
+                                Quantity = hddDto.Quantity,
+                                ProductOfferId = hddDto.OfferId
+                            });
+                        }
+                    }
+                }
+                foreach (var hddToRemove in existingHdds.Values)
+                {
+                    pcBuild.PcBuild_Hdds.Remove(hddToRemove);
+                }
+
                 // Handle Fan components
                 // 1. Create dictionary of existing Fan components by ID
                 var existingFans = pcBuild.PcBuild_Fans.ToDictionary(f => f.FanId, f => f);
@@ -593,39 +775,20 @@ namespace PcBuilderApi.Services.Implementations
                         }
                     }
                 }
-
-                // 3. Remove Fans that are no longer in the build
                 foreach (var fanToRemove in existingFans.Values)
                 {
                     pcBuild.PcBuild_Fans.Remove(fanToRemove);
                 }
 
-                // Calculate total price
                 await UpdateTotalPrice(pcBuild);
-
-                // Save to database
-                if (isNewBuild)
-                {
-                    await _unitOfWork.Repository<PcBuild>().AddAsync(pcBuild);
-                }
-                else
-                {
-                    await _unitOfWork.Repository<PcBuild>().UpdateAsync(pcBuild);
-                }
-
+                await _unitOfWork.Repository<PcBuild>().UpdateAsync(pcBuild);
                 await _unitOfWork.SaveAsync();
                 return true;
             }
             catch (Exception ex)
             {
-                // Log the exception
                 return false;
             }
-        }
-
-        public Task<bool> UpdateBuildAsync(PcBuild pcBuild)
-        {
-            throw new NotImplementedException();
         }
 
         private async Task UpdateTotalPrice(PcBuild pcBuild)
