@@ -109,5 +109,23 @@ namespace PcBuilderApi.Controllers
             }
         }
 
+        [HttpGet("{componentType}/filter-options")]
+        public async Task<IActionResult> GetFilterOptions(ComponentType componentType)
+        {
+            try
+            {
+                var filterOptions = await _componentService.GetFilterOptionsAsync(componentType);
+
+                return Ok(filterOptions);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while retrieving filter options." });
+            }
+        }
     }
 }
