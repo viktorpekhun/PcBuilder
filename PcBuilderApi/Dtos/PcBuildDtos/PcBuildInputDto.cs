@@ -4,7 +4,6 @@ namespace PcBuilderApi.Dtos.PcBuildDtos
 {
     public class PcBuildInputDto
     {
-        public Guid? Id { get; set; }
 
         [Required(ErrorMessage = "Name is required.")]
         [MaxLength(255, ErrorMessage = "Name can't have more than 255 characters.")]
