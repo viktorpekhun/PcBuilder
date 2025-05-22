@@ -144,6 +144,7 @@ namespace PcBuilderApi.Services.Implementations
                         result["gpuManufacturer"] = gpuManufacturers;
                         var gpuModels = components.Select(c => c.GpuModel).Distinct().OrderBy(b => b).ToList();
                         result["gpuModel"] = gpuModels;
+
                         var memoryMin = components.Min(c => c.Memory);
                         var memoryMax = components.Max(c => c.Memory);
                         result["memory_range"] = new List<string> {
@@ -211,9 +212,11 @@ namespace PcBuilderApi.Services.Implementations
                         var types = components.Select(c => c.Type).Distinct().OrderBy(b => b).ToList();
                         result["type"] = types.Where(t => t != null).Cast<string>().ToList();
 
-                        // Fix for CA2021: Ensure proper conversion of nullable double to string
                         var fanSizes = components.Select(c => c.FanSize).Distinct().OrderBy(b => b).ToList();
                         result["fanSize"] = fanSizes.Where(fs => fs.HasValue).Select(fs => fs.Value.ToString("0.0")).ToList();
+
+                        var fanCounts = components.Select(c => c.FanCount).Distinct().OrderBy(b => b).ToList();
+                        result["fanCount"] = fanCounts.Where(fc => fc.HasValue).Select(fc => fc.Value.ToString()).ToList();
 
                         var heightMin = components.Min(c => c.Height);
                         var heightMax = components.Max(c => c.Height);
@@ -227,8 +230,6 @@ namespace PcBuilderApi.Services.Implementations
                                 maxPowerDissipationMin?.ToString() ?? "1",
                                 maxPowerDissipationMax?.ToString() ?? "500"
                             };
-                        var fanCounts = components.Select(c => c.FanCount).Distinct().OrderBy(b => b).ToList();
-                        result["fanCount"] = fanCounts.Where(fc => fc.HasValue).Select(fc => fc.Value.ToString()).ToList();
 
                         var maxSpeedMin = components.Min(c => c.MaxSpeed);
                         var maxSpeedMax = components.Max(c => c.MaxSpeed);
