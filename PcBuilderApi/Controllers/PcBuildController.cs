@@ -54,7 +54,7 @@ namespace PcBuilderApi.Controllers
                     return Unauthorized("Invalid user identification");
                 }
 
-                var result = await _pcBuildService.SaveBuildAsync(buildDto, userId);
+                var result = await _pcBuildService.SaveBuildAsync(userId, buildDto);
 
                 if (result)
                 {
@@ -71,6 +71,42 @@ namespace PcBuilderApi.Controllers
                 {
                     Success = false,
                     Message = "An error occurred while saving the build",
+                    Error = ex.Message
+                });
+            }
+        }
+
+        [Authorize]
+        [HttpPut("update/{id}")]
+        public async Task<IActionResult> UpdateBuild(Guid id, [FromBody] PcBuildInputDto buildDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out Guid userId))
+                {
+                    return Unauthorized("Invalid user identification");
+                }
+                var result = await _pcBuildService.UpdateBuildAsync(id, buildDto);
+                if (result)
+                {
+                    return Ok(new { Success = true, Message = "Build updated successfully" });
+                }
+                else
+                {
+                    return BadRequest(new { Success = false, Message = "Failed to update build" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    Success = false,
+                    Message = "An error occurred while updating the build",
                     Error = ex.Message
                 });
             }
