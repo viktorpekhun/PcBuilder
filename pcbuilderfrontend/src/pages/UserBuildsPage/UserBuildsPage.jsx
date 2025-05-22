@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import {Link, useNavigate} from 'react-router-dom';
 import styles from './UserBuildsPage.module.css';
 import useAuth from '../../hooks/useAuth';
 import useAxiosPrivate from '../../hooks/useAxiosPrivate';
@@ -12,6 +12,7 @@ function UserBuildsPage() {
     const [selectedBuild, setSelectedBuild] = useState(null);
     const [selectedBuildId, setSelectedBuildId] = useState(null);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
     const [error, setError] = useState(null);
     const [deleteStatus, setDeleteStatus] = useState({ loading: false, error: null });
     const { auth } = useAuth();
@@ -56,6 +57,124 @@ function UserBuildsPage() {
         }
     };
 
+    const handleEditBuild = () => {
+        if (!selectedBuild) return;
+        console.log("Edit build - transformed components:", selectedBuild);
+        // Transform the selected build data to the format expected by PcBuildPage
+        const transformedComponents = {
+            // Single components
+            cpu: selectedBuild.cpu ? {
+                componentId: selectedBuild.cpu.id,
+                price: selectedBuild.cpu.price,
+                storeName: selectedBuild.cpu.storeName,
+                storeLogoUrl: selectedBuild.cpu.storeLogoUrl || selectedBuild.cpu.imageUrl,
+                productOfferUrl: selectedBuild.cpu.productOfferUrl,
+                offerId: selectedBuild.cpu.offerId
+            } : null,
+
+            gpu: selectedBuild.gpu ? {
+                componentId: selectedBuild.gpu.id,
+                price: selectedBuild.gpu.price,
+                storeName: selectedBuild.gpu.storeName,
+                storeLogoUrl: selectedBuild.gpu.storeLogoUrl || selectedBuild.gpu.imageUrl,
+                productOfferUrl: selectedBuild.gpu.productOfferUrl,
+                offerId: selectedBuild.gpu.offerId
+            } : null,
+
+            motherboard: selectedBuild.motherboard ? {
+                componentId: selectedBuild.motherboard.id,
+                price: selectedBuild.motherboard.price,
+                storeName: selectedBuild.motherboard.storeName,
+                storeLogoUrl: selectedBuild.motherboard.storeLogoUrl || selectedBuild.motherboard.imageUrl,
+                productOfferUrl: selectedBuild.motherboard.productOfferUrl,
+                offerId: selectedBuild.motherboard.offerId
+            } : null,
+
+            powerSupply: selectedBuild.powerSupply ? {
+                componentId: selectedBuild.powerSupply.id,
+                price: selectedBuild.powerSupply.price,
+                storeName: selectedBuild.powerSupply.storeName,
+                storeLogoUrl: selectedBuild.powerSupply.storeLogoUrl || selectedBuild.powerSupply.imageUrl,
+                productOfferUrl: selectedBuild.powerSupply.productOfferUrl,
+                offerId: selectedBuild.powerSupply.offerId
+            } : null,
+
+            cpuCooler: selectedBuild.cpuCooler ? {
+                componentId: selectedBuild.cpuCooler.id,
+                price: selectedBuild.cpuCooler.price,
+                storeName: selectedBuild.cpuCooler.storeName,
+                storeLogoUrl: selectedBuild.cpuCooler.storeLogoUrl || selectedBuild.cpuCooler.imageUrl,
+                productOfferUrl: selectedBuild.cpuCooler.productOfferUrl,
+                offerId: selectedBuild.cpuCooler.offerId
+            } : null,
+
+            pcCase: selectedBuild.pcCase ? {
+                componentId: selectedBuild.pcCase.id,
+                price: selectedBuild.pcCase.price,
+                storeName: selectedBuild.pcCase.storeName,
+                storeLogoUrl: selectedBuild.pcCase.storeLogoUrl || selectedBuild.pcCase.imageUrl,
+                productOfferUrl: selectedBuild.pcCase.productOfferUrl,
+                offerId: selectedBuild.pcCase.offerId
+            } : null,
+
+            // Multi-component arrays
+            rams: selectedBuild.rams ? selectedBuild.rams.map(ram => ({
+                componentId: ram.id,  // Use id instead of componentId
+                quantity: ram.quantity || 1,
+                price: ram.price || (ram.totalPrice / (ram.quantity || 1)),
+                storeName: ram.storeName,
+                storeLogoUrl: ram.storeLogoUrl || ram.imageUrl,
+                productOfferUrl: ram.productOfferUrl,
+                offerId: ram.offerId
+            })) : [],
+
+            ssds: selectedBuild.ssds ? selectedBuild.ssds.map(ssd => ({
+                componentId: ssd.id,  // Use id instead of componentId
+                quantity: ssd.quantity || 1,
+                price: ssd.price || (ssd.totalPrice / (ssd.quantity || 1)),
+                storeName: ssd.storeName,
+                storeLogoUrl: ssd.storeLogoUrl || ssd.imageUrl,
+                productOfferUrl: ssd.productOfferUrl,
+                offerId: ssd.offerId
+            })) : [],
+
+            hdds: selectedBuild.hdds ? selectedBuild.hdds.map(hdd => ({
+                componentId: hdd.id,  // Use id instead of componentId
+                quantity: hdd.quantity || 1,
+                price: hdd.price || (hdd.totalPrice / (hdd.quantity || 1)),
+                storeName: hdd.storeName,
+                storeLogoUrl: hdd.storeLogoUrl || hdd.imageUrl,
+                productOfferUrl: hdd.productOfferUrl,
+                offerId: hdd.offerId
+            })) : [],
+
+            fans: selectedBuild.fans ? selectedBuild.fans.map(fan => ({
+                componentId: fan.id,  // Use id instead of componentId
+                quantity: fan.quantity || 1,
+                price: fan.price || (fan.totalPrice / (fan.quantity || 1)),
+                storeName: fan.storeName,
+                storeLogoUrl: fan.storeLogoUrl || fan.imageUrl,
+                productOfferUrl: fan.productOfferUrl,
+                offerId: fan.offerId
+            })) : []
+        };
+
+        console.log("Edit build - transformed components:", transformedComponents);
+
+        // Store the data in localStorage for PcBuildPage to use
+        localStorage.setItem('selectedComponents', JSON.stringify(transformedComponents));
+
+        // Store build information for potential save/update
+        localStorage.setItem('editingBuild', JSON.stringify({
+            id: selectedBuild.id,
+            name: selectedBuild.name,
+            description: selectedBuild.description
+        }));
+
+        // Navigate to the PC Builder page
+        navigate('/');
+    };
+
     const openDeleteModal = (buildId) => {
         const buildToDelete = builds.find(build => build.id === buildId);
         if (buildToDelete) {
@@ -65,6 +184,15 @@ function UserBuildsPage() {
                 buildName: buildToDelete.name
             });
         }
+    };
+
+    const handleCreateNewBuild = () => {
+        // Clear any existing build data from localStorage
+        localStorage.removeItem('selectedComponents');
+        localStorage.removeItem('editingBuild');
+
+        // Navigate to the PC Builder page
+        navigate('/');
     };
 
     // Fetch all user builds
@@ -117,6 +245,7 @@ function UserBuildsPage() {
     // Handle build selection
     const handleSelectBuild = (buildId) => {
         setSelectedBuildId(buildId);
+        console.log('Selected Build: ', selectedBuild)
     };
 
     if (loading) {
@@ -176,7 +305,12 @@ function UserBuildsPage() {
                             </li>
                         ))}
                     </ul>
-                    <Link to="/" className={styles['new-build-button']}>Create New Build</Link>
+                    <button
+                        onClick={handleCreateNewBuild}
+                        className={styles['new-build-button']}
+                    >
+                        Create New Build
+                    </button>
                 </div>
 
                 {/* Right content - selected build details */}
@@ -188,10 +322,7 @@ function UserBuildsPage() {
                                 <div className={styles['build-actions']}>
                                     <button
                                         className={styles['edit-button']}
-                                        onClick={() => {
-                                            // TODO: Implement edit functionality
-                                            // Could be loading the build into PcBuildPage
-                                        }}
+                                        onClick={handleEditBuild}
                                     >
                                         Edit Build
                                     </button>

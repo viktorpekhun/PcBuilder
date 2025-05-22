@@ -1,10 +1,18 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import styles from './SaveBuildModal.module.css';
 
-function SaveBuildModal({ isOpen, onCancel, onSave, isSaving }) {
-    const [buildName, setBuildName] = useState('');
-    const [description, setDescription] = useState('');
+function SaveBuildModal({ isOpen, onCancel, onSave, isSaving, initialName = '', initialDescription = '', isEditing = false }) {
+    const [buildName, setBuildName] = useState(initialName);
+    const [description, setDescription] = useState(initialDescription);
     const [error, setError] = useState('');
+
+    useEffect(() => {
+        if (isOpen) {
+            setBuildName(initialName);
+            setDescription(initialDescription);
+            setError('');
+        }
+    }, [isOpen, initialName, initialDescription]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -27,7 +35,7 @@ function SaveBuildModal({ isOpen, onCancel, onSave, isSaving }) {
     return (
         <div className={styles.modalOverlay}>
             <div className={styles.modalContent}>
-                <h2>Save Your Build</h2>
+                <h2>{isEditing ? 'Update Your Build' : 'Save Your Build'}</h2>
 
                 <form onSubmit={handleSubmit}>
                     <div className={styles.formGroup}>
@@ -69,7 +77,7 @@ function SaveBuildModal({ isOpen, onCancel, onSave, isSaving }) {
                             className={styles.saveButton}
                             disabled={isSaving}
                         >
-                            {isSaving ? 'Saving...' : 'Save Build'}
+                            {isSaving ? 'Saving...' : isEditing ? 'Update' : 'Save Build'}
                         </button>
                     </div>
                 </form>
