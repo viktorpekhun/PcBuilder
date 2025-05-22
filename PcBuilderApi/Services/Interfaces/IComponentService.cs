@@ -8,5 +8,7 @@ namespace PcBuilderApi.Services.Interfaces
         Task<PagedResponse<object>> GetAllByTypeAsync(ComponentType componentType, ResourceParameters parameters);
 
         Task<object> GetByIdAsync(Guid id, ComponentType componentType);
+
+        Task<Dictionary<string, List<string>>> GetFilterOptionsAsync(ComponentType componentType);
     }
 }
