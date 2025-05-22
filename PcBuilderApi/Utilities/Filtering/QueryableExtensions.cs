@@ -52,7 +52,14 @@ namespace PcBuilderApi.Utilities.Filtering
             {
                 // Get property info
                 var propertyName = filter.Key;
-                var propertyInfo = typeof(T).GetProperty(propertyName,
+                bool isRangeFilter = propertyName.EndsWith("_range", StringComparison.OrdinalIgnoreCase);
+
+                // For range filters, extract the actual property name without the "_range" suffix
+                string actualPropertyName = isRangeFilter
+                    ? propertyName.Substring(0, propertyName.Length - 6)
+                    : propertyName;
+
+                var propertyInfo = typeof(T).GetProperty(actualPropertyName,
                     BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
 
                 if (propertyInfo == null)
@@ -71,49 +78,78 @@ namespace PcBuilderApi.Utilities.Filtering
                     Nullable.GetUnderlyingType(propertyType) :
                     propertyType;
 
-                // Create OR expressions for multiple values
                 Expression propertyFilterExpression = null;
 
-                foreach (var value in filter.Value)
+                if (isRangeFilter && filter.Value.Length >= 2)
                 {
-                    // Skip empty values
-                    if (string.IsNullOrWhiteSpace(value))
-                        continue;
+                    string minValueStr = filter.Value[0];
+                    string maxValueStr = filter.Value[1];
 
-                    // Convert the value to the appropriate type
-                    object convertedValue;
                     try
                     {
-                        convertedValue = Convert.ChangeType(value, underlyingType);
+                        // Parse min and max values
+                        object minValue = Convert.ChangeType(minValueStr, underlyingType);
+                        object maxValue = Convert.ChangeType(maxValueStr, underlyingType);
+
+                        // Create constants for min and max
+                        Expression minConstant = Expression.Constant(minValue, propertyType);
+                        Expression maxConstant = Expression.Constant(maxValue, propertyType);
+
+                        // Create range expression: property >= minValue && property <= maxValue
+                        Expression greaterThanOrEqual = Expression.GreaterThanOrEqual(property, minConstant);
+                        Expression lessThanOrEqual = Expression.LessThanOrEqual(property, maxConstant);
+                        propertyFilterExpression = Expression.AndAlso(greaterThanOrEqual, lessThanOrEqual);
                     }
-                    catch (Exception)
+                    catch
                     {
-                        // Skip this value if conversion fails
+                        // Skip if conversion fails
                         continue;
                     }
-
-                    // Create constant expression
-                    Expression constant = isNullable
-                        ? Expression.Constant(convertedValue, propertyType)
-                        : Expression.Constant(convertedValue);
-
-                    // Create comparison expression
-                    Expression comparisonExpression;
-
-                    if (propertyType == typeof(string))
+                }
+                else
+                {
+                    // Regular non-range filter with multiple possible values combined with OR
+                    foreach (var value in filter.Value)
                     {
-                        var method = typeof(string).GetMethod("Contains", new[] { typeof(string) });
-                        comparisonExpression = Expression.Call(property, method, constant);
-                    }
-                    else
-                    {
-                        comparisonExpression = Expression.Equal(property, constant);
-                    }
+                        // Skip empty values
+                        if (string.IsNullOrWhiteSpace(value))
+                            continue;
 
-                    // Combine with OR for multiple values of the same property
-                    propertyFilterExpression = propertyFilterExpression == null
-                        ? comparisonExpression
-                        : Expression.OrElse(propertyFilterExpression, comparisonExpression);
+                        // Convert the value to the appropriate type
+                        object convertedValue;
+                        try
+                        {
+                            convertedValue = Convert.ChangeType(value, underlyingType);
+                        }
+                        catch (Exception)
+                        {
+                            // Skip this value if conversion fails
+                            continue;
+                        }
+
+                        // Create constant expression
+                        Expression constant = isNullable
+                            ? Expression.Constant(convertedValue, propertyType)
+                            : Expression.Constant(convertedValue);
+
+                        // Create comparison expression
+                        Expression comparisonExpression;
+
+                        if (propertyType == typeof(string))
+                        {
+                            var method = typeof(string).GetMethod("Contains", new[] { typeof(string) });
+                            comparisonExpression = Expression.Call(property, method, constant);
+                        }
+                        else
+                        {
+                            comparisonExpression = Expression.Equal(property, constant);
+                        }
+
+                        // Combine with OR for multiple values of the same property
+                        propertyFilterExpression = propertyFilterExpression == null
+                            ? comparisonExpression
+                            : Expression.OrElse(propertyFilterExpression, comparisonExpression);
+                    }
                 }
 
                 // If we have a valid expression for this property, combine with AND with other properties
