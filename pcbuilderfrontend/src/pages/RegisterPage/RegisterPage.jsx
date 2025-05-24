@@ -94,9 +94,10 @@ const RegisterPage = () => {
         }
     }
 
-    const togglePersist = () => {
-        setPersist(prev => !prev);
-    }
+    useEffect(() => {
+        setPersist(true);
+    }, []);
+
 
     useEffect(() => {
         localStorage.setItem("persist", persist);
@@ -197,15 +198,6 @@ const RegisterPage = () => {
                         Sign Up
                     </button>
 
-                    <div className={styles['persistCheck']}>
-                        <input
-                            type="checkbox"
-                            id="persist"
-                            onChange={togglePersist}
-                            checked={persist}
-                        />
-                        <label htmlFor="persist">Trust This Device</label>
-                    </div>
                 </form>
 
                 <p>

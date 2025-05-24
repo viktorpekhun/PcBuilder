@@ -1,21 +1,42 @@
 .filterPanel {
+    position: sticky;
+    top: 8px;
     background-color: #f8f8f8;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 20px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    box-shadow: 0 0 4px 1px rgba(0, 0, 0, 0.25);
     width: 100%;
     max-width: 300px;
+    max-height: calc(100vh - 32px); /* Viewport height minus top and bottom margins */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.filterHeader{
+    color: white;
+    width: 100%;
+    background-color: #262B31;
+    margin: 0 0 8px 0;
+    height: 48px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex-shrink: 0;
 }
 
 .filtersContainer {
     display: flex;
     flex-direction: column;
     gap: 15px;
+    margin: 0 0 0 8px;
+    overflow-y: auto; /* Add scrollbar inside the filters area */
+    padding-right: 4px; /* Add padding to prevent content touching scrollbar */
+    padding-bottom: 16px; /* Space at bottom for better UX */
 }
 
 .filterGroup {
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #CECECE;
     padding-bottom: 10px;
 }
 
@@ -23,12 +44,14 @@
     margin: 0 0 8px 0;
     font-size: 1rem;
     color: #333;
+    text-align: left;
 }
 
 .checkboxGroup {
     display: flex;
     flex-direction: column;
     gap: 5px;
+    padding-left: 8px;
 }
 
 .checkboxLabel {
@@ -38,16 +61,40 @@
     cursor: pointer;
 }
 
+.checkboxLabel input {
+    margin: 0 8px 0 0;
+}
+
+.showMoreButton {
+    width: 100%;
+    background: none;
+    border: none;
+    text-align: left;
+    color: #3f51b5;
+    cursor: pointer;
+    padding: 8px 0;
+    margin-top: 5px;
+    font-size: 0.85rem;
+    transition: color 0.2s;
+}
+
+.showMoreButton:hover {
+    color: #303f9f;
+    text-decoration: underline;
+}
+
 .rangeGroup {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    padding-left: 8px;
 }
 
 .rangeGroup label {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    width: 50%;
 }
 
 .rangeInput {
@@ -64,17 +111,10 @@
 }
 
 .clearButton {
-    margin-top: 15px;
-    padding: 8px 12px;
-    background-color: #f44336;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    width: 100%;
+    margin: 20px auto;
+    display: block;
+    font-size: 16px;
+    width: 80%;
 }
 
-.clearButton:hover {
-    background-color: #d32f2f;
-}
+
