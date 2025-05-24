@@ -8,9 +8,7 @@
         public string Brand { get; set; } = string.Empty;
         public string? SizeStandard { get; set; }
         public string? SizeDimentions { get; set; }
-        public int? PsuWattage { get; set; }
         public string? PsuLocation { get; set; }
-        public bool HasDustFilters { get; set; }
         public string? Usb { get; set; }
         public decimal? AveragePrice { get; set; }
         public int? OffersCount { get; set; }

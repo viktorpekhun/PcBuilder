@@ -45,7 +45,6 @@ namespace PcBuilderApi.Mappers.PcCaseMappers
                 SizeStandard = pcCase.SizeStandard,
                 SizeDimentions = pcCase.SizeDimentions,
                 Weight = pcCase.Weight,
-                PsuWattage = pcCase.PsuWattage,
                 PsuLocation = pcCase.PsuLocation,
                 MaxGpuLength = pcCase.MaxGpuLength,
                 MaxCpuCoolerHeight = pcCase.MaxCpuCoolerHeight,

@@ -135,15 +135,8 @@ namespace PcBuilderApi.Utilities.Filtering
                         // Create comparison expression
                         Expression comparisonExpression;
 
-                        if (propertyType == typeof(string))
-                        {
-                            var method = typeof(string).GetMethod("Contains", new[] { typeof(string) });
-                            comparisonExpression = Expression.Call(property, method, constant);
-                        }
-                        else
-                        {
-                            comparisonExpression = Expression.Equal(property, constant);
-                        }
+                        
+                        comparisonExpression = Expression.Equal(property, constant);
 
                         // Combine with OR for multiple values of the same property
                         propertyFilterExpression = propertyFilterExpression == null

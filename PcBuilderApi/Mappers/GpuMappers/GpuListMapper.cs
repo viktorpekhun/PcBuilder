@@ -25,6 +25,7 @@ namespace PcBuilderApi.Mappers.GpuMappers
                     GpuModel = gpu.GpuModel,
                     Memory = gpu.Memory,
                     MemoryType = gpu.MemoryType,
+                    MemoryBus = gpu.MemoryBus,
                     PcleVersion = gpu.PcleVersion,
                     PcleLane = gpu.PcleLane,
                     MaxFrequency = gpu.MaxFrequency,

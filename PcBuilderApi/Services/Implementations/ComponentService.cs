@@ -126,6 +126,17 @@ namespace PcBuilderApi.Services.Implementations
                                 threadsMin?.ToString() ?? "1",
                                 threadsMax?.ToString() ?? "256"
                             };
+
+                        var cacheMin = components.Min(c => c.Cache);
+                        var cacheMax = components.Max(c => c.Cache);
+                        result["cache_range"] = new List<string> {
+                                cacheMin?.ToString() ?? "1",
+                                cacheMax?.ToString() ?? "128"
+                            };
+
+                        var complectations = components.Select(c => c.Complectation).Distinct().OrderBy(b => b).ToList();
+                        result["complectation"] = complectations.Where(c => c != null).Cast<string>().ToList();
+
                         var averagePriceMin = components.Min(c => c.AveragePrice);
                         var averagePriceMax = components.Max(c => c.AveragePrice);
                         result["averagePrice_range"] = new List<string> {
@@ -145,14 +156,15 @@ namespace PcBuilderApi.Services.Implementations
                         var gpuModels = components.Select(c => c.GpuModel).Distinct().OrderBy(b => b).ToList();
                         result["gpuModel"] = gpuModels;
 
+                        var memoryTypes = components.Select(c => c.MemoryType).Distinct().OrderBy(b => b).ToList();
+                        result["memoryType"] = memoryTypes.Where(mt => mt != null).Cast<string>().ToList();
+
                         var memoryMin = components.Min(c => c.Memory);
                         var memoryMax = components.Max(c => c.Memory);
                         result["memory_range"] = new List<string> {
                                 memoryMin?.ToString() ?? "1",
                                 memoryMax?.ToString() ?? "64"
                             };
-                        var memoryTypes = components.Select(c => c.MemoryType).Distinct().OrderBy(b => b).ToList();
-                        result["memoryType"] = memoryTypes.Where(mt => mt != null).Cast<string>().ToList();
 
                         var maxFrequencyMin = components.Min(c => c.MaxFrequency);
                         var maxFrequencyMax = components.Max(c => c.MaxFrequency);
@@ -166,6 +178,13 @@ namespace PcBuilderApi.Services.Implementations
                                 cudaCoresMin?.ToString() ?? "1",
                                 cudaCoresMax?.ToString() ?? "10000"
                             };
+
+                        var memoryBuses = components.Select(c => c.MemoryBus).Distinct().OrderBy(b => b).ToList();
+                        result["memoryBus"] = memoryBuses.Where(mb => mb.HasValue).Select(mb => mb.Value.ToString()).ToList();
+
+                        var pcleVersions = components.Select(c => c.PcleVersion).Distinct().OrderBy(b => b).ToList();
+                        result["pcleVersion"] = pcleVersions.Where(pv => pv.HasValue).Select(pv => pv.Value.ToString("0.0")).ToList();
+
                         var averagePriceMin = components.Min(c => c.AveragePrice);
                         var averagePriceMax = components.Max(c => c.AveragePrice);
                         result["averagePrice_range"] = new List<string> {
@@ -191,6 +210,16 @@ namespace PcBuilderApi.Services.Implementations
                         var dimmTypes = components.Select(c => c.DimmType).Distinct().OrderBy(b => b).ToList();
                         result["dimmType"] = dimmTypes.Where(dt => dt != null).Cast<string>().ToList();
 
+                        var dimmCapacities = components.Select(c => c.DimmCapacity).Distinct().OrderBy(b => b).ToList();
+                        result["dimmCapacity"] = dimmCapacities.Where(dc => dc.HasValue).Select(dc => dc.Value.ToString()).ToList();
+
+                        var sata3CountMin = components.Min(c => c.Sata3Count);
+                        var sata3CountMax = components.Max(c => c.Sata3Count);
+                        result["sata3Count_range"] = new List<string> {
+                                sata3CountMin?.ToString() ?? "0",
+                                sata3CountMax?.ToString() ?? "10"
+                            };
+
                         var formFactors = components.Select(c => c.FormFactor).Distinct().OrderBy(b => b).ToList();
                         result["formFactor"] = formFactors.Where(ff => ff != null).Cast<string>().ToList();
 
@@ -208,9 +237,6 @@ namespace PcBuilderApi.Services.Implementations
                         var components = await _unitOfWork.Repository<CpuCooler>().GetAllAsync();
                         var brands = components.Select(c => c.Brand).Distinct().OrderBy(b => b).ToList();
                         result["brand"] = brands;
-
-                        var types = components.Select(c => c.Type).Distinct().OrderBy(b => b).ToList();
-                        result["type"] = types.Where(t => t != null).Cast<string>().ToList();
 
                         var fanSizes = components.Select(c => c.FanSize).Distinct().OrderBy(b => b).ToList();
                         result["fanSize"] = fanSizes.Where(fs => fs.HasValue).Select(fs => fs.Value.ToString("0.0")).ToList();
@@ -252,7 +278,10 @@ namespace PcBuilderApi.Services.Implementations
                         var components = await _unitOfWork.Repository<PowerSupply>().GetAllAsync();
                         var brands = components.Select(c => c.Brand).Distinct().OrderBy(b => b).ToList();
                         result["brand"] = brands;
-                        
+
+                        var formFactors = components.Select(c => c.FormFactor).Distinct().OrderBy(b => b).ToList();
+                        result["formFactor"] = formFactors.Where(ff => ff != null).Cast<string>().ToList();
+
                         var wattageMin = components.Min(c => c.Wattage);
                         var wattageMax = components.Max(c => c.Wattage);
                         result["wattage_range"] = new List<string> {
@@ -261,6 +290,27 @@ namespace PcBuilderApi.Services.Implementations
                             };
                         var efficiencyStandarts = components.Select(c => c.EfficiencyStandart).Distinct().OrderBy(b => b).ToList();
                         result["efficiencyStandart"] = efficiencyStandarts.Where(es => es != null).Cast<string>().ToList();
+
+                        var efficiencyPercentMin = components.Min(c => c.EfficiencyPercent);
+                        var efficiencyPercentMax = components.Max(c => c.EfficiencyPercent);
+                        result["efficiencyPercent_range"] = new List<string> {
+                                efficiencyPercentMin?.ToString("0.0") ?? "1.0",
+                                efficiencyPercentMax?.ToString("0.0") ?? "100.0"
+                            };
+
+                        var molexCountMin = components.Min(c => c.MolexCount);
+                        var molexCountMax = components.Max(c => c.MolexCount);
+                        result["molexCount_range"] = new List<string> {
+                                molexCountMin?.ToString() ?? "0",
+                                molexCountMax?.ToString() ?? "20"
+                            };
+
+                        var sataCountMin = components.Min(c => c.SataCount);
+                        var sataCountMax = components.Max(c => c.SataCount);
+                        result["sataCount_range"] = new List<string> {
+                                sataCountMin?.ToString() ?? "0",
+                                sataCountMax?.ToString() ?? "20"
+                            };
 
                         var averagePriceMin = components.Min(c => c.AveragePrice);
                         var averagePriceMax = components.Max(c => c.AveragePrice);
@@ -288,9 +338,6 @@ namespace PcBuilderApi.Services.Implementations
                                 weightMax?.ToString("0.0") ?? "20.0"
                             };
 
-                        var psuLocations = components.Select(c => c.PsuLocation).Distinct().OrderBy(b => b).ToList();
-                        result["psuLocation"] = psuLocations.Where(pl => pl != null).Cast<string>().ToList();
-
                         var maxGpuLengthMin = components.Min(c => c.MaxGpuLength);
                         var maxGpuLengthMax = components.Max(c => c.MaxGpuLength);
                         result["maxGpuLength_range"] = new List<string> {
@@ -302,6 +349,20 @@ namespace PcBuilderApi.Services.Implementations
                         result["maxCpuCoolerHeight_range"] = new List<string> {
                                 maxCpuCoolerHeightMin?.ToString("0.0") ?? "1.0",
                                 maxCpuCoolerHeightMax?.ToString("0.0") ?? "20.0"
+                            };
+
+                        var slot25QuantMin = components.Min(c => c.Slot25Quant);
+                        var slot25QuantMax = components.Max(c => c.Slot25Quant);
+                        result["slot25Quant_range"] = new List<string> {
+                                slot25QuantMin?.ToString() ?? "0",
+                                slot25QuantMax?.ToString() ?? "20"
+                            };
+
+                        var slot35QuantMin = components.Min(c => c.Slot35Quant);
+                        var slot35QuantMax = components.Max(c => c.Slot35Quant);
+                        result["slot35Quant_range"] = new List<string> {
+                                slot35QuantMin?.ToString() ?? "0",
+                                slot35QuantMax?.ToString() ?? "20"
                             };
 
                         var averagePriceMin = components.Min(c => c.AveragePrice);
@@ -459,6 +520,10 @@ namespace PcBuilderApi.Services.Implementations
                             };
                         break;
                     }
+            }
+            foreach (var key in result.Keys.ToList())
+            {
+                result[key].RemoveAll(string.IsNullOrEmpty);
             }
             return result;
         }

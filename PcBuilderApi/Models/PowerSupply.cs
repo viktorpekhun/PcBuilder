@@ -37,7 +37,7 @@ namespace PcBuilderApi.Models
         [MaxLength(50)]
         public string? EfficiencyStandart { get; set; }
         public double? EfficiencyPercent { get; set; }
-        public bool? IsModular { get; set; }
+        public bool IsModular { get; set; }
         public double? NoiseLevelMaxDb { get; set; }
 
         [MaxLength(50)]

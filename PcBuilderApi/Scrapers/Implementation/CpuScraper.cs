@@ -99,6 +99,11 @@ namespace PcBuilderApi.Scrapers.Implementation
                             case "Базове тепловиділення TDP, Вт":
                                 cpu.Tdp = ParseInt(value);
                                 break;
+                            case "Максимальне тепловиділення TDP, Вт":
+                                {
+                                    cpu.Tdp = ParseInt(value);
+                                    break;
+                                }
                             case "Інтегрована графіка":
                                 cpu.IntegratedGraphics = !value.Equals("немає", StringComparison.OrdinalIgnoreCase);
                                 break;

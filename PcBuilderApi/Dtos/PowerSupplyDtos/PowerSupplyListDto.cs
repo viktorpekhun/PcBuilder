@@ -10,10 +10,10 @@
         public int Wattage { get; set; }
         public string? EfficiencyStandart { get; set; }
         public double? EfficiencyPercent { get; set; }
-        public bool? IsModular { get; set; }
         public double? NoiseLevelMaxDb { get; set; }
         public decimal? AveragePrice { get; set; }
         public int? OffersCount { get; set; }
-        public List<PowerSupplyPowerConnectorDto> PowerSupplyPowerConnectors { get; set; } = new();
+        public List<PowerSupplyCpuPowerConnectorDto> PowerSupplyCpuPowerConnectors { get; set; } = new();
+        public List<PowerSupplyGpuPowerConnectorDto> PowerSupplyGpuPowerConnectors { get; set; } = new();
     }
 }

@@ -14,15 +14,25 @@ namespace PcBuilderApi.Mappers.PowerSupplyMappers
             return powerSupplies.Select(powerSupply =>
             {
 
-                var powerSupplyPowerConnectorDtos = powerSupply.PowerSupplyPowerConnectors
-                     .Select(c => new PowerSupplyPowerConnectorDto
-                     {
-                         Type = c.Type,
-                         Pins = c.Pins,
-                         AdditionalPins = c.AdditionalPins,
-                         Quantity = c.Quantity
-                     })
-                     .ToList();
+                var powerSupplyCpuPowerConnectorDtos = powerSupply.PowerSupplyPowerConnectors
+                .Where(c => c.Type == "CPU")
+                .Select(c => new PowerSupplyCpuPowerConnectorDto
+                {
+                    Pins = c.Pins,
+                    AdditionalPins = c.AdditionalPins,
+                    Quantity = c.Quantity
+                })
+                .ToList();
+
+                var powerSupplyGpuPowerConnectorDtos = powerSupply.PowerSupplyPowerConnectors
+                    .Where(c => c.Type == "GPU")
+                    .Select(c => new PowerSupplyGpuPowerConnectorDto
+                    {
+                        Pins = c.Pins,
+                        AdditionalPins = c.AdditionalPins,
+                        Quantity = c.Quantity
+                    })
+                    .ToList();
                 return new PowerSupplyListDto
                 {
                     Id = powerSupply.Id,
@@ -33,11 +43,11 @@ namespace PcBuilderApi.Mappers.PowerSupplyMappers
                     Wattage = powerSupply.Wattage,
                     EfficiencyPercent = powerSupply.EfficiencyPercent,
                     EfficiencyStandart = powerSupply.EfficiencyStandart,
-                    IsModular = powerSupply.IsModular,
                     NoiseLevelMaxDb = powerSupply.NoiseLevelMaxDb,
                     AveragePrice = powerSupply.AveragePrice,
                     OffersCount = powerSupply.OffersCount,
-                    PowerSupplyPowerConnectors = powerSupplyPowerConnectorDtos,
+                    PowerSupplyCpuPowerConnectors = powerSupplyCpuPowerConnectorDtos,
+                    PowerSupplyGpuPowerConnectors = powerSupplyGpuPowerConnectorDtos
                 };
             });
         }

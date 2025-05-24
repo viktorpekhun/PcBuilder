@@ -11,7 +11,6 @@ namespace PcBuilderApi.Dtos.PcCaseDtos
         public string? SizeStandard { get; set; }
         public string? SizeDimentions { get; set; }
         public double? Weight { get; set; }
-        public int? PsuWattage { get; set; }
         public string? PsuLocation { get; set; }
         public double? MaxGpuLength { get; set; }
         public double? MaxCpuCoolerHeight { get; set; }

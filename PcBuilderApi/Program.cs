@@ -108,7 +108,8 @@ builder.Services.AddCors(options =>
         policy => policy.WithOrigins("http://localhost:5173") // URL Vite
                         .AllowAnyMethod()
                         .AllowAnyHeader()
-                        .AllowCredentials());
+                        .AllowCredentials()
+                        .WithExposedHeaders("X-Pagination"));
 });
 
 builder.Services.AddEndpointsApiExplorer();

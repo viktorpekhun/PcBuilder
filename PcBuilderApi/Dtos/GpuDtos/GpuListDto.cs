@@ -17,6 +17,8 @@
 
         public string? MemoryType { get; set; }
 
+        public int? MemoryBus { get; set; }
+
         public double? PcleVersion { get; set; }
 
         public int? PcleLane { get; set; }

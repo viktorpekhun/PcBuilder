@@ -20,10 +20,28 @@ namespace PcBuilderApi.Mappers.PowerSupplyMappers
             var powerSupply = (PowerSupply)entity;
             var offers = productOffers.Where(p => p.ComponentId == powerSupply.Id);
             var offerDtos = _mapper.Map<List<ProductOfferDto>>(offers);
-            var powerSupplyPowerConnectorDtos = powerSupply.PowerSupplyPowerConnectors
-                .Select(c => new PowerSupplyPowerConnectorDto
+            var powerSupplyMotherboardPowerConnectorDtos = powerSupply.PowerSupplyPowerConnectors
+                .Where(c => c.Type == "Motherboard")
+                .Select(c => new PowerSupplyMotherboardPowerConnectorDto
                 {
-                    Type = c.Type,
+                    Pins = c.Pins,
+                    AdditionalPins = c.AdditionalPins,
+                })
+                .ToList();
+            var powerSupplyCpuPowerConnectorDtos = powerSupply.PowerSupplyPowerConnectors
+                .Where(c => c.Type == "CPU")
+                .Select(c => new PowerSupplyCpuPowerConnectorDto
+                {
+                    Pins = c.Pins,
+                    AdditionalPins = c.AdditionalPins,
+                    Quantity = c.Quantity
+                })
+                .ToList();
+
+            var powerSupplyGpuPowerConnectorDtos = powerSupply.PowerSupplyPowerConnectors
+                .Where(c => c.Type == "GPU")
+                .Select(c => new PowerSupplyGpuPowerConnectorDto
+                {
                     Pins = c.Pins,
                     AdditionalPins = c.AdditionalPins,
                     Quantity = c.Quantity
@@ -54,7 +72,9 @@ namespace PcBuilderApi.Mappers.PowerSupplyMappers
                 FactoryLink = powerSupply.FactoryLink,
                 AveragePrice = powerSupply.AveragePrice,
                 OffersCount = powerSupply.OffersCount,
-                PowerSupplyPowerConnectors = powerSupplyPowerConnectorDtos,
+                PowerSupplyMotherboardPowerConnectors = powerSupplyMotherboardPowerConnectorDtos,
+                PowerSupplyCpuPowerConnectors = powerSupplyCpuPowerConnectorDtos,
+                PowerSupplyGpuPowerConnectors = powerSupplyGpuPowerConnectorDtos,
                 ProductOffers = offerDtos
             };
         }
