@@ -1,33 +1,27 @@
 .component-list {
-    padding: 20px;
     display: flex;
     flex-direction: column;
+    margin: 24px 80px 0 80px;
     align-items: center;
+    justify-content: center;
+    width: fit-content;
+    max-width: 1350px;
 }
 
 .back-button {
-    margin: 10px 0 20px;
-    padding: 8px 16px;
-    background-color: #4a90e2;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.back-button:hover {
-    background-color: #3a80d2;
+    white-space: nowrap;
+    gap: 8px;
+    border: 1px solid #c4c4c4;
+    box-sizing: border-box;
 }
 
 .components-table {
-    width: 90%;
+    width: 100%;
     border-collapse: collapse;
-    margin-top: 20px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 .components-table th {
-    background-color: #f2f2f2;
+    background-color: white;
     padding: 12px;
     text-align: left;
     font-weight: bold;
@@ -36,6 +30,7 @@
 
 .component-row {
     border-bottom: 1px solid #eee;
+    background-color: white;
 }
 
 .component-row:hover {
@@ -44,19 +39,73 @@
 
 .component-image {
     width: 70px;
-    padding: 8px;
+    min-width: 70px;
+    height: 70px;
+    padding: 4px;
+    display: flex;
     text-align: center;
+    justify-content: center;
+    border: 2px solid #CECECE;
+    margin-right: 8px;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
 .component-image img {
     max-width: 100%;
-    height: auto;
+    max-height: 100%;
+    object-fit: contain;
     border-radius: 4px;
 }
+
 
 .no-image {
     color: #999;
     font-size: 0.8rem;
+}
+
+
+.component-title {
+    text-align: left;
+    font-weight: bold;
+    margin-bottom: 6px;
+    cursor: pointer;
+}
+
+.component-title:hover {
+    color: #0000EE;
+    text-decoration: underline;
+}
+
+.component-specs {
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 14px;
+    color: #555;
+    line-height: 1.4;
+}
+
+.spec-item {
+    margin-right: 4px;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+}
+
+.spec-label {
+    font-weight: 500;
+    margin-right: 2px;
+}
+
+.spec-value {
+    font-weight: bold;
+    color: #262B31;
+}
+
+.spec-separator {
+    margin: 0 4px;
+    color: #ccc;
+    font-weight: bold;
 }
 
 .component-name {
@@ -64,40 +113,39 @@
     padding: 8px;
 }
 
-.component-price {
-    padding: 8px;
-}
 
 .component-actions {
+    display: flex;
+    flex-direction: column;
     padding: 8px;
+    align-items: center;
+    justify-content: center;
 }
-
-.select-button {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 6px 12px;
-    cursor: pointer;
-    font-size: 0.9rem;
+.component-actions p{
+    font-size: 12px;
 }
-
-.select-button:hover {
-    background-color: #45a049;
+.details-button{
+    font-size: 16px;
 }
-
 /* Add to your existing CSS */
 
 .content-container {
     display: flex;
-    gap: 20px;
+    flex-direction: row;
+    gap: 8px;
     width: 100%;
-    margin-top: 20px;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: calc(100vh - 200px); /* Ensure content container has enough height */
 }
 
 .table-container {
-    flex: 1;
-    position: relative;
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 0 4px 1px rgba(0, 0, 0, 0.25);
 }
 
 .loading-overlay {
@@ -128,17 +176,326 @@
     cursor: pointer;
 }
 
-.details-button {
-    background-color: #6c757d;
-    color: white;
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin: 2rem 0 0;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.paginationButton {
+    min-width: 40px;
+    height: 40px;
+    padding: 0 0.75rem;
     border: none;
+    background-color: white;
+    color: #2d3748;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 4px 1px rgba(0, 0, 0, 0.25);
+}
+
+.paginationButton:hover:not(:disabled) {
+    background-color: #edf2f7;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.paginationButton:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.activePagination {
+    background-color: #A68059;
+    color: #E2E7DB;
+    font-weight: 600;
+}
+
+.activePagination:hover {
+    background-color: #c59b71 !important;
+}
+.paginationButton:disabled {
+    cursor: not-allowed;
+    font-weight: bold;
+    opacity: 0.5;
+    border: 1px solid #9d9d9d;
+}
+
+.navButton {
+    font-weight: 500;
+    padding: 0 8px;
+}
+
+.ellipsis {
+    cursor: default;
+    background-color: transparent;
+    border-color: transparent;
+}
+
+.ellipsis:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Add a subtle ripple effect to the buttons */
+.paginationButton::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
+    background-repeat: no-repeat;
+    background-position: 50%;
+    transform: scale(10, 10);
+    opacity: 0;
+    transition: transform .3s, opacity .5s;
+}
+
+.paginationButton:active::after {
+    transform: scale(0, 0);
+    opacity: .3;
+    transition: 0s;
+}
+
+
+
+/* Search styles */
+.top-bar-content{
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    gap: 8px;
+    height: 40px;
+    margin-bottom: 8px;
+}
+.search-container {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    flex-direction: row;
+    border: 1px solid #CECECE;
+    border-bottom: 3px #989898 solid;
+    background-color: white;
+    border-radius: 4px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+.search-container:focus-within {
+    box-shadow: 0 0 4px 1px rgba(0, 0, 0, 0.25);
+    border-bottom-color: #262B31; /* зміна кольору бордера при фокусі */
+}
+
+.search-input {
+    flex: 1;
+    padding: 10px 16px 7px;
+    font-size: 16px;
+    border: none;
+    box-sizing: border-box;
+}
+
+.search-input:focus {
+    outline: none;
+}
+.search-button-field{
+    background-color: white;
+    border: none;
+    margin-right: 8px;
+    padding: 6px 6px 1px;
+}
+.search-button {
+    color: #989898;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.search-button:active {
+    transform: translateY(2px);
+}
+
+/* Keep existing styles and add/modify the following */
+
+/* Replace the table styles with these */
+
+.components-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px 16px 20px;
+}
+
+.component-card {
+    display: flex;
+    align-items: center;
+    padding: 12px 8px;
+    background-color: white;
+    border-radius: 4px;
+    border-bottom: 1px solid #eee;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25), 0 -1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.component-image {
+    width: 70px;
+    min-width: 70px;
+    height: 70px;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.component-image img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.component-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 4px;
+    overflow: hidden;
+}
+
+.component-price {
+    width: 120px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 16px;
+    color: #1ba81e;
+    padding: 0 8px;
+}
+
+
+/* Keep the component-title, component-specs, and spec-* styles as they are */
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .components-list-header {
+        display: none; /* Hide headers on mobile */
+    }
+
+    .component-card {
+        flex-wrap: wrap;
+        padding: 12px;
+    }
+
+    .component-image {
+        width: 60px;
+        min-width: 60px;
+        height: 60px;
+    }
+
+    .component-info {
+        width: calc(100% - 68px);
+        margin-bottom: 12px;
+    }
+
+    .component-price, .component-actions {
+        width: 50%;
+        text-align: left;
+        padding: 4px;
+        margin-top: 8px;
+    }
+
+    .component-actions {
+        align-items: flex-end;
+        text-align: right;
+    }
+}
+
+
+
+
+.sorting-controls {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #CECECE;
+}
+
+.sorting-label {
+    font-weight: bolder;
+    margin-right: 12px;
+    color: #555;
+    font-size: 14px;
+}
+
+.sort-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.sort-button {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #ffffff;
+    border: 1px solid #ddd;
     border-radius: 4px;
     padding: 6px 12px;
     cursor: pointer;
-    font-size: 0.9rem;
-    margin-left: 8px;
+    font-size: 14px;
+    color: #333;
+    transition: all 0.2s ease;
 }
 
-.details-button:hover {
-    background-color: #5a6268;
+.sort-button:hover {
+    background-color: #f0f0f0;
+}
+
+.sort-button.active {
+    background-color: #262B31;
+    color: white;
+    border-color: #262B31;
+}
+
+/* Make sure the SVG icons are vertically aligned */
+.sort-button svg {
+    margin-left: 3px;
+    margin-top: 1px;
+}
+
+.active {
+    background-color: #A68059;
+    color: #E2E7DB;
+    font-weight: 600;
+}
+
+.active:hover {
+    background-color: #2f2f2f !important;
+}
+
+/* Mobile responsiveness for sorting */
+@media (max-width: 768px) {
+    .sorting-controls {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .sorting-label {
+        margin-bottom: 6px;
+    }
+
+    .sort-buttons {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
 }

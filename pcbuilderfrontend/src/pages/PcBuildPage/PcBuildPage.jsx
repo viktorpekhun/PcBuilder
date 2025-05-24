@@ -369,16 +369,16 @@ function PcBuildPage() {
 
     // Configuration for component types - single vs multi
     const componentTypes = [
-        {key: 'cpu', label: 'Процесор', isMulti: false},
-        {key: 'gpu', label: 'Відеокарта', isMulti: false},
-        {key: 'motherboard', label: 'Материнська Плата', isMulti: false},
-        {key: 'rams', label: "Оперативна Пам'ять", isMulti: true, singleType: 'ram'},
-        {key: 'ssds', label: 'SSD Диск', isMulti: true, singleType: 'ssd'},
-        {key: 'hdds', label: 'HDD Диск', isMulti: true, singleType: 'hdd'},
-        {key: 'powerSupply', label: 'Блок живлення', isMulti: false},
-        {key: 'cpuCooler', label: 'Кулер Процесора', isMulti: false},
-        {key: 'pcCase', label: 'Корпус ПК', isMulti: false},
-        {key: 'fans', label: 'Додаткові Вентилятори', isMulti: true, singleType: 'fan'}
+        {key: 'cpu', label: 'Процесор', buttonLabel: 'Процесор', isMulti: false},
+        {key: 'gpu', label: 'Відеокарта', buttonLabel: 'Відеокарту', isMulti: false},
+        {key: 'motherboard', label: 'Материнська Плата', buttonLabel: 'Материнську Плату', isMulti: false},
+        {key: 'rams', label: "Оперативна Пам'ять", buttonLabel: "Оперативну Пам'ять", isMulti: true, singleType: 'ram'},
+        {key: 'ssds', label: 'SSD Диски', buttonLabel: 'SSD Диск', isMulti: true, singleType: 'ssd'},
+        {key: 'hdds', label: 'HDD Диски', buttonLabel: 'HDD Диск', isMulti: true, singleType: 'hdd'},
+        {key: 'powerSupply', label: 'Блок живлення', buttonLabel: 'Блок живлення', isMulti: false},
+        {key: 'cpuCooler', label: 'Кулер Процесора', buttonLabel: 'Кулер Процесора', isMulti: false},
+        {key: 'pcCase', label: 'Корпус ПК', buttonLabel: 'Корпус ПК', isMulti: false},
+        {key: 'fans', label: 'Додаткові Вентилятори', buttonLabel: 'Вентилятор', isMulti: true, singleType: 'fan'}
     ];
 
     // Check if we are editing a build
@@ -586,7 +586,7 @@ function PcBuildPage() {
         });
     };
 
-    const renderMultiComponents = (key, label, singleType) => {
+    const renderMultiComponents = (key, buttonLabel, singleType) => {
         return (
             <div className={styles['multi-components']}>
                 {componentData[key].length > 0 && (
@@ -635,7 +635,7 @@ function PcBuildPage() {
                     </>
                 )}
                 <button className={'button-primary'}>
-                    <Link to={`/components/${singleType}`}>Додати {label}</Link>
+                    <Link to={`/components/${singleType}`}>Додати {buttonLabel}</Link>
                 </button>
             </div>
         );
@@ -691,7 +691,7 @@ function PcBuildPage() {
                                 <path
                                     d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
                             </svg>
-                            Remove
+                            Прибрати
                         </button>
                     </div>
                 ))}
@@ -940,7 +940,7 @@ function PcBuildPage() {
                              className="bi bi-pencil-square" viewBox="0 0 16 16">
                             <path
                                 d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                            <path fill-rule="evenodd"
+                            <path
                                   d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
                         </svg>
                         <span>Редагування збірки: <strong>{editingBuild.name}</strong></span>
@@ -967,7 +967,7 @@ function PcBuildPage() {
                         </thead>
                         <tbody>
                         {/* Single components */}
-                        {componentTypes.filter(type => !type.isMulti).map(({key, label}) => (
+                        {componentTypes.filter(type => !type.isMulti).map(({key, label, buttonLabel}) => (
                             <tr key={key}>
                                 <td>{label}</td>
                                 <td>
@@ -988,7 +988,7 @@ function PcBuildPage() {
                                         </div>
                                     ) : (
                                         <button className={'button-primary'}>
-                                            <Link to={`/components/${key}`}>Виберіть {label}</Link>
+                                            <Link to={`/components/${key}`}>Виберіть {buttonLabel}</Link>
                                         </button>
                                     )}
                                 </td>
@@ -1024,11 +1024,11 @@ function PcBuildPage() {
                         ))}
 
                         {/* Multi components */}
-                        {componentTypes.filter(type => type.isMulti).map(({key, label, singleType}) => (
+                        {componentTypes.filter(type => type.isMulti).map(({key, label, buttonLabel, singleType}) => (
                             <tr key={key}>
                                 <td>{label}</td>
                                 <td className={styles['multi-components-info-container']}>
-                                    {renderMultiComponents(key, label, singleType)}
+                                    {renderMultiComponents(key, buttonLabel, singleType)}
                                 </td>
                                 <td className={styles['multi-components-info-container']}>
                                     {renderMultiComponentStores(componentData[key])}

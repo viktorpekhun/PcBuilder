@@ -17,7 +17,7 @@ function App() {
     return(
         <>
             <Navbar/>
-            <div>
+            <div className={'content-wrapper'}>
                 <Routes>
                     <Route path="/" element={<Layout />}>
                         <Route index element={<PcBuildPage />} />
