@@ -3,9 +3,7 @@
     display: flex;
     flex-direction: column;
     padding: 0 80px;
-    min-height: 100vh;
     box-sizing: border-box;
-    margin-bottom: 32px;
 }
 
 
@@ -19,11 +17,10 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-height: 100vh;
     background-color: white;
     min-width: 650px;
     box-sizing: border-box;
-    border-radius: 8px;
+    border-radius: 4px;
     overflow: hidden;
     box-shadow: 0 0 4px 1px rgba(0, 0, 0, 0.25);
 }
@@ -33,13 +30,16 @@
     font-size: 32px;
     color: #262B31;
     margin: 32px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px
 }
 
 /* Table styling */
 .build-components-table {
     width: 100%;
     border-collapse: collapse;
-    border-radius: 8px;
     overflow: hidden;
 }
 
@@ -139,10 +139,10 @@
 }
 
 .price{
-    font-size: 12px;
+    font-size: 14px;
     font-family: "Roboto Thin",sans-serif;
     font-weight: bolder;
-    font-style: italic;
+    color: #43a047;
 }
 
 .multi-components-info-container{
@@ -198,10 +198,10 @@
 /* Перевірка сумісності */
 .compatibility-container {
     min-width: 350px;
-    max-width: 608px;
+    max-width: 450px;
     width: 100%;
-    border-radius: 8px;
-    background-color: #f8f8f8;
+    border-radius: 4px;
+    background-color: white;
     box-shadow: 0 0 4px 1px rgba(0, 0, 0, 0.25);
     overflow: hidden;
 }
@@ -211,50 +211,70 @@
     justify-content: center;
     height: 48px;
     background-color: #262B31;
-    color: #E2E7DB;
+    color: white;
     font-size: 20px;
     margin: 0;
 }
 
 .compatibility-status {
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 4px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    padding: 16px;
+    margin: 0 8px;
+    border: 2px solid;
+    border-radius: 3px;
     font-weight: bold;
+    text-align: left;
+}
+.compatibility-status p{
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+    max-width: 100%;
+    white-space: nowrap;
 }
 
 .status-success {
+    border-color: #28a745;
     background-color: #e6ffed;
     color: #28a745;
 }
 
 .status-warning {
+    border-color: #f0ad4e;
     background-color: #fff9e6;
     color: #f0ad4e;
 }
 
 .status-error {
-    background-color: #ffe6e6;
+    border-color: #dc3545;
+    background-color: #FFE6E6;
     color: #dc3545;
 }
 
 .compatibility-messages {
     list-style-type: none;
-    padding: 0;
+    padding: 12px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     margin: 0;
 }
 
 .compatibility-message {
     text-align: left;
-    padding: 10px;
-    margin-bottom: 5px;
-    border-radius: 4px;
+    padding: 8px;
+    font-size: 14px;
+    border-radius: 3px;
 }
 
 .message-warning {
     background-color: #fff9e6;
     color: #856404;
-    border-left: 4px solid #f0ad4e;
+    border-left: 3px solid #f0ad4e;
 }
 
 .message-error {
@@ -290,4 +310,125 @@
 .action-buttons {
     display: flex;
     gap: 8px;
+}
+
+
+.error-message {
+    color: #e53935;
+    margin-top: 10px;
+    padding: 8px;
+    background-color: #ffebee;
+    border-radius: 4px;
+    border-left: 4px solid #e53935;
+}
+
+.success-message {
+    color: #43a047;
+    margin-top: 10px;
+    padding: 8px;
+    background-color: #e8f5e9;
+    border-radius: 4px;
+    border-left: 4px solid #43a047;
+}
+
+
+
+
+
+
+.edit-icon {
+    margin-right: 10px;
+}
+
+.editing-subtitle {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 1rem;
+}
+
+.edit-mode-banner {
+    background-color: #f0f7ff;
+    border: 1px solid #cce5ff;
+    border-left: 4px solid #007bff;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 4px;
+}
+
+.banner-content {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+
+.exit-edit-mode:hover {
+    background-color: #e8f2ff;
+}
+
+
+.save-buttons-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    width: 100%;
+    gap: 12px;
+    margin: 0 0 20px 0;
+    padding: 0 12px;
+    box-sizing: border-box;
+}
+
+.save-buttons-container button{
+    font-size: 16px;
+    padding: 8px 16px;
+}
+
+
+.basic-info-display {
+    display: flex;
+    flex-direction: column;
+    padding: 3px 3px 0 3px;
+    margin-bottom: 24px;
+    gap: 3px;
+}
+
+.basic-info {
+    background-color: #A68059;
+    color: white;
+    display: flex;
+    flex-direction: row;
+    text-align: left;
+    align-items: center;
+    padding: 8px;
+    gap: 4px;
+    box-sizing: border-box;
+}
+.wattage-info{
+    background-color: #A68059;
+}
+.problems-info{
+    background-color: #DC3545;
+}
+.warnings-info{
+    background-color: #F0AD4E;
+}
+
+.icon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.wattage-text {
+    font-size: 16px;
+    font-weight: bold;
+
+}
+
+.loading-component{
+    color: #808386;
+    font-size: 14px;
 }

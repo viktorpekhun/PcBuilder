@@ -1,0 +1,65 @@
+
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modalContent {
+    background: white;
+    border-radius: 8px;
+    padding: 24px;
+    width: 400px;
+    max-width: 90%;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.modalContent h2 {
+    margin-top: 0;
+    color: #333;
+    margin-bottom: 16px;
+}
+
+.warningText {
+    color: #f44336;
+    font-weight: 500;
+    margin-bottom: 24px;
+}
+
+.buttonGroup {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.continueButton {
+    padding: 10px 16px;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.continueButton:hover {
+    background-color: #f5f5f5;
+}
+
+.exitButton {
+    padding: 10px 16px;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.exitButton:hover {
+    background-color: #e53935;
+}

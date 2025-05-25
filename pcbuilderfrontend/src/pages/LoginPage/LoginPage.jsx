@@ -60,9 +60,9 @@ const LoginPage = () => {
         }
     };
 
-    const togglePersist = () => {
-        setPersist((prev) => !prev);
-    };
+    useEffect(() => {
+        setPersist(true);
+    }, []);
 
     useEffect(() => {
         localStorage.setItem("persist", persist);
@@ -93,15 +93,6 @@ const LoginPage = () => {
                         required
                     />
                     <button className={'button-primary'}>Sign In</button>
-                    <div className={styles['persistCheck']}>
-                        <input
-                            type="checkbox"
-                            id="persist"
-                            onChange={togglePersist}
-                            checked={persist}
-                        />
-                        <label htmlFor="persist">Trust This Device</label>
-                    </div>
                 </form>
                 <p>
                     Need an Account?<br />
