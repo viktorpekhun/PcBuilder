@@ -1,37 +1,51 @@
-.login-container section {
+.login-page {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.login-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    max-width: 460px;
-    margin: auto;
-    padding: 1rem 2rem 1rem;
-    background-color: rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    border: 2px solid #7c7c7c;
-}
-
-
-.login-container section h1 {
-    font-size: 2rem;
-    color: #865F20;
-    margin-bottom: 1.5rem;
-    text-align: center;
-
-}
-
-
-.login-container .errmsg {
-    background-color: #f8d7da;
-    color: #721c24;
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-    margin-bottom: 1rem;
-    text-align: center;
     width: 100%;
+    max-width: 450px; /* Increased from 400px */
+    padding: 32px; /* Slightly more padding */
+    background-color: white;
+    border-radius: 8px; /* Slightly more rounded corners */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    margin-top: 48px;
+    box-sizing: border-box;
 }
 
-.login-container .offscreen {
+
+.login-container h1 {
+    font-size: 24px;
+    color: #262B31;
+    margin: 0;
+    text-align: left;
+    width: 100%;
+
+}
+
+
+.errmsg {
+    background-color: #ffe6e6;
+    color: #721c24;
+    padding: 8px;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    text-align: left;
+    width: 100%;
+    border: 1px solid #dc3545;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.offscreen {
     position: absolute;
     left: -9999px;
 }
@@ -41,47 +55,72 @@
     display: flex;
     flex-direction: column;
     width: 100%;
+    box-sizing: border-box;
+    margin-top: 8px;
 }
 
 
 .login-container label {
     font-size: 1rem;
     color: #333;
-    margin-bottom: 0.5rem;
+    margin-bottom: 4px;
+    text-align: left;
 }
 
 .login-container input[type="text"],
 .login-container input[type="password"] {
     font-size: 1rem;
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 0.5rem;
+    padding: 10px;
+    border: 1px solid #CECECE;
+    border-radius: 4px;
     margin-bottom: 1rem;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.login-container p {
-    font-size: 0.9rem;
-    color: #333;
-    text-align: center;
+.login-container input:focus{
+    border: 1px solid #808386;
+    outline: none;
 }
 
-.login-container .line {
+.description {
+    font-size: 14px;
+    color: #262B31;
+    text-align: left;
+    align-self: flex-start;
+    margin-top: 0;
+}
+
+.register-link{
+    font-size: 14px;
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+
+}
+
+
+.line {
     color: #3498db;
 }
 
-.login-container .line a {
+.line a {
     color: #3498db;
     font-weight: bold;
-    text-decoration: none;
     transition: color 0.3s;
 }
 
-.login-container .line a:hover {
+.line a:hover {
     color: #2980b9;
 }
 
+.login-button{
+    align-self: center;
+    font-size: 16px;
+    padding: 8px 24px;
+}
 
-.login-container .persistCheck {
+.persistCheck {
     font-size: 0.75rem;
     margin-top: 10px;
     display: flex;
@@ -89,7 +128,7 @@
     align-items: flex-end;
 }
 
-.login-container .persistCheck label {
+.persistCheck label {
     margin: 0;
 }
 
@@ -97,4 +136,50 @@
     height: 20px;
     width: 20px;
     margin: 0 5px 2px 2px;
+}
+
+/* Add error class for inputs */
+.input-error {
+    border: 1px solid #dc3545 !important;
+    background-color: #fff8f8;
+}
+
+/* Add styles for password field with eye icon */
+.password-field {
+    position: relative;
+    width: 100%;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #808386;
+    padding: 0;
+    margin: 0;
+    height: 24px;
+    width: 24px;
+    margin-top: -8px; /* Adjust for the bottom margin of the input */
+    transition: color 0.2s ease;
+}
+
+.password-toggle:hover {
+    color: #262B31;
+}
+
+.password-toggle:focus {
+    outline: none;
+}
+
+/* Adjust padding for password field to make room for the icon */
+.password-field input[type="text"],
+.password-field input[type="password"] {
+    padding-right: 38px;
 }

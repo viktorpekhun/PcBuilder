@@ -7,6 +7,7 @@ import useAuth from "../../hooks/useAuth.js";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate.js";
 import SaveBuildModal from "../../components/SaveBuildModal/SaveBuildModal.jsx";
 import CancelEditModal from "../../components/CanselEditModal/CanselEditModal.jsx";
+import Toast from "../../components/Toast/Toast.jsx";
 
 
 const CHECK_URL = '/api/pcBuild/check'
@@ -18,6 +19,9 @@ function CompatibilityCheck({ selectedComponentIds, componentData }) {
     const [error, setError] = useState(null);
     const [totalWattage, setTotalWattage] = useState(0);
 
+    const hasComponents = Object.values(selectedComponentIds).some(
+        value => value !== null && (Array.isArray(value) ? value.length > 0 : true)
+    );
     useEffect(() => {
         if (!componentData) return;
 
@@ -90,15 +94,16 @@ function CompatibilityCheck({ selectedComponentIds, componentData }) {
         if (componentData.cpuCooler?.wattage) {
             wattage += parseInt(componentData.cpuCooler.wattage) || 0;
         }
+        if (hasComponents) {
+            wattage += 150;
+        }
 
         setTotalWattage(wattage);
-    }, [componentData]);
+    }, [componentData, hasComponents]);
 
     useEffect(() => {
         // Only check compatibility if we have at least some components selected
-        const hasComponents = Object.values(selectedComponentIds).some(
-            value => value !== null && (Array.isArray(value) ? value.length > 0 : true)
-        );
+
 
         if (!hasComponents) {
             setCompatibilityResults(null);
@@ -134,19 +139,8 @@ function CompatibilityCheck({ selectedComponentIds, componentData }) {
         };
 
         checkCompatibility();
-    }, [selectedComponentIds]);
+    }, [selectedComponentIds, hasComponents]);
 
-    if (loading) {
-        return <div className={styles['compatibility-loading']}>Перевірка сумісності...</div>;
-    }
-
-    if (error) {
-        return <div className={styles['compatibility-error']}>{error}</div>;
-    }
-
-    if (!compatibilityResults) {
-        return null;
-    }
 
     console.log("Compatibility results:", compatibilityResults);
 
@@ -202,7 +196,7 @@ function CompatibilityCheck({ selectedComponentIds, componentData }) {
                             d="M5.52.359A.5.5 0 0 1 6 0h4a.5.5 0 0 1 .474.658L8.694 6H12.5a.5.5 0 0 1 .395.807l-7 9a.5.5 0 0 1-.873-.454L6.823 9.5H3.5a.5.5 0 0 1-.48-.641z"/>
                     </svg>
                     <div className={styles['wattage-text']}>
-                        Необхідна потужність: {totalWattage} Вт
+                        Необхідна потужність(із запасом): {totalWattage} Вт
                     </div>
                 </div>
                 <div className={`${styles['basic-info']} ${styles['wattage-info']}`}>
@@ -248,20 +242,31 @@ function CompatibilityCheck({ selectedComponentIds, componentData }) {
                         Кількість потенційних проблем: {warningCount}
                     </div>
                 </div>
-
-
             </div>
 
 
             {/* Overall status */}
             <div className={`${styles['compatibility-status']} ${
-                !compatibilityResults.compatible
-                    ? styles['status-error']
-                    : compatibilityResults.hasWarnings
-                        ? styles['status-warning']
-                        : styles['status-success']
+                !hasComponents
+                    ? styles['status-warning']
+                    : !compatibilityResults?.compatible
+                        ? styles['status-error']
+                        : compatibilityResults?.hasWarnings
+                            ? styles['status-warning']
+                            : styles['status-success']
             }`}>
-                {!compatibilityResults.compatible ? (
+                {!hasComponents ? (
+                    <>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                             className={styles['icon']} viewBox="0 0 16 16">
+                            <path
+                                d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.15.15 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.2.2 0 0 1-.054.06.1.1 0 0 1-.066.017H1.146a.1.1 0 0 1-.066-.017.2.2 0 0 1-.054-.06.18.18 0 0 1 .002-.183L7.884 2.073a.15.15 0 0 1 .054-.057m1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767z"/>
+                            <path
+                                d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
+                        </svg>
+                        <p>Компоненти не вибрано</p>
+                    </>
+                ) : !compatibilityResults?.compatible ? (
                     <>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
                              className={styles['icon']} viewBox="0 0 16 16">
@@ -272,7 +277,7 @@ function CompatibilityCheck({ selectedComponentIds, componentData }) {
                         </svg>
                         <p>Виявлено несумісні комплектуючі</p>
                     </>
-                ) : compatibilityResults.hasWarnings ? (
+                ) : compatibilityResults?.hasWarnings ? (
                     <>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
                              className={styles['icon']} viewBox="0 0 16 16">
@@ -283,6 +288,8 @@ function CompatibilityCheck({ selectedComponentIds, componentData }) {
                         </svg>
                         <p>Виявлено потенційні проблеми</p>
                     </>
+                ) : loading ? (
+                    <p>Перевірка сумісності...</p>
                 ) : (
                     <>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
@@ -298,22 +305,32 @@ function CompatibilityCheck({ selectedComponentIds, componentData }) {
             </div>
 
             {/* All messages in a single list - WITH NULL CHECKS */}
-            <ul className={styles['compatibility-messages']}>
-                {compatibilityResults.results && compatibilityResults.results.flatMap((result, resultIndex) =>
-                    result.messages && result.messages.map((message, messageIndex) => {
-                            const messageInfo = getMessageTypeInfo(message.type);
-                            return (
-                                <li
-                                    key={`${resultIndex}-${messageIndex}`}
-                                    className={`${styles['compatibility-message']} ${messageInfo.className}`}
-                                >
-                                    {message.message}
-                                </li>
-                            );
-                        })
-                )}
-            </ul>
+            {hasComponents && compatibilityResults && compatibilityResults.results && (
+                <ul className={styles['compatibility-messages']}>
+                    {compatibilityResults.results.flatMap((result, resultIndex) =>
+                            result.messages && result.messages.map((message, messageIndex) => {
+                                const messageInfo = getMessageTypeInfo(message.type);
+                                return (
+                                    <li
+                                        key={`${resultIndex}-${messageIndex}`}
+                                        className={`${styles['compatibility-message']} ${messageInfo.className}`}
+                                    >
+                                        {message.message}
+                                    </li>
+                                );
+                            })
+                    )}
+                </ul>
+            )}
 
+            {/* Show a message when no components are selected */}
+            {!hasComponents && (
+                <ul className={styles['compatibility-messages']}>
+                    <li className={`${styles['compatibility-message']} ${styles['message-warning']}`}>
+                        Додайте компоненти до збірки для перевірки сумісності
+                    </li>
+                </ul>
+            )}
         </div>
     );
 }
@@ -359,6 +376,11 @@ function PcBuildPage() {
         loading: false,
         error: null,
         success: false
+    });
+    const [toast, setToast] = useState({
+        visible: false,
+        message: '',
+        type: 'success'
     });
     const navigate = useNavigate();
     const location = useLocation();
@@ -533,6 +555,17 @@ function PcBuildPage() {
             console.error("Error saving components to localStorage:", err);
         }
     }, [selectedComponents, initialLoadComplete]);
+
+    useEffect(() => {
+        // This effect runs when auth state changes
+        if (!auth?.accessToken && editingBuild) {
+            // User logged out while in edit mode
+            // Clear editing state but keep selected components
+            localStorage.removeItem('editingBuild');
+            setEditingBuild(null);
+
+        }
+    }, [auth, editingBuild]);
 
     if (loading && !initialLoadComplete) {
         return <div className={styles['loading-indicator']}>Loading your build...</div>;
@@ -780,7 +813,7 @@ function PcBuildPage() {
             navigate('/login', {
                 state: {
                     from: location.pathname,
-                    message: 'Please log in to save your build.'
+                    message: 'Увійдіть щоб зберегти збірку.'
                 }
             });
             return;
@@ -803,10 +836,10 @@ function PcBuildPage() {
         );
 
         if (!hasComponents) {
-            setSaveStatus({
-                loading: false,
-                error: 'Please add at least one component to your build.',
-                success: false
+            setToast({
+                visible: true,
+                message: 'В збірці повинен бути хоча б один компонент.',
+                type: 'error'
             });
             return;
         }
@@ -885,18 +918,30 @@ function PcBuildPage() {
                 success: true
             });
 
+            setToast({
+                visible: true,
+                message: 'Збірку успішно збережено!',
+                type: 'success'
+            });
+
             // Close the modal
             setSaveModal({ isOpen: false });
 
             // Navigate to user builds page or show success message
-            navigate('/user/builds', { state: { message: 'Build saved successfully!' } });
+            navigate('/user/builds', { state: { message: 'Збірку успішно збережено!' } });
 
         } catch (err) {
             console.error("Error saving build:", err);
             setSaveStatus({
                 loading: false,
-                error: err.response?.data?.message || 'Failed to save your build. Please try again.',
+                error: err.response?.data?.message || 'Не вдалося зберегти збірку. Будь ласка, спробуйте ще раз.',
                 success: false
+            });
+
+            setToast({
+                visible: true,
+                message: err.response?.data?.message || 'Не вдалося зберегти збірку. Будь ласка, спробуйте ще раз.',
+                type: 'error'
             });
         }
     };
@@ -911,6 +956,14 @@ function PcBuildPage() {
 
     return (
         <section className={styles['build-components-page']}>
+            {toast.visible && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast({ ...toast, visible: false })}
+                    duration={5000}
+                />
+            )}
             <SaveBuildModal
                 isOpen={saveModal.isOpen}
                 onCancel={() => setSaveModal({ isOpen: false })}
@@ -918,7 +971,7 @@ function PcBuildPage() {
                 isSaving={saveStatus.loading}
                 initialName={editingBuild?.name || ''}
                 initialDescription={editingBuild?.description || ''}
-                isEditing={!!editingBuild} // Pass this prop
+                isEditing={!!editingBuild && !saveModal.saveAsNew} // Check if it's not saveAsNew
             />
             <CancelEditModal
                 isOpen={cancelEditModal.isOpen}
@@ -1050,7 +1103,7 @@ function PcBuildPage() {
 
                     {/* Total Price Display */}
                     <div className={styles['total-price']}>
-                        <h3>Кінцева ціна: {calculateTotalPrice()} грн</h3>
+                        <h3>Остаточна ціна: <span>{calculateTotalPrice()} грн</span></h3>
                     </div>
                     <div className={styles['save-buttons-container']}>
                         {editingBuild ? (
@@ -1077,22 +1130,21 @@ function PcBuildPage() {
                                 onClick={openSaveModal}
                                 disabled={saveStatus.loading}
                             >
-                                {saveStatus.loading ? 'Збереження...' : 'Оновити Збірку'}
+                                {saveStatus.loading ? 'Збереження...' : 'Зберегти Збірку'}
                             </button>
                         )}
 
-                        {saveStatus.error && (
-                            <div className={styles['error-message']}>
-                                {saveStatus.error}
-                            </div>
-                        )}
-
-                        {saveStatus.success && (
-                            <div className={styles['success-message']}>
-                                Збірка успішно збережена!
-                            </div>
-                        )}
                     </div>
+                    {/*{saveStatus.error && (*/}
+                    {/*    <div className={styles['error-message']}>*/}
+                    {/*        {saveStatus.error}*/}
+                    {/*    </div>*/}
+                    {/*)}*/}
+                    {/*{saveStatus.success && (*/}
+                    {/*    <div className={styles['success-message']}>*/}
+                    {/*        Збірка успішно збережена!*/}
+                    {/*    </div>*/}
+                    {/*)}*/}
                 </div>
 
                 <CompatibilityCheck

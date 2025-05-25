@@ -7,9 +7,9 @@ function DeleteModal({ isOpen, buildName, onCancel, onConfirm, isDeleting }) {
     return (
         <div className={styles.modalOverlay}>
             <div className={styles.modalContent}>
-                <h2>Delete Confirmation</h2>
-                <p>Are you sure you want to delete <strong>{buildName}</strong>?</p>
-                <p className={styles.warningText}>This action cannot be undone.</p>
+                <h2>Підтвердження Видалення</h2>
+                <p>Ви впевнені що хочете видалити <strong>{buildName}</strong>?</p>
+                <p className={styles.warningText}>Ця дія є незворотною.</p>
 
                 <div className={styles.buttonGroup}>
                     <button
@@ -17,14 +17,14 @@ function DeleteModal({ isOpen, buildName, onCancel, onConfirm, isDeleting }) {
                         onClick={onCancel}
                         disabled={isDeleting}
                     >
-                        Cancel
+                        Відмінити
                     </button>
                     <button
                         className={styles.deleteButton}
                         onClick={onConfirm}
                         disabled={isDeleting}
                     >
-                        {isDeleting ? 'Deleting...' : 'Delete Build'}
+                        {isDeleting ? 'Видалення...' : 'Видалити Збірку'}
                     </button>
                 </div>
             </div>
