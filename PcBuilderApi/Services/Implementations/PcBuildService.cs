@@ -186,10 +186,11 @@ namespace PcBuilderApi.Services.Implementations
                     Cpu = (build.Cpu != null && build.CpuOfferId != null) ? new ComponentPreviewDto
                     {
                         Id = build.Cpu.Id,
+                        OfferId = (Guid)build.CpuOfferId,
                         Name = build.Cpu.Name,
                         Price = cpuInfo.Item1,
-                        OfferId = (Guid)build.CpuOfferId,
                         StoreName = cpuInfo.Item2,
+                        ProductOfferUrl = cpuInfo.Item3,
                         ImageUrl = build.Cpu.PhotoUrl
                     } : null,
 
@@ -197,47 +198,52 @@ namespace PcBuilderApi.Services.Implementations
                     Gpu = (build.Gpu != null && build.GpuOfferId != null) ? new ComponentPreviewDto
                     {
                         Id = build.Gpu.Id,
+                        OfferId = (Guid)build.GpuOfferId,
                         Name = build.Gpu.Name,
                         Price = gpuInfo.Item1,
-                        OfferId = (Guid)build.GpuOfferId,
                         StoreName = gpuInfo.Item2,
+                        ProductOfferUrl = gpuInfo.Item3,
                         ImageUrl = build.Gpu.PhotoUrl
                     } : null,
 
                     Motherboard = (build.Motherboard != null && build.MotherboardOfferId != null) ? new ComponentPreviewDto
                     {
                         Id = build.Motherboard.Id,
+                        OfferId = (Guid)build.MotherboardOfferId,
                         Name = build.Motherboard.Name,
                         Price = motherboardInfo.Item1,
-                        OfferId = (Guid)build.MotherboardOfferId,
                         StoreName = motherboardInfo.Item2,
+                        ProductOfferUrl = motherboardInfo.Item3,
                         ImageUrl = build.Motherboard.PhotoUrl
                     } : null,
                     CpuCooler = (build.CpuCooler != null && build.CpuCoolerOfferId != null) ? new ComponentPreviewDto
                     {
                         Id = build.CpuCooler.Id,
+                        OfferId = (Guid)build.CpuCoolerOfferId,
                         Name = build.CpuCooler.Name,
                         Price = cpuCoolerInfo.Item1,
-                        OfferId = (Guid)build.CpuCoolerOfferId,
                         StoreName = cpuCoolerInfo.Item2,
+                        ProductOfferUrl = cpuCoolerInfo.Item3,
                         ImageUrl = build.CpuCooler.PhotoUrl
                     } : null,
                     PowerSupply = (build.PowerSupply != null && build.PowerSupplyOfferId != null) ? new ComponentPreviewDto
                     {
                         Id = build.PowerSupply.Id,
+                        OfferId = (Guid)build.PowerSupplyOfferId,
                         Name = build.PowerSupply.Name,
                         Price = powerSupplyInfo.Item1,
-                        OfferId = (Guid)build.PowerSupplyOfferId,
                         StoreName = powerSupplyInfo.Item2,
+                        ProductOfferUrl = powerSupplyInfo.Item3,
                         ImageUrl = build.PowerSupply.PhotoUrl
                     } : null,
                     PcCase = (build.PcCase != null && build.PcCaseOfferId != null) ? new ComponentPreviewDto
                     {
                         Id = build.PcCase.Id,
+                        OfferId = (Guid)build.PcCaseOfferId,
                         Name = build.PcCase.Name,
                         Price = pcCaseInfo.Item1,
-                        OfferId = (Guid)build.PcCaseOfferId,
                         StoreName = pcCaseInfo.Item2,
+                        ProductOfferUrl = pcCaseInfo.Item3,
                         ImageUrl = build.PcCase.PhotoUrl
                     } : null
 
@@ -263,11 +269,12 @@ namespace PcBuilderApi.Services.Implementations
                         buildDto.Rams.Add(new MultiComponentPreviewDto
                         {
                             Id = pcBuildRam.RamId,
+                            OfferId = (Guid)pcBuildRam.ProductOfferId,
                             Name = ram.Name,
                             Quantity = pcBuildRam.Quantity,
                             StoreName = ramInfo.Item2,
-                            OfferId = (Guid)pcBuildRam.ProductOfferId,
                             TotalPrice = ramInfo.Item1 * pcBuildRam.Quantity,
+                            ProductOfferUrl = ramInfo.Item3,
                             ImageUrl = ram.PhotoUrl
                         });
                     }
@@ -294,11 +301,12 @@ namespace PcBuilderApi.Services.Implementations
                         buildDto.Ssds.Add(new MultiComponentPreviewDto
                         {
                             Id = pcBuildSsd.SsdId,
+                            OfferId = (Guid)pcBuildSsd.ProductOfferId,
                             Name = ssd.Name,
                             Quantity = pcBuildSsd.Quantity,
                             StoreName = ssdInfo.Item2,
-                            OfferId = (Guid)pcBuildSsd.ProductOfferId,
                             TotalPrice = ssdInfo.Item1 * pcBuildSsd.Quantity,
+                            ProductOfferUrl = ssdInfo.Item3,
                             ImageUrl = ssd.PhotoUrl
                         });
                     }
@@ -325,11 +333,12 @@ namespace PcBuilderApi.Services.Implementations
                         buildDto.Hdds.Add(new MultiComponentPreviewDto
                         {
                             Id = pcBuildHdd.HddId,
+                            OfferId = (Guid)pcBuildHdd.ProductOfferId,
                             Name = hdd.Name,
                             Quantity = pcBuildHdd.Quantity,
                             StoreName = hddInfo.Item2,
-                            OfferId = (Guid)pcBuildHdd.ProductOfferId,
                             TotalPrice = hddInfo.Item1 * pcBuildHdd.Quantity,
+                            ProductOfferUrl = hddInfo.Item3,
                             ImageUrl = hdd.PhotoUrl
                         });
                     }
@@ -356,11 +365,12 @@ namespace PcBuilderApi.Services.Implementations
                         buildDto.Fans.Add(new MultiComponentPreviewDto
                         {
                             Id = pcBuildFan.FanId,
+                            OfferId = (Guid)pcBuildFan.ProductOfferId,
                             Name = fan.Name,
                             Quantity = pcBuildFan.Quantity,
                             StoreName = fanInfo.Item2,
-                            OfferId = (Guid)pcBuildFan.ProductOfferId,
                             TotalPrice = fanInfo.Item1 * pcBuildFan.Quantity,
+                            ProductOfferUrl = fanInfo.Item3,
                             ImageUrl = fan.PhotoUrl
                         });
                     }
@@ -834,11 +844,11 @@ namespace PcBuilderApi.Services.Implementations
             pcBuild.Price = totalPrice;
         }
 
-        private async Task<(decimal, string)> GetComponentPriceAndStore(Guid? componentId, Guid? offerId)
+        private async Task<(decimal, string, string)> GetComponentPriceAndStore(Guid? componentId, Guid? offerId)
         {
             if (!componentId.HasValue)
             {
-                return (0, string.Empty);
+                return (0, string.Empty, string.Empty);
             }
 
 
@@ -846,11 +856,11 @@ namespace PcBuilderApi.Services.Implementations
                 includeProperties: "Store");
             if (offer != null)
             {
-                return (offer.Price, offer.Store.Name);
+                return (offer.Price, offer.Store.Name, offer.ProductOfferUrl);
             }
             else
             {
-                return (0, string.Empty);
+                return (0, string.Empty, string.Empty);
             }
 
 

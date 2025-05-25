@@ -7,12 +7,11 @@ namespace PcBuilderApi.Dtos.PcBuildDtos
 
         [Required(ErrorMessage = "Name is required.")]
         [MaxLength(255, ErrorMessage = "Name can't have more than 255 characters.")]
-        [RegularExpression(@"^[a-zA-Z0-9 _-]*$", ErrorMessage = "Name can contain letters, numbers, spaces, underscores (_) and hyphens (-)")]
+        [RegularExpression(@"^[a-zA-Zа-яА-ЯіІїЇєЄґҐёЁ0-9 _-]*$", ErrorMessage = "Name can contain letters, numbers, spaces, underscores (_) and hyphens (-)")]
         public string Name { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Description is required.")]
         [MaxLength(500, ErrorMessage = "Description can't have more than 500 characters.")]
-        public string Description { get; set; } = string.Empty;
+        public string? Description { get; set; } = string.Empty;
 
         public bool IsPublished { get; set; } = false;
 

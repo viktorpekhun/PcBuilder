@@ -6,7 +6,7 @@
 
         public string Name { get; set; } = string.Empty;
 
-        public string Description { get; set; } = string.Empty;
+        public string? Description { get; set; } = string.Empty;
 
         public bool IsPublished { get; set; }
 
@@ -34,25 +34,25 @@
     public class ComponentPreviewDto
     {
         public Guid Id { get; set; }
+        public Guid OfferId { get; set; }
 
         public string Name { get; set; } = string.Empty;
         public string? ImageUrl { get; set; }
-        public Guid OfferId { get; set; }
         public string? StoreName { get; set; }
         public decimal? Price { get; set; }
+        public string? ProductOfferUrl { get; set; }
 
     }
     public class MultiComponentPreviewDto
     {
         public Guid Id { get; set; }
-
+        public Guid OfferId { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? ImageUrl { get; set; }
         public int Quantity { get; set; }
-        public Guid OfferId { get; set; }
         public string? StoreName { get; set; }
         public decimal? TotalPrice { get; set; }
-
+        public string? ProductOfferUrl { get; set; }
 
     }
 }

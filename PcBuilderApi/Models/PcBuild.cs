@@ -10,12 +10,11 @@ namespace PcBuilderApi.Models
 
         [Required(ErrorMessage = "Name is required.")]
         [MaxLength(255, ErrorMessage = "Name can't have more than 255 characters.")]
-        [RegularExpression(@"^[a-zA-Z0-9_-]*$", ErrorMessage = "Name can only contain letters, numbers, underscores (_) and hyphens (-)")]
+        [RegularExpression(@"^[a-zA-Zа-яА-ЯіІїЇєЄґҐёЁ0-9 _-]*$", ErrorMessage = "Name can only contain letters, numbers, underscores (_) and hyphens (-)")]
         public string Name { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Description is required.")]
         [MaxLength(500, ErrorMessage = "Description can't have more than 500 characters.")]
-        public string Description { get; set; } = string.Empty;
+        public string? Description { get; set; } = string.Empty;
 
         [Required]
         public decimal Price { get; set; } = 0;
