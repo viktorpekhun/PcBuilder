@@ -1,11 +1,13 @@
 .component-list {
     display: flex;
     flex-direction: column;
-    margin: 24px 80px 0 80px;
+    margin-top: 24px;
     align-items: center;
     justify-content: center;
-    width: fit-content;
-    max-width: 1350px;
+    width: 100%;
+    max-width: 1450px;
+    padding: 0 80px;
+    box-sizing: border-box;
 }
 
 .back-button {
@@ -145,6 +147,7 @@
     background-color: white;
     border-radius: 4px;
     overflow: hidden;
+    width: 100%;
     box-shadow: 0 0 4px 1px rgba(0, 0, 0, 0.25);
 }
 

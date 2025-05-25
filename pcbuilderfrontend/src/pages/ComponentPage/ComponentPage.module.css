@@ -1,6 +1,7 @@
 .component-page {
-    padding: 20px;
-    max-width: 1200px;
+    padding: 20px 80px;
+    max-width: 1450px;
+    box-sizing: border-box;
     margin: 0 auto;
 }
 
@@ -265,6 +266,49 @@
     border-bottom: none;
 }
 
+
+.selected-offer-row {
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.offers-table tbody tr {
+    cursor: pointer;
+}
+
+.offers-table tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+
+.offers-table td {
+    vertical-align: middle;
+}
+
+.offers-table th:nth-child(2),
+.offers-table td:nth-child(2) {
+    max-width: 150px;
+    width: 150px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.offers-table th:first-child,
+.offers-table td:first-child {
+    width: auto;
+}
+
+
+.offers-table td:last-child {
+    text-align: center;
+}
+
+.offers-table th:last-child,
+.offers-table td:last-child {
+    width: 280px;
+    white-space: nowrap;
+}
+
 .offers-table-body-container {
     max-height: 600px;
     overflow-y: auto;
@@ -298,6 +342,7 @@
     align-items: center;
     gap: 12px;
     font-weight: bold;
+    text-align: left;
 }
 
 .store-logo {
@@ -329,6 +374,7 @@
 
 .offers-button{
     gap: 6px;
+    text-decoration: none;
 }
 
 .loading, .error {
@@ -415,24 +461,3 @@
 }
 
 
-
-.selected-offer-row {
-    background-color: rgba(0, 123, 255, 0.1);
-}
-
-.offers-table tbody tr {
-    cursor: pointer;
-}
-
-.offers-table tbody tr:hover {
-    background-color: rgba(0, 123, 255, 0.05);
-}
-
-
-.offers-table td {
-    vertical-align: middle;
-}
-
-.offers-table td:last-child {
-    text-align: center;
-}

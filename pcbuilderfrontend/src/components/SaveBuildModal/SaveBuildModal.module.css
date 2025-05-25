@@ -32,23 +32,49 @@
 
 .formGroup label {
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     font-weight: 500;
+    font-size: 1rem;
+    color: #333;
 }
 
+/* Updated input styles to match LoginPage */
 .formGroup input,
 .formGroup textarea {
     width: 100%;
     padding: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid #CECECE;
     border-radius: 4px;
-    font-size: 16px;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    box-sizing: border-box;
 }
 
+/* Added focus styles */
+.formGroup input:focus,
+.formGroup textarea:focus {
+    border: 1px solid #808386;
+    outline: none;
+}
+
+/* Updated error styling */
 .errorMessage {
-    color: #e53935;
+    background-color: #ffe6e6;
+    color: #721c24;
+    padding: 8px;
+    border-radius: 4px;
     margin-bottom: 16px;
     font-size: 14px;
+    border: 1px solid #dc3545;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+/* Added error class for inputs */
+.inputError {
+    border: 1px solid #dc3545 !important;
+    background-color: #fff8f8;
 }
 
 .buttonGroup {

@@ -7,22 +7,22 @@ function CancelEditModal({ isOpen, onCancel, onConfirm }) {
     return (
         <div className={styles.modalOverlay}>
             <div className={styles.modalContent}>
-                <h2>Cancel Editing?</h2>
-                <p>Are you sure you want to cancel editing this build?</p>
-                <p className={styles.warningText}>Any unsaved changes will be lost.</p>
+                <h2>Скасувати редагування?</h2>
+                <p>Ви впевнені що хочете скасувати редагування?</p>
+                <p className={styles.warningText}>Будь які не збережені зміни буде втрачено.</p>
 
                 <div className={styles.buttonGroup}>
                     <button
                         className={styles.continueButton}
                         onClick={onCancel}
                     >
-                        Continue Editing
+                        Продовжити Редагування
                     </button>
                     <button
                         className={styles.exitButton}
                         onClick={onConfirm}
                     >
-                        Exit Without Saving
+                        Вийти Без Збереження
                     </button>
                 </div>
             </div>

@@ -8,6 +8,7 @@
   align-items: center;
   position: relative;
   box-sizing: border-box;
+  color: #262B31;
 }
 
 .card {
@@ -79,7 +80,17 @@ button a {
   text-decoration: none;
 }
 
+.App{
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
 .content-wrapper{
+  width: 100%;
+  box-sizing: border-box;
   margin-bottom: 64px;
 }
 

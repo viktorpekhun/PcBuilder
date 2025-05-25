@@ -1,100 +1,211 @@
-.register-container section {
+.register-page {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.register-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    max-width: 460px;
-    margin: auto;
-    padding: 1rem 2rem 1rem;
-    background-color: rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 500px; /* Slightly larger for more form fields */
+    padding: 32px;
+    background-color: white;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    border: 2px solid #7c7c7c;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    margin-top: 48px;
+    box-sizing: border-box;
 }
 
-
-.register-container section h1 {
-    font-size: 2rem;
-    color: #865F20;
-    margin-bottom: 1.5rem;
-    text-align: center;
-
-}
-
-
-.register-container .errmsg {
-    background-color: #f8d7da;
-    color: #721c24;
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-    margin-bottom: 1rem;
-    text-align: center;
+.register-container h1 {
+    font-size: 24px;
+    color: #262B31;
+    margin: 0;
+    text-align: left;
     width: 100%;
 }
 
-.register-container .offscreen {
+.description {
+    font-size: 14px;
+    color: #262B31;
+    text-align: left;
+    align-self: flex-start;
+    margin-top: 0;
+}
+
+.errmsg {
+    background-color: #ffe6e6;
+    color: #721c24;
+    padding: 8px;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    text-align: left;
+    width: 100%;
+    border: 1px solid #dc3545;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.offscreen {
     position: absolute;
     left: -9999px;
 }
 
-
-.register-container form {
+form {
     display: flex;
     flex-direction: column;
     width: 100%;
+    box-sizing: border-box;
+    margin-top: 8px;
 }
 
-
-.register-container label {
+label {
     font-size: 1rem;
     color: #333;
-    margin-bottom: 0.5rem;
+    margin-bottom: 4px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
-.register-container input[type="text"],
-.register-container input[type="password"] {
+input[type="text"],
+input[type="password"] {
     font-size: 1rem;
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 0.5rem;
+    padding: 10px;
+    border: 1px solid #CECECE;
+    border-radius: 4px;
     margin-bottom: 1rem;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.register-container p {
-    font-size: 0.9rem;
-    color: #333;
-    text-align: center;
+input:focus {
+    border: 1px solid #808386;
+    outline: none;
 }
 
-.register-container .line {
+/* Password field with eye icon */
+.password-field {
+    position: relative;
+    width: 100%;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #808386;
+    padding: 0;
+    margin: 0;
+    height: 24px;
+    width: 24px;
+    margin-top: -8px;
+    transition: color 0.2s ease;
+}
+
+.password-toggle:hover {
+    color: #262B31;
+}
+
+.password-toggle:focus {
+    outline: none;
+}
+
+.password-field input[type="text"],
+.password-field input[type="password"] {
+    padding-right: 38px;
+}
+
+/* Login link area */
+.login-link {
+    font-size: 14px;
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+}
+
+.line {
     color: #3498db;
 }
 
-.register-container .line a {
+.line a {
     color: #3498db;
     font-weight: bold;
-    text-decoration: none;
     transition: color 0.3s;
 }
 
-.register-container .line a:hover {
+.line a:hover {
     color: #2980b9;
 }
 
-
-.register-container .persistCheck {
-    font-size: 0.75rem;
-    margin-top: 10px;
-    display: flex;
-    justify-content: flex-start;
-    align-items: flex-end;
+/* Register button */
+.register-button {
+    align-self: center;
+    font-size: 16px;
+    padding: 8px 24px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 8px;
 }
 
-.register-container .persistCheck label {
-    margin: 0;
+
+
+.register-button:disabled {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+.register-button:disabled:hover {
+    filter: none !important;
+    background-color: #cccccc !important;
+}
+/* Validation icons */
+.valid {
+    color: #28a745;
+    margin-left: 5px;
 }
 
-.register-container [type="checkbox"] {
-    height: 20px;
-    width: 20px;
-    margin: 0 5px 2px 2px;
+.invalid {
+    color: #dc3545;
+    margin-left: 5px;
+}
+
+.hide {
+    display: none;
+}
+
+.instructions {
+    font-size: 12px;
+    color: #555;
+    background-color: #f8f9fa;
+    border-left: 3px solid #808386;
+    padding: 8px;
+    margin-top: -8px;
+    margin-bottom: 12px;
+    border-radius: 0 4px 4px 0;
+}
+
+.instructions svg {
+    margin-right: 4px;
+}
+
+/* Add error class for inputs */
+.input-error {
+    border: 1px solid #dc3545 !important;
+    background-color: #fff8f8;
 }
