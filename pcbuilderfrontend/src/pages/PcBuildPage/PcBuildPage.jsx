@@ -1041,7 +1041,7 @@ function PcBuildPage() {
                                         </div>
                                     ) : (
                                         <button className={'button-primary'}>
-                                            <Link to={`/components/${key}`}>Виберіть {buttonLabel}</Link>
+                                            <Link to={`/components/${key}`}>Додати {buttonLabel}</Link>
                                         </button>
                                     )}
                                 </td>
