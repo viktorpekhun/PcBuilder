@@ -312,25 +312,6 @@
 .search-input:focus {
     outline: none;
 }
-.search-button-field{
-    background-color: white;
-    border: none;
-    margin-right: 8px;
-    padding: 6px 6px 1px;
-}
-.search-button {
-    color: #989898;
-    transition: all 0.2s ease;
-    cursor: pointer;
-}
-
-.search-button:active {
-    transform: translateY(2px);
-}
-
-/* Keep existing styles and add/modify the following */
-
-/* Replace the table styles with these */
 
 .components-list {
     display: flex;

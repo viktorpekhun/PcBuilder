@@ -14,7 +14,6 @@ function ComponentsPage() {
     const [error, setError] = useState(null);
     const [filters, setFilters] = useState({});
     const [searchQuery, setSearchQuery] = useState('');
-    const [activeSearchQuery, setActiveSearchQuery] = useState('');
     const firstLoadDone = useRef(false);
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -39,7 +38,7 @@ function ComponentsPage() {
             // Use provided customFilters parameter instead of filters state
             const filtersToUse = customFilters || {};
             // Use provided query or fall back to activeSearchQuery
-            const searchToUse = query !== null ? query : activeSearchQuery;
+            const searchToUse = query !== null ? query : searchQuery;
 
             // Convert filters to API format
             const apiFilters = {};
@@ -153,38 +152,43 @@ function ComponentsPage() {
     };
     // Initial load effect
     useEffect(() => {
+        firstLoadDone.current = false;
         setFilters({});
         setSearchQuery('');
-        setActiveSearchQuery('');
         setCurrentPage(1);
         fetchComponents({}, 1, '');
-    }, [type, fetchComponents]);
+    }, [type]);
 
     // Combined effect to handle filters and search changes
     useEffect(() => {
         if (!firstLoadDone.current) return;
         setCurrentPage(1);
-        fetchComponents(filters, 1, activeSearchQuery);
-    }, [filters, activeSearchQuery, fetchComponents]);
+        fetchComponents(filters, 1, searchQuery); // use searchQuery directly
+    }, [filters, sortField, sortDirection]); // Remove activeSearchQuery
 
     // Handle page changes
     useEffect(() => {
         if (!firstLoadDone.current) return;
         if (currentPage > 1) {
-            fetchComponents(filters, currentPage, activeSearchQuery);
+            fetchComponents(filters, currentPage, searchQuery);
         }
-    }, [currentPage, fetchComponents]);
+    }, [currentPage]); // Remove fetchComponents from dependencies
 
-    // Handle search input change - just update the local state
+    // Handle search input change - update state, debounce will handle the rest
     const handleSearchChange = (e) => {
         setSearchQuery(e.target.value);
     };
 
-    // Handle search submission (button click or Enter key)
-    const handleSearchSubmit = (e) => {
-        e.preventDefault();
-        setActiveSearchQuery(searchQuery); // This will trigger the filters/search effect
-    };
+    // Debounced search effect
+    useEffect(() => {
+        if (!firstLoadDone.current) return;
+        const debounceTimer = setTimeout(() => {
+            setCurrentPage(1);
+            fetchComponents(filters, 1, searchQuery);
+        }, 400);
+
+        return () => clearTimeout(debounceTimer); // Cleanup on every keystroke
+    }, [searchQuery]);
 
     const handleFilterChange = useCallback((newFilters) => {
         setFilters(newFilters);
@@ -274,7 +278,7 @@ function ComponentsPage() {
     };
 
 
-    if (loading && !components.length) return <div>Loading {type} components...</div>;
+    if (loading && !firstLoadDone.current) return <div>Loading {type} components...</div>;
     if (error) return <div>{error}</div>;
 
     return (
@@ -288,7 +292,7 @@ function ComponentsPage() {
                     </svg>
                     До Конфігуратора
                 </button>
-                <form onSubmit={handleSearchSubmit} className={styles['search-container']}>
+                <div className={styles['search-container']}>
                     <input
                         type="text"
                         placeholder="Пошук..."
@@ -296,17 +300,7 @@ function ComponentsPage() {
                         onChange={handleSearchChange}
                         className={styles['search-input']}
                     />
-                    <button
-                        type="submit"
-                        className={styles['search-button-field']}
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                             className={`bi bi-search ${styles['search-button']}`} viewBox="0 0 16 16">
-                            <path
-                                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
-                        </svg>
-                    </button>
-                </form>
+                </div>
             </div>
             <div className={styles['content-container']}>
                 {/* Filter panel */}
@@ -317,7 +311,7 @@ function ComponentsPage() {
 
                 {/* Components table */}
                 <div className={styles['table-container']}>
-                    {loading && <div className={styles['loading-overlay']}>Applying filters...</div>}
+                    {/* {loading && <div className={styles['loading-overlay']}>Applying filters...</div>} */}
 
                     <div className={styles['sorting-controls']}>
                         <span className={styles['sorting-label']}>Сортувати за:</span>
