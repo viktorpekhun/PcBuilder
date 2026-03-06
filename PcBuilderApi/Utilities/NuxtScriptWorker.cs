@@ -14,6 +14,7 @@ namespace PcBuilderApi.Utilities
 
             if (scriptNode == null)
                 return null;
+            //add null script log
 
             string jsCode = scriptNode.InnerText;
             jsCode = jsCode
@@ -31,7 +32,7 @@ namespace PcBuilderApi.Utilities
                 var psi = new ProcessStartInfo
                 {
                     FileName = "node",
-                    Arguments = "C:\\Users\\vikto\\source\\repos\\PcBuilderApi\\PcBuilderApi\\Utilities\\nuxt-extract.js",
+                    Arguments = "C:\\Users\\vikto\\source\\repos\\viktorpekhun\\PcBuilder\\PcBuilderApi\\Utilities\\nuxt-extract.js",
                     RedirectStandardInput = true,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
