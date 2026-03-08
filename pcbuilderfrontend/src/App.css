@@ -75,10 +75,10 @@ button:disabled {
   cursor: not-allowed;
 }
 
-button a {
+/* button a {
   color: white;
   text-decoration: none;
-}
+} */
 
 .App{
   width: 100%;

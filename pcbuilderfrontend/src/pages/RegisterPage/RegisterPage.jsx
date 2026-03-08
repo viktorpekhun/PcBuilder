@@ -5,6 +5,7 @@ import axios from '../../api/axios.jsx';
 import useAuth from "../../hooks/useAuth.js";
 import { Link, useNavigate } from "react-router-dom";
 import styles from './RegisterPage.module.css';
+import { Button } from "../../components/Button/Button.js";
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,50}$/;
 const USER_REGEX = /^[a-zA-Z][a-zA-Z0-9-_]{3,30}$/;
@@ -279,12 +280,13 @@ const RegisterPage = () => {
                         Має співпадати з полем пароля.
                     </p>
 
-                    <button
-                        className={`button-primary ${styles['register-button']}`}
+                    <Button
+                        variant="primary"
+                        size="md"
                         disabled={!validEmail || !validName || !validPwd || !validMatch}
                     >
                         Зареєструватись
-                    </button>
+                    </Button>
                 </form>
 
                 <p className={styles['login-link']}>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styles from './SaveBuildModal.module.css';
+import { Button } from '../Button/Button';
 
 function SaveBuildModal({ isOpen, onCancel, onSave, isSaving, initialName = '', initialDescription = '', isEditing = false }) {
     const [buildName, setBuildName] = useState(initialName);
@@ -101,21 +102,21 @@ function SaveBuildModal({ isOpen, onCancel, onSave, isSaving, initialName = '', 
 
 
                     <div className={styles.buttonGroup}>
-                        <button
-                            type="button"
-                            className={'button-secondary'}
+                        <Button
+                            variant='outline-secondary'
+                            size='md'
                             onClick={onCancel}
                             disabled={isSaving}
                         >
                             Відмінити
-                        </button>
-                        <button
-                            type="submit"
-                            className={`button-primary`}
+                        </Button>
+                        <Button
+                            variant='primary'
+                            size='md'
                             disabled={isSaving}
                         >
                             {isSaving ? 'Збереження...' : isEditing ? 'Оновити' : 'Зберегти Збірку'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>

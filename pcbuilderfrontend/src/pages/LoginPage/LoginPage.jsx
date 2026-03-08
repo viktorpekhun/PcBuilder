@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import styles from './LoginPage.module.css';
 
 import axios from '../../api/axios.jsx';
+import { Button } from '../../components/Button/Button.js';
 const LOGIN_URL = '/api/auth/login';
 
 const LoginPage = () => {
@@ -144,7 +145,12 @@ const LoginPage = () => {
                         </button>
                     </div>
 
-                    <button className={`button-primary ${styles['login-button']}`}>Увійти</button>
+                    <Button
+                        variant='primary'
+                        size='md'
+                    >
+                        Увійти
+                    </Button>
                 </form>
                 <p className={styles['register-link']}>
                     Немає акаунту?

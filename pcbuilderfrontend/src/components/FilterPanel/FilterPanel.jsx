@@ -1,6 +1,7 @@
 import {useState, useEffect, useRef} from 'react';
 import axios from "../../api/axios.jsx";
 import styles from './FilterPanel.module.css';
+import { Button } from '../Button/Button.js';
 
 const FilterPanel = ({ config, onFilterChange }) => {
     const [filterValues, setFilterValues] = useState({});
@@ -241,8 +242,10 @@ const FilterPanel = ({ config, onFilterChange }) => {
                     config.filters.map(filter => renderFilter(filter))
                 )}
             </div>
-            <button
-                className={`button-primary ${styles.clearButton}`}
+            <Button
+                variant='primary'
+                size='md'
+                className={styles.clearButton}
                 onClick={() => {
                     // Reset all filters
                     const initialValues = {};
@@ -269,7 +272,7 @@ const FilterPanel = ({ config, onFilterChange }) => {
                 }}
             >
                 Очистити фільтри
-            </button>
+            </Button>
         </div>
     );
 };

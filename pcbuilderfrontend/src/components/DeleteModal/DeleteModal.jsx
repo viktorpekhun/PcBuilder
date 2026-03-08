@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from './DeleteModal.module.css';
+import { Button } from '../Button/Button';
 
 function DeleteModal({ isOpen, buildName, onCancel, onConfirm, isDeleting }) {
     if (!isOpen) return null;
@@ -12,20 +13,22 @@ function DeleteModal({ isOpen, buildName, onCancel, onConfirm, isDeleting }) {
                 <p className={styles.warningText}>Ця дія є незворотною.</p>
 
                 <div className={styles.buttonGroup}>
-                    <button
-                        className={styles.cancelButton}
+                    <Button
+                        variant='outline-secondary'
+                        size='md'
                         onClick={onCancel}
                         disabled={isDeleting}
                     >
                         Відмінити
-                    </button>
-                    <button
-                        className={styles.deleteButton}
+                    </Button>
+                    <Button
+                        variant='danger'
+                        size='md'
                         onClick={onConfirm}
                         disabled={isDeleting}
                     >
                         {isDeleting ? 'Видалення...' : 'Видалити Збірку'}
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>

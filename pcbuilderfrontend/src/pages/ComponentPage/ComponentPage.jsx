@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import styles from './ComponentPage.module.css';
 import { getComponentById } from '../../services/componentService';
 import { componentSpecFullConfigs } from './componentSpecsFullConfigs.js';
+import { Button } from '../../components/Button/Button';
 
 function ComponentPage() {
     const { type, id } = useParams();
@@ -219,16 +220,6 @@ function ComponentPage() {
             <div className={styles['component-details']}>
                 <div className={styles['component-header']}>
                     <div className={styles['header-left']}>
-                        <button
-                            className={'button-secondary'}
-                            onClick={() => navigate(`/components/${type}`)}
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" stroke="currentColor" strokeWidth="1"
-                                 className="bi bi-arrow-90deg-left" viewBox="0 0 16 16">
-                                <path fill-rule="evenodd"
-                                      d="M1.146 4.854a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 4H12.5A2.5 2.5 0 0 1 15 6.5v8a.5.5 0 0 1-1 0v-8A1.5 1.5 0 0 0 12.5 5H2.707l3.147 3.146a.5.5 0 1 1-.708.708z"/>
-                            </svg>
-                        </button>
                         <div className={styles['header-title']}>
                             <h1>{component.name}</h1>
                         </div>
@@ -323,7 +314,6 @@ function ComponentPage() {
                     </div>
                 )}
 
-                {/* Offers Section - With individual add buttons */}
                 {component.productOffers && component.productOffers.length > 0 && (
                     <div className={styles['offers-section']}>
                         <h3>Наявні Пропозиції ({component.offersCount})</h3>
@@ -375,8 +365,9 @@ function ComponentPage() {
                                             </td>
                                             <td>
                                                 <div className={styles['offer-buttons']}>
-                                                    <button
-                                                        className={`button-primary ${styles['offers-button']}`}
+                                                    <Button
+                                                        variant='primary'
+                                                        size='sm'
                                                         onClick={() => handleAddToBuild(offer)}
                                                     >
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
@@ -388,12 +379,13 @@ function ComponentPage() {
                                                                 d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
                                                         </svg>
                                                         Додати до Збірки
-                                                    </button>
-                                                    <a
+                                                    </Button>
+                                                    <Button
+                                                        variant="secondary"
+                                                        size="sm"
                                                         href={offer.productOfferUrl}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className={`button-secondary ${styles['offers-button']}`}
                                                     >
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                                              fill="currentColor"
@@ -404,7 +396,7 @@ function ComponentPage() {
                                                                   d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
                                                         </svg>
                                                         Купити
-                                                    </a>
+                                                    </Button>
                                                 </div>
                                             </td>
                                         </tr>

@@ -6,6 +6,7 @@ import FilterPanel from '../../components/FilterPanel/FilterPanel.jsx';
 import { Pagination } from '../../components/Pagination/Pagination.tsx';
 import { filterConfigs } from '../../components/FilterPanel/filterConfigs.js';
 import {componentSpecConfigs} from "./componentSpecsConfigs.js";
+import { Button } from '../../components/Button/Button.js';
 
 function ComponentsPage() {
     const { type } = useParams();
@@ -197,12 +198,6 @@ function ComponentsPage() {
         setFilters(newFilters);
     }, []);
 
-    const handlePageChange = (page) => {
-        if (page < 1 || page > totalPages || page === currentPage) return;
-        setCurrentPage(page);
-        window.scrollTo(0, 0); // Scroll to top for better UX
-    };
-
 
     if (loading && !firstLoadDone.current) return <div>Loading {type} components...</div>;
     if (error) return <div>{error}</div>;
@@ -210,14 +205,6 @@ function ComponentsPage() {
     return (
         <section className={styles['component-list']}>
             <div className={styles['top-bar-content']}>
-                <button className={`button-secondary ${styles['back-button']}`} onClick={() => navigate('/')}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" stroke="currentColor" strokeWidth="1"
-                         className="bi bi-arrow-90deg-left" viewBox="0 0 16 16">
-                        <path fill-rule="evenodd"
-                              d="M1.146 4.854a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 4H12.5A2.5 2.5 0 0 1 15 6.5v8a.5.5 0 0 1-1 0v-8A1.5 1.5 0 0 0 12.5 5H2.707l3.147 3.146a.5.5 0 1 1-.708.708z"/>
-                    </svg>
-                    До Конфігуратора
-                </button>
                 <div className={styles['search-container']}>
                     <input
                         type="text"
@@ -403,12 +390,13 @@ function ComponentsPage() {
                                 </div>
 
                                 <div className={styles['component-actions']}>
-                                    <button
+                                    <Button
+                                        variant='primary'
+                                        size='md'
                                         onClick={() => navigate(`/components/${type}/${component.id}`)}
-                                        className={`button-primary ${styles['details-button']}`}
                                     >
                                         Деталі
-                                    </button>
+                                    </Button>
                                     <p>Пропозицій: {component.offersCount}</p>
                                 </div>
                             </div>

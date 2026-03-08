@@ -7,6 +7,7 @@ import useAuth from "../../hooks/useAuth.js";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate.js";
 import SaveBuildModal from "../../components/SaveBuildModal/SaveBuildModal.jsx";
 import CancelEditModal from "../../components/CanselEditModal/CanselEditModal.jsx";
+import { Button } from "../../components/Button/Button.tsx";
 import Toast from "../../components/Toast/Toast.jsx";
 
 
@@ -667,9 +668,9 @@ function PcBuildPage() {
                         ))}
                     </>
                 )}
-                <button className={'button-primary'}>
+                <Button variant="outline-primary" size="sm">
                     <Link to={`/components/${singleType}`}>Додати {buttonLabel}</Link>
-                </button>
+                </Button>
             </div>
         );
     };
@@ -715,9 +716,10 @@ function PcBuildPage() {
             <div className={styles['multi-info-container']}>
                 {components.map((item, index) => (
                     <div key={index} className={styles['component-price-item']}>
-                        <button
-                            className={`button-secondary button-with-icon`}
+                        <Button
                             onClick={() => removeMultiComponent(key, item.componentId)}
+                            variant="outline-secondary"
+                            size="md"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                  fill="currentColor" className="bi bi-x" viewBox="0 0 16 16">
@@ -725,7 +727,7 @@ function PcBuildPage() {
                                     d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
                             </svg>
                             Прибрати
-                        </button>
+                        </Button>
                     </div>
                 ))}
             </div>
@@ -998,12 +1000,13 @@ function PcBuildPage() {
                         </svg>
                         <span>Редагування збірки: <strong>{editingBuild.name}</strong></span>
                     </div>
-                    <button
-                        className={'button-secondary'}
+                    <Button
+                        variant="outline-secondary"
+                        size="md"
                         onClick={() => setCancelEditModal({isOpen: true})}
                     >
                         Скасувати Редагування
-                    </button>
+                    </Button>
                 </div>
             )}
             <div className={styles['build-components-container']}>
@@ -1040,9 +1043,9 @@ function PcBuildPage() {
                                             </div>
                                         </div>
                                     ) : (
-                                        <button className={'button-primary'}>
+                                        <Button variant="outline-primary" size="sm">
                                             <Link to={`/components/${key}`}>Додати {buttonLabel}</Link>
-                                        </button>
+                                        </Button>
                                     )}
                                 </td>
                                 <td>
@@ -1059,9 +1062,10 @@ function PcBuildPage() {
                                 <td>
                                     {componentData[key] && (
                                         <div className={styles['action-buttons']}>
-                                            <button
-                                                className={`button-secondary button-with-icon`}
+                                            <Button
                                                 onClick={() => removeComponent(key)}
+                                                variant="outline-secondary"
+                                                size="sm"
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                      fill="currentColor" className="bi bi-x" viewBox="0 0 16 16">
@@ -1069,7 +1073,7 @@ function PcBuildPage() {
                                                         d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
                                                 </svg>
                                                 Прибрати
-                                            </button>
+                                            </Button>
                                         </div>
                                     )}
                                 </td>
@@ -1108,30 +1112,33 @@ function PcBuildPage() {
                     <div className={styles['save-buttons-container']}>
                         {editingBuild ? (
                             <>
-                                <button
-                                    className={'button-primary'}
+                                <Button
+                                    variant="primary"
+                                    size="md"
                                     onClick={openSaveModal}
                                     disabled={saveStatus.loading}
                                 >
                                     {saveStatus.loading ? 'Збереження...' : 'Оновити Збірку'}
-                                </button>
+                                </Button>
 
-                                <button
-                                    className={'button-secondary'}
+                                <Button
+                                    variant="outline-secondary"
+                                    size="md"
                                     onClick={openSaveAsNewModal}
                                     disabled={saveStatus.loading}
                                 >
                                     Зберегти Як Нову
-                                </button>
+                                </Button>
                             </>
                         ) : (
-                            <button
-                                className={'button-primary'}
+                            <Button
+                                variant="primary"
+                                size="md"
                                 onClick={openSaveModal}
                                 disabled={saveStatus.loading}
                             >
                                 {saveStatus.loading ? 'Збереження...' : 'Зберегти Збірку'}
-                            </button>
+                            </Button>
                         )}
 
                     </div>
