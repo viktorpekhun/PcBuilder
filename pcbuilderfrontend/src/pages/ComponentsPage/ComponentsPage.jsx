@@ -3,6 +3,7 @@ import { getComponents } from "../../services/componentService.js";
 import { useNavigate, useParams } from "react-router-dom";
 import styles from './ComponentsPage.module.css';
 import FilterPanel from '../../components/FilterPanel/FilterPanel.jsx';
+import { Pagination } from '../../components/Pagination/Pagination.tsx';
 import { filterConfigs } from '../../components/FilterPanel/filterConfigs.js';
 import {componentSpecConfigs} from "./componentSpecsConfigs.js";
 
@@ -18,6 +19,7 @@ function ComponentsPage() {
 
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [totalResults, setTotalResults] = useState(1);
     const pageSize = 20;
     const [sortField, setSortField] = useState('offersCount');
     const [sortDirection, setSortDirection] = useState('desc');
@@ -102,6 +104,7 @@ function ComponentsPage() {
                     setComponents(response.data || response);
                     setTotalPages(paginationData.TotalPages);
                     setCurrentPage(paginationData.PageNumber);
+                    setTotalResults(paginationData.TotalCount);
 
                     console.log(`Using header pagination: Total pages = ${paginationData.TotalPages}`);
                 } catch (parseError) {
@@ -198,83 +201,6 @@ function ComponentsPage() {
         if (page < 1 || page > totalPages || page === currentPage) return;
         setCurrentPage(page);
         window.scrollTo(0, 0); // Scroll to top for better UX
-    };
-
-    const Pagination = () => {
-        console.log(`Rendering pagination: currentPage=${currentPage}, totalPages=${totalPages}`);
-
-        // Don't render pagination if there's only one page
-        if (totalPages <= 1) {
-            console.log("Not showing pagination: totalPages <= 1");
-            return null;
-        }
-
-        // Generate array of page numbers to show
-        const getPageNumbers = () => {
-            let pages = [];
-            // Always show first 5 pages or fewer if totalPages < 5
-            const maxInitialPages = Math.min(5, totalPages);
-
-            for (let i = 1; i <= maxInitialPages; i++) {
-                pages.push(i);
-            }
-
-            // Add ellipsis and last page if totalPages > 5
-            if (totalPages > 5) {
-                if (currentPage > 5 && currentPage < totalPages) {
-                    // If current page is beyond first 5, show it too
-                    pages = [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
-                } else if (currentPage >= totalPages - 2) {
-                    // If we're near the end, show last 5 pages
-                    pages = [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-                } else {
-                    pages.push('...');
-                    pages.push(totalPages);
-                }
-            }
-
-            return pages;
-        };
-
-        const pageNumbers = getPageNumbers();
-
-        return (
-            <div className={styles.pagination}>
-                <button
-                    className={`${styles.paginationButton} ${styles.navButton}`}
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                         stroke="currentColor" strokeWidth="1" className="bi bi-chevron-left" viewBox="0 0 16 16">
-                        <path fill-rule="evenodd"
-                              d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0"/>
-                    </svg>
-                </button>
-
-                {pageNumbers.map((page, index) => (
-                    <button
-                        key={index}
-                        className={`${styles.paginationButton} ${page === currentPage ? styles.activePagination : ''} ${page === '...' ? styles.ellipsis : ''}`}
-                        onClick={() => page !== '...' && handlePageChange(page)}
-                        disabled={page === '...'}
-                    >
-                        {page}
-                    </button>
-                ))}
-
-                <button
-                    className={`${styles.paginationButton} ${styles.navButton}`}
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                         class="bi bi-chevron-right" viewBox="0 0 16 16" stroke="currentColor" strokeWidth="1">
-                        <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708"/>
-                    </svg>
-                </button>
-            </div>
-        );
     };
 
 
@@ -496,7 +422,13 @@ function ComponentsPage() {
                     )}
                 </div>
             </div>
-            <Pagination/>
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalResults={totalResults}
+                pageSize={pageSize}
+                onPageChange={(newPage) => setCurrentPage(newPage)}
+            />
         </section>
     );
 }
