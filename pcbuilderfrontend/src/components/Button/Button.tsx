@@ -1,9 +1,9 @@
 import styles from "./Button.module.css";
 
 interface ButtonBaseProps {
-    variant?: 'primary' | 'secondary' | 'outline-primary' | 'oultline-secondary' | 'danger';
+    variant?: 'primary' | 'secondary' | 'outline-primary' | 'outline-secondary' | 'danger';
     size?: 'sm' | 'md' | 'lg';
-    className?: string;
+    className?: string | undefined;
     children?: React.ReactNode;
 }
 

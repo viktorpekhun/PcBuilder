@@ -2,7 +2,6 @@
 using Microsoft.IdentityModel.Tokens;
 using PcBuilderApi.Models;
 using PcBuilderApi.Services.Interfaces;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
@@ -27,9 +26,9 @@ namespace PcBuilderApi.Services.Implementations
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity([
-                        new Claim(ClaimTypes.Name, user.Username),
-                        new Claim(ClaimTypes.Email, user.Email),
-                        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
+                        new Claim(JwtRegisteredClaimNames.Name, user.Username),
+                        new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                        new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString())
                     ]),
                 Expires = DateTime.UtcNow.AddMinutes(_configuration.GetValue<int>("Jwt:ExpirationInMinutes")),
                 SigningCredentials = credentials,
@@ -57,9 +56,15 @@ namespace PcBuilderApi.Services.Implementations
                 ValidateLifetime = false
             };
 
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out _);
-            return principal;
+            var tokenHandler = new JsonWebTokenHandler();
+            var resultTask = tokenHandler.ValidateTokenAsync(token, tokenValidationParameters);
+            var result = resultTask.GetAwaiter().GetResult();
+
+            if (!result.IsValid)
+            {
+                throw new UnauthorizedAccessException("Invalid access token");
+            }
+            return new ClaimsPrincipal(result.ClaimsIdentity);
         }
     }
 }

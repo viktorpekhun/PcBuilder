@@ -7,11 +7,12 @@
     box-sizing: border-box;
     width: 100%;
     height: 64px;
-    background: #68633B;
+    background-color: #ffffff;
+    box-shadow: 0 1px 6px rgb(139, 139, 139);;
     margin: auto 0 0 0;
 }
 
 .footer h1{
-    color: #E2E7DB;
+    color: #262b31;
     font-size: 24px;
 }

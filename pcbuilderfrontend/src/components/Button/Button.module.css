@@ -30,7 +30,7 @@
 }
 
 .secondary {
-  background-color: #858585;
+  background-color: #838383;
   border: 2px solid #858585;
   color: white;
 }
@@ -41,8 +41,8 @@
 }
 
 .secondary:hover:not(:disabled) {
-  background-color: #374151;
-  border: 2px solid #374151;
+  background-color: #a0a0a0;
+  border: 2px solid #a0a0a0;
 }
 
 .outline-primary {

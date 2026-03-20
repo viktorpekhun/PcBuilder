@@ -63,7 +63,7 @@ namespace PcBuilderApi.Controllers
                 }
 
                 var pagedComponents = await _componentService.GetAllByTypeAsync(componentType, parameters);
-
+                var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
                 // Add pagination headers
                 Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(new
                 {
@@ -73,7 +73,7 @@ namespace PcBuilderApi.Controllers
                     pagedComponents.TotalPages,
                     pagedComponents.HasNext,
                     pagedComponents.HasPrevious
-                }));
+                }, jsonOptions));
 
                 return Ok(pagedComponents.Items);
             }
