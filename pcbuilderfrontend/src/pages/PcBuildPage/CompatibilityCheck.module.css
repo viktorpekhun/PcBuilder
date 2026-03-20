@@ -1,0 +1,131 @@
+.compatibility-container {
+    min-width: 350px;
+    max-width: 385px;
+    width: 100%;
+    border-radius: 4px;
+    background-color: white;
+    box-shadow: 0 0 4px 1px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+}
+
+.compatibility-container h2 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 48px;
+    background-color: #262B31;
+    color: white;
+    font-size: 20px;
+    margin: 0;
+}
+
+.compatibility-status {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    padding: 16px;
+    margin: 0 8px;
+    border: 2px solid;
+    border-radius: 3px;
+    font-weight: bold;
+    text-align: left;
+}
+
+.compatibility-status p {
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+    max-width: 100%;
+    white-space: nowrap;
+}
+
+.status-success {
+    border-color: #28a745;
+    background-color: #e6ffed;
+    color: #28a745;
+}
+
+.status-warning {
+    border-color: #f0ad4e;
+    background-color: #fff9e6;
+    color: #f0ad4e;
+}
+
+.status-error {
+    border-color: #dc3545;
+    background-color: #FFE6E6;
+    color: #dc3545;
+}
+
+.compatibility-messages {
+    list-style-type: none;
+    padding: 12px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+}
+
+.compatibility-message {
+    text-align: left;
+    padding: 8px;
+    font-size: 14px;
+    border-radius: 3px;
+}
+
+.message-warning {
+    background-color: #fff9e6;
+    color: #856404;
+    border-left: 3px solid #f0ad4e;
+}
+
+.message-error {
+    background-color: #ffe6e6;
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
+.basic-info-display {
+    display: flex;
+    flex-direction: column;
+    padding: 3px 3px 0 3px;
+    margin-bottom: 24px;
+    gap: 3px;
+}
+
+.basic-info {
+    background-color: #A68059;
+    color: white;
+    display: flex;
+    flex-direction: row;
+    text-align: left;
+    align-items: center;
+    padding: 8px;
+    gap: 4px;
+    box-sizing: border-box;
+}
+
+.wattage-info {
+    background-color: #A68059;
+}
+
+.problems-info {
+    background-color: #DC3545;
+}
+
+.warnings-info {
+    background-color: #F0AD4E;
+}
+
+.icon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.info-text {
+    font-size: 15px;
+    font-weight: bold;
+}

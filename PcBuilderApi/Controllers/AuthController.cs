@@ -16,7 +16,7 @@ namespace PcBuilderApi.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<ActionResult> Register([FromBody] UserRegisterDto request)
+        public async Task<ActionResult<TokenResponseDto>> Register([FromBody] UserRegisterDto request)
         {
             if (!ModelState.IsValid)
             {
@@ -30,11 +30,11 @@ namespace PcBuilderApi.Controllers
                 return StatusCode(statusCode, new { Message = errorMessage });
             }
 
-            return Ok(tokenResponse); // Only returns the access token
+            return Ok(tokenResponse);
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult> Login([FromBody] UserLoginDto request)
+        public async Task<ActionResult<TokenResponseDto>> Login([FromBody] UserLoginDto request)
         {
             if (!ModelState.IsValid)
             {
@@ -48,7 +48,7 @@ namespace PcBuilderApi.Controllers
                 return StatusCode(statusCode, new { Message = errorMessage });
             }
 
-            return Ok(tokenResponse); // Only returns the access token
+            return Ok(tokenResponse);
         }
 
         [HttpPost("logout")]
@@ -66,7 +66,7 @@ namespace PcBuilderApi.Controllers
         }
 
         [HttpGet("refresh")]
-        public async Task<IActionResult> RefreshToken()
+        public async Task<ActionResult<TokenResponseDto>> RefreshToken()
         {
             var refreshToken = Request.Cookies["refreshToken"];
             if (refreshToken == null)

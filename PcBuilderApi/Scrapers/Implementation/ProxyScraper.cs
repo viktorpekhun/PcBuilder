@@ -24,17 +24,18 @@ namespace PcBuilderApi.Scrapers.Implementation
             try
             {
                 using HttpClient client = new HttpClient();
-                string content = await client.GetStringAsync("https://spys.me/proxy.txt");
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                string content = await client.GetStringAsync("https://api.proxyscrape.com/v2/?request=displayproxies&protocol=http&timeout=10000&country=all&ssl=all&anonymity=all");
 
-                var regex = new Regex(@"[0-9]+(?:\.[0-9]+){3}:[0-9]+");
+                var regex = new Regex(@"\d{1,3}(\.\d{1,3}){3}:\d+");
                 var matches = regex.Matches(content);
 
                 proxies.AddRange(matches.Select(m => m.Value));
-                Console.WriteLine("🔹 Завантажено проксі з spys.me");
+                Console.WriteLine("🔹 Завантажено проксі з ProxiesScrape");
             }
             catch (Exception ex)
             {
-                Console.WriteLine("❌ Помилка spys.me: " + ex.Message);
+                Console.WriteLine("❌ Помилка ProxiesScrape: " + ex.Message);
             }
 
             return proxies;

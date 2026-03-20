@@ -1,6 +1,6 @@
 #root {
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  min-height: 100vh;
   text-align: center;
   background-color: #E2E7DB;
   display: flex;
@@ -75,23 +75,28 @@ button:disabled {
   cursor: not-allowed;
 }
 
-button a {
+/* button a {
   color: white;
   text-decoration: none;
-}
+} */
 
-.App{
+/* .App{
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-}
+} */
 .content-wrapper{
   width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
   box-sizing: border-box;
-  margin-bottom: 64px;
+  margin-bottom: 32px;
 }
 
 

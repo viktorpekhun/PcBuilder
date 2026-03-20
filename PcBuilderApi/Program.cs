@@ -1,17 +1,19 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using PcBuilderApi.Data;
-using PcBuilderApi.Mappers.CpuMappers;
-using PcBuilderApi.Mappers.GpuMappers;
-using PcBuilderApi.Mappers.RamMappers;
-using PcBuilderApi.Mappers.MotherboardMappers;
-using PcBuilderApi.Mappers.SsdMappers;
-using PcBuilderApi.Mappers.HddMappers;
-using PcBuilderApi.Mappers.CpuCoolerMappers;
-using PcBuilderApi.Mappers.PowerSupplyMappers;
-using PcBuilderApi.Mappers.PcCaseMappers;
-using PcBuilderApi.Mappers.FanMappers;
 using PcBuilderApi.Mappers;
+using PcBuilderApi.Mappers.CpuCoolerMappers;
+using PcBuilderApi.Mappers.CpuMappers;
+using PcBuilderApi.Mappers.FanMappers;
+using PcBuilderApi.Mappers.GpuMappers;
+using PcBuilderApi.Mappers.HddMappers;
+using PcBuilderApi.Mappers.MotherboardMappers;
+using PcBuilderApi.Mappers.PcCaseMappers;
+using PcBuilderApi.Mappers.PowerSupplyMappers;
+using PcBuilderApi.Mappers.ProductOfferMappers;
+using PcBuilderApi.Mappers.RamMappers;
+using PcBuilderApi.Mappers.SsdMappers;
 using PcBuilderApi.Models;
 using PcBuilderApi.Repositories.Implementations;
 using PcBuilderApi.Repositories.Interfaces;
@@ -21,9 +23,8 @@ using PcBuilderApi.Services.Compatibility;
 using PcBuilderApi.Services.Compatibility.Rules;
 using PcBuilderApi.Services.Implementations;
 using PcBuilderApi.Services.Interfaces;
-using PcBuilderApi.Mappers.ProductOfferMappers;
 using Swashbuckle.AspNetCore.Filters;
-using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -131,6 +132,7 @@ builder.Services.AddSwaggerGen(options =>
     options.OperationFilter<SecurityRequirementsOperationFilter>();
 });
 
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 builder.Services.AddAuthentication("Bearer").AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters

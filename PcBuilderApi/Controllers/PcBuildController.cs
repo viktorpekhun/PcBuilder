@@ -18,6 +18,17 @@ namespace PcBuilderApi.Controllers
             _pcBuildService = pcBuildService;
         }
 
+        private Guid? UserId
+        {
+            get
+            {
+                var idStr = User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value
+                            ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+                return Guid.TryParse(idStr, out var guid) ? guid : null;
+            }
+        }
+
         [HttpPost("check")]
         public async Task<IActionResult> CheckCompatibility([FromBody] ComponentsCompatibilityDto dto)
         {
@@ -48,13 +59,12 @@ namespace PcBuilderApi.Controllers
                     return BadRequest(ModelState);
                 }
 
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out Guid userId))
+                if (UserId == null)
                 {
-                    return Unauthorized("Invalid user identification");
+                    return Unauthorized();
                 }
 
-                var result = await _pcBuildService.SaveBuildAsync(userId, buildDto);
+                var result = await _pcBuildService.SaveBuildAsync(UserId.Value, buildDto);
 
                 if (result)
                 {
@@ -86,10 +96,9 @@ namespace PcBuilderApi.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out Guid userId))
+                if (UserId == null)
                 {
-                    return Unauthorized("Invalid user identification");
+                    return Unauthorized();
                 }
                 var result = await _pcBuildService.UpdateBuildAsync(id, buildDto);
                 if (result)
@@ -114,16 +123,15 @@ namespace PcBuilderApi.Controllers
 
         [Authorize]
         [HttpGet("user-builds")]
-        public async Task<IActionResult> GetUserBuilds()
+        public async Task<ActionResult<IEnumerable<PcBuildListDto>>> GetUserBuilds()
         {
             try
             {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out Guid userId))
+                if (UserId  == null)
                 {
-                    return Unauthorized("Invalid user identification");
+                    return Unauthorized();
                 }
-                var builds = await _pcBuildService.GetUserBuildsAsync(userId);
+                var builds = await _pcBuildService.GetUserBuildsAsync(UserId.Value);
                 return Ok(builds);
             }
             catch (Exception ex)
@@ -134,17 +142,10 @@ namespace PcBuilderApi.Controllers
 
         [Authorize]
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetBuildById(Guid id)
+        public async Task<ActionResult<PcBuildRequestDto>> GetBuildById(Guid id)
         {
             try
             {
-                Guid? userId = null;
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out Guid parsedUserId))
-                {
-                    userId = parsedUserId;
-                }
-
                 var build = await _pcBuildService.GetBuildByIdAsync(id);
 
                 if (build == null)
@@ -152,10 +153,9 @@ namespace PcBuilderApi.Controllers
                     return NotFound(new { Success = false, Message = "Build not found" });
                 }
 
-
-                if (!build.IsPublished && (userId == null || build.UserId != userId.Value))
+                if (!build.IsPublished && (UserId == null || build.UserId != UserId))
                 {
-                    return Forbid();
+                    return UserId == null ? Unauthorized() : Forbid();
                 }
 
                 return Ok(build);
@@ -177,12 +177,11 @@ namespace PcBuilderApi.Controllers
         {
             try
             {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out Guid userId))
+                if (UserId == null)
                 {
-                    return Unauthorized("Invalid user identification");
+                    return Unauthorized();
                 }
-                var result = await _pcBuildService.DeleteBuildAsync(id, userId);
+                var result = await _pcBuildService.DeleteBuildAsync(id, UserId.Value);
                 if (result)
                 {
                     return Ok(new { Success = true, Message = "Build deleted successfully" });

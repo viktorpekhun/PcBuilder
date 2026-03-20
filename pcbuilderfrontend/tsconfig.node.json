@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    /* Universal compiler options */
+    "composite": true,
+    "target": "esnext",
+    "module": "esnext",
+    "jsx": "react-jsx",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "moduleDetection": "force",
+    "strict": true,
+    
+    /* Build-tool specific */
+    "outDir": "./dist",
+    "rootDir": ".",
+    "types": ["node"],
+    
+    /* Type Checking for Build Tools */
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noEmit": true
+  },
+  "include": [
+    "vite.config.ts",
+    "eslint.config.js"
+  ]
+}

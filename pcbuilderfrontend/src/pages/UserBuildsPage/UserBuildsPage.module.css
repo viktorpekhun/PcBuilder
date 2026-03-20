@@ -89,6 +89,12 @@
     flex-grow: 1;
 }
 
+.builds-list-footer {
+    display: flex;
+    justify-content: center;
+    padding: 16px 16px;
+}
+
 .build-item {
     padding: 16px;
     border-bottom: 1px solid #CECECE;
@@ -289,7 +295,7 @@
 }
 
 .component-cell {
-    min-width: 300px;
+    width: 100%;
 }
 
 .component-info {
