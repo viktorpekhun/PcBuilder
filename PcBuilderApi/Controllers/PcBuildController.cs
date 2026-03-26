@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PcBuilderApi.Dtos.PcBuildDtos;
-using PcBuilderApi.Services.Interfaces;
-using System.Security.Claims;
-using static PcBuilderApi.Utilities.SD;
+using PcBuilder.SharedKernel.Enums;
+using PcBuilder.SharedKernel.Exceptions;
+using PcBuilds.Application.Commands;
+using PcBuilds.Application.Dtos;
+using PcBuilds.Application.Queries;
 
 namespace PcBuilderApi.Controllers
 {
@@ -11,196 +13,106 @@ namespace PcBuilderApi.Controllers
     [ApiController]
     public class PcBuildController : ControllerBase
     {
-        private readonly IPcBuildService _pcBuildService;
+        private readonly IMediator _mediator;
 
-        public PcBuildController(IPcBuildService pcBuildService)
+        public PcBuildController(IMediator mediator)
         {
-            _pcBuildService = pcBuildService;
+            _mediator = mediator;
         }
 
-        private Guid? UserId
+        private Guid GetUserId()
         {
-            get
-            {
-                var idStr = User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value
-                            ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var idStr = User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value
+                        ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
-                return Guid.TryParse(idStr, out var guid) ? guid : null;
-            }
+            if (!Guid.TryParse(idStr, out var guid))
+                throw new UnauthorizedAccessException("User ID not found in token.");
+
+            return guid;
         }
 
         [HttpPost("check")]
         public async Task<IActionResult> CheckCompatibility([FromBody] ComponentsCompatibilityDto dto)
         {
-            try
+            var results = await _mediator.Send(new CheckCompatibilityQuery(dto));
+            return Ok(new
             {
-                var results = await _pcBuildService.CheckComponentsCompatibilityAsync(dto);
-                return Ok(new
-                {
-                    Compatible = !results.Any(r => !r.IsCompatible),
-                    HasWarnings = results.Any(r => r.Messages.Any(m => m.Type == CompatibilityMessageType.Warning)),
-                    Results = results
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+                Compatible = !results.Any(r => !r.IsCompatible),
+                HasWarnings = results.Any(r => r.Messages.Any(m => m.Type == CompatibilityMessageType.Warning)),
+                Results = results
+            });
         }
 
         [Authorize]
         [HttpPost("save")]
         public async Task<IActionResult> SaveBuild([FromBody] PcBuildInputDto buildDto)
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+            var userId = GetUserId();
+            var result = await _mediator.Send(new SaveBuildCommand(userId, buildDto));
 
-                if (UserId == null)
-                {
-                    return Unauthorized();
-                }
+            if (!result)
+                return BadRequest(new { Success = false, Message = "Failed to save build" });
 
-                var result = await _pcBuildService.SaveBuildAsync(UserId.Value, buildDto);
-
-                if (result)
-                {
-                    return Ok(new { Success = true, Message = "Build saved successfully" });
-                }
-                else
-                {
-                    return BadRequest(new { Success = false, Message = "Failed to save build" });
-                }
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    Success = false,
-                    Message = "An error occurred while saving the build",
-                    Error = ex.Message
-                });
-            }
+            return Ok(new { Success = true, Message = "Build saved successfully" });
         }
 
         [Authorize]
         [HttpPut("update/{id}")]
         public async Task<IActionResult> UpdateBuild(Guid id, [FromBody] PcBuildInputDto buildDto)
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-                if (UserId == null)
-                {
-                    return Unauthorized();
-                }
-                var result = await _pcBuildService.UpdateBuildAsync(id, buildDto);
-                if (result)
-                {
-                    return Ok(new { Success = true, Message = "Build updated successfully" });
-                }
-                else
-                {
-                    return BadRequest(new { Success = false, Message = "Failed to update build" });
-                }
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    Success = false,
-                    Message = "An error occurred while updating the build",
-                    Error = ex.Message
-                });
-            }
+            var userId = GetUserId();
+            var result = await _mediator.Send(new UpdateBuildCommand(id, buildDto));
+
+            if (!result)
+                return BadRequest(new { Success = false, Message = "Failed to update build" });
+
+            return Ok(new { Success = true, Message = "Build updated successfully" });
         }
 
         [Authorize]
         [HttpGet("user-builds")]
-        public async Task<ActionResult<IEnumerable<PcBuildListDto>>> GetUserBuilds()
+        public async Task<IActionResult> GetUserBuilds()
         {
-            try
-            {
-                if (UserId  == null)
-                {
-                    return Unauthorized();
-                }
-                var builds = await _pcBuildService.GetUserBuildsAsync(UserId.Value);
-                return Ok(builds);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            var userId = GetUserId();
+            var builds = await _mediator.Send(new GetUserBuildsQuery(userId));
+            return Ok(builds);
         }
 
         [Authorize]
         [HttpGet("{id}")]
-        public async Task<ActionResult<PcBuildRequestDto>> GetBuildById(Guid id)
+        public async Task<IActionResult> GetBuildById(Guid id)
         {
-            try
+            var build = await _mediator.Send(new GetBuildByIdQuery(id));
+
+            if (build == null)
+                throw new NotFoundException("Build not found");
+
+            if (!build.IsPublished)
             {
-                var build = await _pcBuildService.GetBuildByIdAsync(id);
+                var idStr = User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value
+                            ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
-                if (build == null)
-                {
-                    return NotFound(new { Success = false, Message = "Build not found" });
-                }
+                if (!Guid.TryParse(idStr, out var userId))
+                    throw new UnauthorizedAccessException("Authentication required to view private builds.");
 
-                if (!build.IsPublished && (UserId == null || build.UserId != UserId))
-                {
-                    return UserId == null ? Unauthorized() : Forbid();
-                }
-
-                return Ok(build);
+                if (build.UserId != userId)
+                    throw new ForbiddenException("You do not have access to this build.");
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    Success = false,
-                    Message = "An error occurred while retrieving the build",
-                    Error = ex.Message
-                });
-            }
+
+            return Ok(build);
         }
 
         [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBuild(Guid id)
         {
-            try
-            {
-                if (UserId == null)
-                {
-                    return Unauthorized();
-                }
-                var result = await _pcBuildService.DeleteBuildAsync(id, UserId.Value);
-                if (result)
-                {
-                    return Ok(new { Success = true, Message = "Build deleted successfully" });
-                }
-                else
-                {
-                    return BadRequest(new { Success = false, Message = "Failed to delete build" });
-                }
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    Success = false,
-                    Message = "An error occurred while deleting the build",
-                    Error = ex.Message
-                });
-            }
+            var userId = GetUserId();
+            var result = await _mediator.Send(new DeleteBuildCommand(id, userId));
 
+            if (!result)
+                return BadRequest(new { Success = false, Message = "Failed to delete build" });
+
+            return Ok(new { Success = true, Message = "Build deleted successfully" });
         }
     }
 }

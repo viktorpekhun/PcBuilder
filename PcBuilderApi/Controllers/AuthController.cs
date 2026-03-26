@@ -1,87 +1,93 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using PcBuilderApi.Dtos.UserDtos;
-using PcBuilderApi.Services.Interfaces;
+using Auth.Application.Commands;
+using Auth.Application.Dtos;
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace PcBuilderApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [EnableRateLimiting("auth")]
     public class AuthController : ControllerBase
     {
-        private readonly IAuthService _authService;
+        private readonly IMediator _mediator;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IMediator mediator)
         {
-            _authService = authService;
+            _mediator = mediator;
         }
 
         [HttpPost("register")]
-        public async Task<ActionResult<TokenResponseDto>> Register([FromBody] UserRegisterDto request)
+        public async Task<IActionResult> Register([FromBody] UserRegisterDto request)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            var result = await _mediator.Send(new RegisterCommand(request.Username, request.Email, request.Password));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
 
-            var (tokenResponse, errorMessage, statusCode) = await _authService.RegisterAsync(request, Response);
-
-            if (tokenResponse == null)
-            {
-                return StatusCode(statusCode, new { Message = errorMessage });
-            }
-
-            return Ok(tokenResponse);
+            SetRefreshTokenCookie(result.Value!.RefreshToken, result.Value.RefreshTokenExpirationDays);
+            return Ok(new TokenResponseDto { AccessToken = result.Value.AccessToken });
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<TokenResponseDto>> Login([FromBody] UserLoginDto request)
+        public async Task<IActionResult> Login([FromBody] UserLoginDto request)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            var result = await _mediator.Send(new LoginCommand(request.Email, request.Password));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
 
-            var (tokenResponse, errorMessage, statusCode) = await _authService.LoginAsync(request, Response);
-
-            if (tokenResponse == null)
-            {
-                return StatusCode(statusCode, new { Message = errorMessage });
-            }
-
-            return Ok(tokenResponse);
+            SetRefreshTokenCookie(result.Value!.RefreshToken, result.Value.RefreshTokenExpirationDays);
+            return Ok(new TokenResponseDto { AccessToken = result.Value.AccessToken });
         }
 
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
             var refreshToken = Request.Cookies["refreshToken"];
-            var (success, errorMessage) = await _authService.LogoutAsync(refreshToken, Response);
-
-            if (!success)
-            {
-                return StatusCode(500, new { Message = errorMessage });
-            }
-
+            ClearRefreshTokenCookie();
+            await _mediator.Send(new LogoutCommand(refreshToken));
             return Ok(new { Message = "Logged out successfully" });
         }
 
         [HttpGet("refresh")]
-        public async Task<ActionResult<TokenResponseDto>> RefreshToken()
+        public async Task<IActionResult> RefreshToken()
         {
             var refreshToken = Request.Cookies["refreshToken"];
             if (refreshToken == null)
-            {
                 return Unauthorized(new { Message = "No refresh token provided" });
-            }
 
-            var (tokenResponse, errorMessage, statusCode) = await _authService.RefreshTokenAsync(refreshToken, Response);
-
-            if (tokenResponse == null)
+            var result = await _mediator.Send(new RefreshTokenCommand(refreshToken));
+            if (result.IsFailure)
             {
-                return StatusCode(statusCode, new { Message = errorMessage });
+                ClearRefreshTokenCookie();
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
             }
 
-            return Ok(tokenResponse);
+            SetRefreshTokenCookie(result.Value!.RefreshToken, result.Value.RefreshTokenExpirationDays);
+            return Ok(new TokenResponseDto { AccessToken = result.Value.AccessToken });
+        }
+
+        private void SetRefreshTokenCookie(string refreshToken, int expirationDays)
+        {
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.Now.AddDays(expirationDays)
+            };
+            Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
+        }
+
+        private void ClearRefreshTokenCookie()
+        {
+            Response.Cookies.Append("refreshToken", "", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.Now.AddDays(-1)
+            });
         }
     }
 }

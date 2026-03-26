@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>PcBuilds.Domain</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Modules\Components\Components.Domain\Components.Domain.csproj" />
+    <ProjectReference Include="..\..\..\Modules\Auth\Auth.Domain\Auth.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
