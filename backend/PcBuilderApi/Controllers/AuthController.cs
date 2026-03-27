@@ -4,7 +4,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
-namespace PcBuilderApi.Controllers
+namespace PcBuilder.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

@@ -5,7 +5,7 @@ using PcBuilder.SharedKernel.Enums;
 using Components.Application.Queries;
 using System.Text.Json;
 
-namespace PcBuilderApi.Controllers
+namespace PcBuilder.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

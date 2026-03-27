@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.12.35728.132
+# Visual Studio Version 18
+VisualStudioVersion = 18.4.11612.150 stable
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PcBuilderApi", "PcBuilderApi\PcBuilderApi.csproj", "{593528A2-9308-4B73-9B15-323CB433105D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PcBuilder.Api", "PcBuilderApi\PcBuilder.Api.csproj", "{593528A2-9308-4B73-9B15-323CB433105D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PcBuilder.SharedKernel", "PcBuilder.SharedKernel\PcBuilder.SharedKernel.csproj", "{3B42D8C6-CE4E-479F-B9AB-8E79F0299698}"
 EndProject

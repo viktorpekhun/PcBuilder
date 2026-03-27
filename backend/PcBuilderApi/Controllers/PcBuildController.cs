@@ -7,7 +7,7 @@ using PcBuilds.Application.Commands;
 using PcBuilds.Application.Dtos;
 using PcBuilds.Application.Queries;
 
-namespace PcBuilderApi.Controllers
+namespace PcBuilder.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

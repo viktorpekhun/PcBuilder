@@ -2,7 +2,7 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using PcBuilderApi.Middleware;
+using PcBuilder.Api.Middleware;
 using PcBuilder.Persistence;
 using Components.Infrastructure;
 using Auth.Infrastructure;

@@ -1,7 +1,7 @@
 using PcBuilder.SharedKernel.Exceptions;
 using System.Text.Json;
 
-namespace PcBuilderApi.Middleware
+namespace PcBuilder.Api.Middleware
 {
     public class GlobalExceptionHandlerMiddleware
     {

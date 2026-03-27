@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using PcBuilder.SharedKernel.Enums;
 using Scraping.Application.Commands;
 
-namespace PcBuilderApi.Controllers
+namespace PcBuilder.Api.Controllers
 {
     [Route("api/scraper")]
     [ApiController]
