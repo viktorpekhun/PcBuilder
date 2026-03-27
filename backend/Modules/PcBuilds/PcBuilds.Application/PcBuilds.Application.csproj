@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>PcBuilds.Application</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
+    <PackageReference Include="MediatR" Version="12.4.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PcBuilds.Domain\PcBuilds.Domain.csproj" />
+    <ProjectReference Include="..\..\Components\Components.Domain\Components.Domain.csproj" />
+    <ProjectReference Include="..\..\..\PcBuilder.SharedKernel\PcBuilder.SharedKernel.csproj" />
+  </ItemGroup>
+
+</Project>
