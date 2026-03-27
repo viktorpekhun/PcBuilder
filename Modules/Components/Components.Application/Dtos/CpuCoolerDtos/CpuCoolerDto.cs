@@ -2,7 +2,7 @@ using Components.Application.Dtos;
 ﻿
 namespace Components.Application.Dtos.CpuCoolerDtos
 {
-    public class CpuCoolerDto : IHasProductOffers
+    public class CpuCoolerDto : IComponentDetailDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;

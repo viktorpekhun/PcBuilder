@@ -1,6 +1,6 @@
 ﻿namespace Components.Application.Dtos.PcCaseDtos
 {
-    public class PcCaseListDto
+    public class PcCaseListDto : IComponentListDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;

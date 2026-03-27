@@ -2,7 +2,7 @@ using Components.Application.Dtos;
 
 namespace Components.Application.Dtos.GpuDtos
 {
-    public class GpuDto : IHasProductOffers
+    public class GpuDto : IComponentDetailDto
     {
         public Guid Id { get; set; }
 

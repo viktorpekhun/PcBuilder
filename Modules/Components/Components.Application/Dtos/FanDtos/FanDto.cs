@@ -3,7 +3,7 @@ using Components.Application.Dtos;
 
 namespace Components.Application.Dtos.FanDtos
 {
-    public class FanDto : IHasProductOffers
+    public class FanDto : IComponentDetailDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;

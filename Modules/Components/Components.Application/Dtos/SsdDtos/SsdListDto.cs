@@ -1,6 +1,6 @@
 ﻿namespace Components.Application.Dtos.SsdDtos
 {
-    public class SsdListDto
+    public class SsdListDto : IComponentListDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;

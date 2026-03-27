@@ -2,7 +2,7 @@ using Components.Application.Dtos;
 ﻿
 namespace Components.Application.Dtos.RamDtos
 {
-    public class RamDto : IHasProductOffers
+    public class RamDto : IComponentDetailDto
     {
         public Guid Id { get; set; }
 

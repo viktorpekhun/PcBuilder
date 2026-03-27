@@ -1,6 +1,6 @@
 ﻿namespace Components.Application.Dtos.CpuDtos
 {
-    public class CpuListDto
+    public class CpuListDto : IComponentListDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;

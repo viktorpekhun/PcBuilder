@@ -2,7 +2,7 @@ using Components.Application.Dtos;
 ﻿
 namespace Components.Application.Dtos.SsdDtos
 {
-    public class SsdDto : IHasProductOffers
+    public class SsdDto : IComponentDetailDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;

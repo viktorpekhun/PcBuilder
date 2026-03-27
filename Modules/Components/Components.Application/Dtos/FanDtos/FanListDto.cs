@@ -1,6 +1,6 @@
 ﻿namespace Components.Application.Dtos.FanDtos
 {
-    public class FanListDto
+    public class FanListDto : IComponentListDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;

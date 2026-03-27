@@ -2,7 +2,7 @@ using Components.Application.Dtos;
 ﻿
 namespace Components.Application.Dtos.HddDtos
 {
-    public class HddDto : IHasProductOffers
+    public class HddDto : IComponentDetailDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;

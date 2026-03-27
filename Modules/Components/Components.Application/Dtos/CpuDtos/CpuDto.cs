@@ -1,7 +1,7 @@
 using Components.Application.Dtos;
 ﻿namespace Components.Application.Dtos.CpuDtos
 {
-    public class CpuDto : IHasProductOffers
+    public class CpuDto : IComponentDetailDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;

@@ -1,6 +1,6 @@
 ﻿namespace Components.Application.Dtos.HddDtos
 {
-    public class HddListDto
+    public class HddListDto : IComponentListDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;

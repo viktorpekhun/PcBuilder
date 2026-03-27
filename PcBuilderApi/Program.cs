@@ -38,19 +38,20 @@ builder.Services.AddHealthChecks()
     .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")!);
 builder.Services.AddOpenApi();
 
+var rateLimitConfig = builder.Configuration.GetSection("RateLimiting");
 builder.Services.AddRateLimiter(options =>
 {
     options.AddFixedWindowLimiter("auth", opt =>
     {
-        opt.PermitLimit = 10;
-        opt.Window = TimeSpan.FromMinutes(1);
-        opt.QueueLimit = 0;
+        opt.PermitLimit = rateLimitConfig.GetValue<int>("Auth:PermitLimit");
+        opt.Window = TimeSpan.FromMinutes(rateLimitConfig.GetValue<int>("Auth:WindowMinutes"));
+        opt.QueueLimit = rateLimitConfig.GetValue<int>("Auth:QueueLimit");
     });
     options.AddFixedWindowLimiter("scraper", opt =>
     {
-        opt.PermitLimit = 1;
-        opt.Window = TimeSpan.FromMinutes(5);
-        opt.QueueLimit = 0;
+        opt.PermitLimit = rateLimitConfig.GetValue<int>("Scraper:PermitLimit");
+        opt.Window = TimeSpan.FromMinutes(rateLimitConfig.GetValue<int>("Scraper:WindowMinutes"));
+        opt.QueueLimit = rateLimitConfig.GetValue<int>("Scraper:QueueLimit");
     });
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });

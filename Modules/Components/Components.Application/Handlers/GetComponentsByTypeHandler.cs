@@ -1,4 +1,5 @@
 using AutoMapper;
+using Components.Application.Dtos;
 using Components.Application.Dtos.CpuDtos;
 using Components.Application.Dtos.CpuCoolerDtos;
 using Components.Application.Dtos.FanDtos;
@@ -12,6 +13,7 @@ using Components.Application.Dtos.SsdDtos;
 using Components.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using PcBuilder.SharedKernel;
 using PcBuilder.SharedKernel.Enums;
 using PcBuilder.SharedKernel.Filtering;
 using PcBuilder.SharedKernel.Persistence;
@@ -19,7 +21,7 @@ using Components.Application.Queries;
 
 namespace Components.Application.Handlers
 {
-    public class GetComponentsByTypeHandler : IRequestHandler<GetComponentsByTypeQuery, PagedResponse<object>>
+    public class GetComponentsByTypeHandler : IRequestHandler<GetComponentsByTypeQuery, Result<PagedResponse<IComponentListDto>>>
     {
         private readonly IApplicationDbContext _context;
         private readonly IMapper _mapper;
@@ -30,7 +32,7 @@ namespace Components.Application.Handlers
             _mapper = mapper;
         }
 
-        public async Task<PagedResponse<object>> Handle(GetComponentsByTypeQuery request, CancellationToken cancellationToken)
+        public async Task<Result<PagedResponse<IComponentListDto>>> Handle(GetComponentsByTypeQuery request, CancellationToken cancellationToken)
         {
             (IEnumerable<object> componentEntities, int totalCount) = request.ComponentType switch
             {
@@ -47,10 +49,10 @@ namespace Components.Application.Handlers
                 ComponentType.Ssd => await GetFilteredComponentsAndCount<Ssd>(request.Parameters),
                 ComponentType.Hdd => await GetFilteredComponentsAndCount<Hdd>(request.Parameters),
                 ComponentType.Fan => await GetFilteredComponentsAndCount<Fan>(request.Parameters),
-                _ => throw new ArgumentException("Unsupported component type")
+                _ => (Enumerable.Empty<object>(), 0)
             };
 
-            List<object> mappedItems = request.ComponentType switch
+            List<IComponentListDto> mappedItems = request.ComponentType switch
             {
                 ComponentType.Cpu => MapList<Cpu, CpuListDto>(componentEntities),
                 ComponentType.Gpu => MapList<Gpu, GpuListDto>(componentEntities),
@@ -62,15 +64,18 @@ namespace Components.Application.Handlers
                 ComponentType.Ssd => MapList<Ssd, SsdListDto>(componentEntities),
                 ComponentType.Hdd => MapList<Hdd, HddListDto>(componentEntities),
                 ComponentType.Fan => MapList<Fan, FanListDto>(componentEntities),
-                _ => throw new ArgumentException("Unsupported component type")
+                _ => throw new InvalidOperationException("Unreachable")
             };
 
-            return new PagedResponse<object>(mappedItems, totalCount, request.Parameters);
+            return Result<PagedResponse<IComponentListDto>>.Success(
+                new PagedResponse<IComponentListDto>(mappedItems, totalCount, request.Parameters));
         }
 
-        private List<object> MapList<TEntity, TDto>(IEnumerable<object> entities) where TEntity : class
+        private List<IComponentListDto> MapList<TEntity, TDto>(IEnumerable<object> entities)
+            where TEntity : class
+            where TDto : IComponentListDto
         {
-            return _mapper.Map<List<TDto>>(entities.Cast<TEntity>()).Cast<object>().ToList();
+            return _mapper.Map<List<TDto>>(entities.Cast<TEntity>()).Cast<IComponentListDto>().ToList();
         }
 
         private async Task<(IEnumerable<object>, int)> GetFilteredComponentsAndCount<T>(

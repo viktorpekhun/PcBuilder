@@ -2,7 +2,7 @@ using Components.Application.Dtos;
 
 namespace Components.Application.Dtos.MotherboardDtos
 {
-    public class MotherboardDto : IHasProductOffers
+    public class MotherboardDto : IComponentDetailDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;

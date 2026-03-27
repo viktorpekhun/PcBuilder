@@ -1,6 +1,6 @@
 ﻿namespace Components.Application.Dtos.RamDtos
 {
-    public class RamListDto
+    public class RamListDto : IComponentListDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;

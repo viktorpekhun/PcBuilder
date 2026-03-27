@@ -1,6 +1,6 @@
 ﻿namespace Components.Application.Dtos.MotherboardDtos
 {
-    public class MotherboardListDto
+    public class MotherboardListDto : IComponentListDto
     {
         public Guid Id { get; set; }
 

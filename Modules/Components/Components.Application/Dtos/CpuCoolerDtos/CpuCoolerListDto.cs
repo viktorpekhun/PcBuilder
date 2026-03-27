@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Components.Application.Dtos.CpuCoolerDtos
 {
-    public class CpuCoolerListDto
+    public class CpuCoolerListDto : IComponentListDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;

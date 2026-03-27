@@ -56,7 +56,11 @@ namespace PcBuilderApi.Controllers
                 }
             }
 
-            var pagedComponents = await _mediator.Send(new GetComponentsByTypeQuery(componentType, parameters));
+            var result = await _mediator.Send(new GetComponentsByTypeQuery(componentType, parameters));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+
+            var pagedComponents = result.Value!;
             var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
             Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(new
@@ -75,8 +79,11 @@ namespace PcBuilderApi.Controllers
         [HttpGet("{componentType}/{id}")]
         public async Task<IActionResult> GetComponentById(ComponentType componentType, Guid id)
         {
-            var component = await _mediator.Send(new GetComponentByIdQuery(id, componentType));
-            return Ok(component);
+            var result = await _mediator.Send(new GetComponentByIdQuery(id, componentType));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+
+            return Ok(result.Value);
         }
 
         [HttpGet("{componentType}/filter-options")]

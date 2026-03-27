@@ -1,6 +1,6 @@
 ﻿namespace Components.Application.Dtos.GpuDtos
 {
-    public class GpuListDto
+    public class GpuListDto : IComponentListDto
     {
         public Guid Id { get; set; }
 

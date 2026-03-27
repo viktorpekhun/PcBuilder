@@ -13,14 +13,14 @@ using Components.Application.Dtos.SsdDtos;
 using Components.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using PcBuilder.SharedKernel;
 using PcBuilder.SharedKernel.Enums;
-using PcBuilder.SharedKernel.Exceptions;
 using PcBuilder.SharedKernel.Persistence;
 using Components.Application.Queries;
 
 namespace Components.Application.Handlers
 {
-    public class GetComponentByIdHandler : IRequestHandler<GetComponentByIdQuery, object>
+    public class GetComponentByIdHandler : IRequestHandler<GetComponentByIdQuery, Result<IComponentDetailDto>>
     {
         private readonly IApplicationDbContext _context;
         private readonly IMapper _mapper;
@@ -31,9 +31,9 @@ namespace Components.Application.Handlers
             _mapper = mapper;
         }
 
-        public async Task<object> Handle(GetComponentByIdQuery request, CancellationToken cancellationToken)
+        public async Task<Result<IComponentDetailDto>> Handle(GetComponentByIdQuery request, CancellationToken cancellationToken)
         {
-            object entity = request.ComponentType switch
+            object? entity = request.ComponentType switch
             {
                 ComponentType.Cpu => await _context.Set<Cpu>().FirstOrDefaultAsync(c => c.Id == request.Id, cancellationToken),
                 ComponentType.Gpu => await _context.Set<Gpu>().Include(g => g.GpuPowerConnectors).FirstOrDefaultAsync(g => g.Id == request.Id, cancellationToken),
@@ -50,18 +50,19 @@ namespace Components.Application.Handlers
                 ComponentType.Ssd => await _context.Set<Ssd>().FirstOrDefaultAsync(s => s.Id == request.Id, cancellationToken),
                 ComponentType.Hdd => await _context.Set<Hdd>().FirstOrDefaultAsync(h => h.Id == request.Id, cancellationToken),
                 ComponentType.Fan => await _context.Set<Fan>().FirstOrDefaultAsync(f => f.Id == request.Id, cancellationToken),
-                _ => throw new ArgumentException("Unsupported component type")
+                _ => null
             };
 
             if (entity == null)
-                throw new NotFoundException($"Component with ID {request.Id} not found for type {request.ComponentType}");
+                return Result<IComponentDetailDto>.Failure(
+                    new Error("ComponentNotFound", $"Component with ID {request.Id} not found for type {request.ComponentType}", 404));
 
             var offers = await _context.Set<ProductOffer>()
                 .Include(p => p.Store)
                 .Where(p => p.ComponentId == request.Id && p.ComponentType == request.ComponentType)
                 .ToListAsync(cancellationToken);
 
-            object dto = request.ComponentType switch
+            IComponentDetailDto dto = request.ComponentType switch
             {
                 ComponentType.Cpu => _mapper.Map<CpuDto>(entity),
                 ComponentType.Gpu => _mapper.Map<GpuDto>(entity),
@@ -73,13 +74,12 @@ namespace Components.Application.Handlers
                 ComponentType.Ssd => _mapper.Map<SsdDto>(entity),
                 ComponentType.Hdd => _mapper.Map<HddDto>(entity),
                 ComponentType.Fan => _mapper.Map<FanDto>(entity),
-                _ => throw new ArgumentException("Unsupported component type")
+                _ => throw new InvalidOperationException("Unreachable")
             };
 
-            if (dto is IHasProductOffers dtoWithOffers)
-                dtoWithOffers.ProductOffers = _mapper.Map<List<ProductOfferDto>>(offers);
+            dto.ProductOffers = _mapper.Map<List<ProductOfferDto>>(offers);
 
-            return dto;
+            return Result<IComponentDetailDto>.Success(dto);
         }
     }
 }
