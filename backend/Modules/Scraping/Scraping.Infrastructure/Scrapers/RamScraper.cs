@@ -31,6 +31,7 @@ namespace Scraping.Infrastructure.Scrapers
             if (titleNode != null)
             {
                 ram.Name = titleNode.InnerText.Trim();
+                ram.Name = Regex.Replace(ram.Name, @"Пам'ять для настільних комп'ютерів", "", RegexOptions.IgnoreCase).Trim();
                 var match = Regex.Match(ram.Name, @"\((.*?)\)");
                 if (match.Success)
                 {
@@ -43,7 +44,7 @@ namespace Scraping.Infrastructure.Scrapers
                 return new ScrapingResult<Ram>(null, new List<Store>(), new List<ProductOffer>());
             }
 
-            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//div[contains(@class, 'description__content')]");
+            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//p[contains(@class, 'description-text')]");
             if (descriptionNode != null)
             {
                 ram.Description = descriptionNode.InnerText.Trim();

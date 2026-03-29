@@ -33,6 +33,7 @@ namespace Scraping.Infrastructure.Scrapers
             if (titleNode != null)
             {
                 powerSupply.Name = titleNode.InnerText.Trim();
+                powerSupply.Name = Regex.Replace(powerSupply.Name, @"Блок живлення", "", RegexOptions.IgnoreCase).Trim();
                 var match = Regex.Match(powerSupply.Name, @"\((.*?)\)");
                 if (match.Success)
                 {
@@ -45,7 +46,7 @@ namespace Scraping.Infrastructure.Scrapers
                 return new ScrapingResult<PowerSupply>(null, new List<Store>(), new List<ProductOffer>());
             }
 
-            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//div[contains(@class, 'description__content')]");
+            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//p[contains(@class, 'description-text')]");
             if (descriptionNode != null)
             {
                 powerSupply.Description = descriptionNode.InnerText.Trim();

@@ -1,5 +1,6 @@
 using Components.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using PcBuilder.SharedKernel.Enums;
 using PcBuilder.SharedKernel.Persistence;
 using Scraping.Application.Interfaces;
@@ -359,6 +360,68 @@ namespace Scraping.Infrastructure.Services
             }
 
             Console.WriteLine("Усі посилання успішно оброблені.");
+        }
+
+        public async Task ScrapeSingleComponentAsync<T>(string componentUrl, ComponentType componentType) where T : class
+        {
+            Console.WriteLine("Початок роботи ScrapeCategoryAsync\n");
+
+            var scraper = _scraperFactory.GetScraper<T>();
+            if (scraper == null)
+            {
+                Console.WriteLine("Скрейпер для цього типу не знайдено!");
+                return;
+            }
+
+            var emptyList = new List<T>();
+            var emptyStoresList = new List<Store>();
+            ConcurrentBag<T> concurrentComponents = new ConcurrentBag<T>(emptyList);
+            ConcurrentBag<Store> concurrentStores = new ConcurrentBag<Store>(emptyStoresList);
+
+
+            var cookieContainer = new CookieContainer();
+
+            var handler = new SocketsHttpHandler
+            {
+                CookieContainer = cookieContainer,
+                UseCookies = true,
+                AllowAutoRedirect = true,
+                SslOptions = new System.Net.Security.SslClientAuthenticationOptions
+                {
+                    EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls13
+                }
+            };
+
+            using var client = new HttpClient(handler);
+
+            client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+            client.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8");
+            client.DefaultRequestHeaders.Add("Accept-Language", "uk-UA,uk;q=0.9,en-US;q=0.8,en;q=0.7");
+            client.DefaultRequestHeaders.Add("sec-ch-ua", "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\"");
+            client.DefaultRequestHeaders.Add("sec-ch-ua-mobile", "?0");
+            client.DefaultRequestHeaders.Add("sec-ch-ua-platform", "\"Windows\"");
+
+
+
+            var result = await scraper.ScrapeAsync(componentUrl, client, concurrentComponents, concurrentStores);
+
+            if (result.Component != null)
+            {
+                Console.WriteLine($"  Отримано компонент: {result.Component}");
+                Console.WriteLine($"  Посилання: {componentUrl}");
+                Console.WriteLine($"  Магазинів: {result.Stores.Count}, Пропозицій: {result.Offers.Count}");
+
+                foreach (var prop in result.Component.GetType().GetProperties())
+                {
+                    var value = prop.GetValue(result.Component);
+                    Console.Write($"  {prop.Name}: {value}");
+                }
+                Console.WriteLine("\n");
+            } 
+            else
+            {
+                Console.WriteLine($"  Не вдалось отримати компонент.");
+            }
         }
     }
 }

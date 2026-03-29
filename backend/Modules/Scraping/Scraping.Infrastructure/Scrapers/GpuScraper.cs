@@ -34,6 +34,7 @@ namespace Scraping.Infrastructure.Scrapers
             if (titleNode != null)
             {
                 gpu.Name = titleNode.InnerText.Trim();
+                gpu.Name = Regex.Replace(gpu.Name, @"Відеокарта", "", RegexOptions.IgnoreCase).Trim();
                 var match = Regex.Match(gpu.Name, @"\((.*?)\)");
                 if (match.Success)
                 {
@@ -46,7 +47,7 @@ namespace Scraping.Infrastructure.Scrapers
                 return new ScrapingResult<Gpu>(null, new List<Store>(), new List<ProductOffer>());
             }
 
-            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//div[contains(@class, 'description__content')]");
+            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//p[contains(@class, 'description-text')]");
             if (descriptionNode != null)
             {
                 gpu.Description = descriptionNode.InnerText.Trim();

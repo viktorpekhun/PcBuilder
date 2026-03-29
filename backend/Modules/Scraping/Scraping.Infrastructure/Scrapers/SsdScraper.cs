@@ -32,6 +32,7 @@ namespace Scraping.Infrastructure.Scrapers
             if (titleNode != null)
             {
                 ssd.Name = titleNode.InnerText.Trim();
+                ssd.Name = Regex.Replace(ssd.Name, @"SSD накопичувач", "", RegexOptions.IgnoreCase).Trim();
                 var match = Regex.Match(ssd.Name, @"\((.*?)\)");
                 if (match.Success)
                 {
@@ -44,7 +45,7 @@ namespace Scraping.Infrastructure.Scrapers
                 return new ScrapingResult<Ssd>(null, new List<Store>(), new List<ProductOffer>());
             }
 
-            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//div[contains(@class, 'description__content')]");
+            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//p[contains(@class, 'description-text')]");
             if (descriptionNode != null)
             {
                 ssd.Description = descriptionNode.InnerText.Trim();

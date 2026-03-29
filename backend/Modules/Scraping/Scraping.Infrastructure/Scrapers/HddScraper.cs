@@ -30,6 +30,7 @@ namespace Scraping.Infrastructure.Scrapers
             if (titleNode != null)
             {
                 hdd.Name = titleNode.InnerText.Trim();
+                hdd.Name = Regex.Replace(hdd.Name, @"Жорсткий диск", "", RegexOptions.IgnoreCase).Trim();
                 var match = Regex.Match(hdd.Name, @"\((.*?)\)");
                 if (match.Success)
                 {
@@ -42,7 +43,7 @@ namespace Scraping.Infrastructure.Scrapers
                 return new ScrapingResult<Hdd>(null, new List<Store>(), new List<ProductOffer>());
             }
 
-            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//div[contains(@class, 'description__content')]");
+            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//p[contains(@class, 'description-text')]");
             if (descriptionNode != null)
             {
                 hdd.Description = descriptionNode.InnerText.Trim();

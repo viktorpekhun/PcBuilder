@@ -31,6 +31,8 @@ namespace Scraping.Infrastructure.Scrapers
             if (titleNode != null)
             {
                 cpuCooler.Name = titleNode.InnerText.Trim();
+                cpuCooler.Name = Regex.Replace(cpuCooler.Name, @"Повітряне охолодження", "", RegexOptions.IgnoreCase).Trim();
+                cpuCooler.Name = Regex.Replace(cpuCooler.Name, @"Водяне охолодження", "", RegexOptions.IgnoreCase).Trim();
                 var match = Regex.Match(cpuCooler.Name, @"\((.*?)\)");
                 if (match.Success)
                 {
@@ -43,7 +45,7 @@ namespace Scraping.Infrastructure.Scrapers
                 return new ScrapingResult<CpuCooler>(null, new List<Store>(), new List<ProductOffer>());
             }
 
-            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//div[contains(@class, 'description__content')]");
+            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//p[contains(@class, 'description-text')]");
             if (descriptionNode != null)
             {
                 cpuCooler.Description = descriptionNode.InnerText.Trim();

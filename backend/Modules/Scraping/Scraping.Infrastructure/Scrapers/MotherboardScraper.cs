@@ -34,6 +34,7 @@ namespace Scraping.Infrastructure.Scrapers
             if (titleNode != null)
             {
                 motherboard.Name = titleNode.InnerText.Trim();
+                motherboard.Name = Regex.Replace(motherboard.Name, @"Материнська плата", "", RegexOptions.IgnoreCase).Trim();
                 var match = Regex.Match(motherboard.Name, @"\((.*?)\)");
                 if (match.Success)
                 {
@@ -46,7 +47,7 @@ namespace Scraping.Infrastructure.Scrapers
                 return new ScrapingResult<Motherboard>(null, new List<Store>(), new List<ProductOffer>());
             }
 
-            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//div[contains(@class, 'description__content')]");
+            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//p[contains(@class, 'description-text')]");
             if (descriptionNode != null)
             {
                 motherboard.Description = descriptionNode.InnerText.Trim();

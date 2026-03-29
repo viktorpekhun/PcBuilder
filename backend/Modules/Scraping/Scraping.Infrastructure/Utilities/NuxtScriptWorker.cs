@@ -32,7 +32,7 @@ namespace Scraping.Infrastructure.Utilities
                 var psi = new ProcessStartInfo
                 {
                     FileName = "node",
-                    Arguments = "C:\\Users\\vikto\\source\\repos\\viktorpekhun\\PcBuilder\\Modules\\Scraping\\Scraping.Infrastructure\\Utilities\\nuxt-extract.js",
+                    Arguments = "C:\\Users\\vikto\\source\\repos\\viktorpekhun\\PcBuilder\\backend\\Modules\\Scraping\\Scraping.Infrastructure\\Utilities\\nuxt-extract.js",
                     RedirectStandardInput = true,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,

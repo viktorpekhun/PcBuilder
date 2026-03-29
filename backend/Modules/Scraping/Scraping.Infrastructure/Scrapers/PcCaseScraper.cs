@@ -33,6 +33,7 @@ namespace Scraping.Infrastructure.Scrapers
             if (titleNode != null)
             {
                 pcCase.Name = titleNode.InnerText.Trim();
+                pcCase.Name = Regex.Replace(pcCase.Name, @"Корпус", "", RegexOptions.IgnoreCase).Trim();
                 var match = Regex.Match(pcCase.Name, @"\((.*?)\)");
                 if (match.Success)
                 {
@@ -45,7 +46,7 @@ namespace Scraping.Infrastructure.Scrapers
                 return new ScrapingResult<PcCase>(null, new List<Store>(), new List<ProductOffer>());
             }
 
-            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//div[contains(@class, 'description__content')]");
+            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//p[contains(@class, 'description-text')]");
             if (descriptionNode != null)
             {
                 pcCase.Description = descriptionNode.InnerText.Trim();

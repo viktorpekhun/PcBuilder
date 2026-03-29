@@ -10,8 +10,8 @@ namespace PcBuilder.Api.Controllers
 {
     [Route("api/scraper")]
     [ApiController]
-    [Authorize]
-    [EnableRateLimiting("scraper")]
+    //[Authorize]
+    //[EnableRateLimiting("scraper")]
     public class ScraperController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -19,6 +19,13 @@ namespace PcBuilder.Api.Controllers
         public ScraperController(IMediator mediator)
         {
             _mediator = mediator;
+        }
+
+        [HttpPost("single-gpu")]
+        public async Task<IActionResult> ScrapeGpu()
+        {
+            await _mediator.Send(new ScrapeSingleComponentCommand("https://hotline.ua/ua/computer-videokarty/asus-prime-rtx5070-o12g", ComponentType.Gpu, typeof(Gpu)));
+            return Ok("Scraping completed for GPU");
         }
 
         [HttpPost("cpu")]
@@ -34,13 +41,6 @@ namespace PcBuilder.Api.Controllers
             await _mediator.Send(new ScrapeCategoryCommand("https://hotline.ua/ua/computer/videokarty/3991-36447-36449-36450-41408-43657-86245-380200-586473-643446-678073-21168069", ComponentType.Gpu, typeof(Gpu)));
             await _mediator.Send(new CorrectGpuModelsCommand());
             return Ok("Scraping completed for GPUs");
-        }
-
-        [HttpPost("correct_gpu")]
-        public async Task<IActionResult> CorrectGpu()
-        {
-            await _mediator.Send(new CorrectGpuModelsCommand());
-            return Ok("GPU models corrected");
         }
 
         [HttpPost("motherboard")]

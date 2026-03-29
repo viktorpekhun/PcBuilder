@@ -31,6 +31,7 @@ namespace Scraping.Infrastructure.Scrapers
             if (titleNode != null)
             {
                 fan.Name = titleNode.InnerText.Trim();
+                fan.Name = Regex.Replace(fan.Name, @"Вентилятор", "", RegexOptions.IgnoreCase).Trim();
                 var match = Regex.Match(fan.Name, @"\((.*?)\)");
                 if (match.Success)
                 {
@@ -43,7 +44,7 @@ namespace Scraping.Infrastructure.Scrapers
                 return new ScrapingResult<Fan>(null, new List<Store>(), new List<ProductOffer>());
             }
 
-            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//div[contains(@class, 'description__content')]");
+            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//p[contains(@class, 'description-text')]");
             if (descriptionNode != null)
             {
                 fan.Description = descriptionNode.InnerText.Trim();

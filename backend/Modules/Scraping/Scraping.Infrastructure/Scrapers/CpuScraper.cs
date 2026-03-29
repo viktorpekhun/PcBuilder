@@ -34,6 +34,7 @@ namespace Scraping.Infrastructure.Scrapers
             if (titleNode != null)
             {
                 cpu.Name = titleNode.InnerText.Trim();
+                cpu.Name = Regex.Replace(cpu.Name, @"Процесор", "", RegexOptions.IgnoreCase).Trim();
                 var match = Regex.Match(cpu.Name, @"\((.*?)\)");
                 if (match.Success)
                 {
@@ -46,7 +47,7 @@ namespace Scraping.Infrastructure.Scrapers
                 return new ScrapingResult<Cpu>(null, new List<Store>(), new List<ProductOffer>());
             }
 
-            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//div[contains(@class, 'description__content')]");
+            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//p[contains(@class, 'description-text')]");
             if (descriptionNode != null)
             {
                 cpu.Description = descriptionNode.InnerText.Trim();
