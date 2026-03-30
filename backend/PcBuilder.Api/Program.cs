@@ -28,7 +28,7 @@ builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddComponentsModule();
 builder.Services.AddAuthModule();
 builder.Services.AddPcBuildsModule();
-builder.Services.AddScrapingModule();
+builder.Services.AddScrapingModule(builder.Configuration);
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<CacheService>();

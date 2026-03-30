@@ -47,10 +47,10 @@ namespace Scraping.Infrastructure.Scrapers
             var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//p[contains(@class, 'description-text')]");
             if (descriptionNode != null)
             {
-                fan.Description = descriptionNode.InnerText.Trim();
+                fan.Description.Uk = descriptionNode.InnerText.Trim();
                 if (!string.IsNullOrEmpty(modelInBrackets))
                 {
-                    fan.Description = Regex.Replace(fan.Description, $@"\({Regex.Escape(modelInBrackets)}\)", "");
+                    fan.Description.Uk = Regex.Replace(fan.Description.Uk, $@"\({Regex.Escape(modelInBrackets)}\)", "");
                 }
             }
 

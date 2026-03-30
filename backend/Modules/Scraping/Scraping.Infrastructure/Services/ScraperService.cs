@@ -16,17 +16,19 @@ namespace Scraping.Infrastructure.Services
         private readonly IPaginationScraper _paginationScraper;
         private readonly IApplicationDbContext _context;
         private readonly IProxyScraper _proxyScraper;
+        private readonly ITranslationService _translationService;
 
         private List<string> _proxies = new();
         private int _proxyIndex = 0;
         private readonly object _lock = new();
 
-        public ScraperService(ComponentScraperFactory scraperFactory, IPaginationScraper paginationScraper, IApplicationDbContext context, IProxyScraper proxyScraper)
+        public ScraperService(ComponentScraperFactory scraperFactory, IPaginationScraper paginationScraper, IApplicationDbContext context, IProxyScraper proxyScraper, ITranslationService translationService)
         {
             _scraperFactory = scraperFactory;
             _paginationScraper = paginationScraper;
             _context = context;
             _proxyScraper = proxyScraper;
+            _translationService = translationService;
         }
 
         private (HttpClient client, string proxy) CreateHttpClientWithProxy()
@@ -72,6 +74,55 @@ namespace Scraping.Infrastructure.Services
             }
 
             return includeProperties;
+        }
+
+        private async Task TranslateDescriptionsAsync<T>(IEnumerable<T> componentsToSave, IReadOnlyList<T> componentsFromDb) where T : class
+        {
+            var descriptionProperty = typeof(T).GetProperty("Description");
+            if (descriptionProperty == null || descriptionProperty.PropertyType != typeof(LocalizedDescription))
+                return;
+
+            var nameProperty = typeof(T).GetProperty("Name");
+
+            var toTranslate = new List<(T component, LocalizedDescription desc)>();
+
+            foreach (var component in componentsToSave)
+            {
+                var desc = descriptionProperty.GetValue(component) as LocalizedDescription;
+                if (desc == null || string.IsNullOrWhiteSpace(desc.Uk))
+                    continue;
+
+                var componentName = nameProperty?.GetValue(component) as string;
+                var existingComponent = componentsFromDb.FirstOrDefault(c =>
+                {
+                    var name = nameProperty?.GetValue(c) as string;
+                    return name == componentName;
+                });
+
+                if (existingComponent != null)
+                {
+                    var existingDesc = descriptionProperty.GetValue(existingComponent) as LocalizedDescription;
+                    if (existingDesc != null && !string.IsNullOrEmpty(existingDesc.En))
+                    {
+                        desc.En = existingDesc.En;
+                        continue;
+                    }
+                }
+
+                toTranslate.Add((component, desc));
+            }
+
+            if (toTranslate.Count == 0)
+                return;
+
+            var ukTexts = toTranslate.Select(x => x.desc.Uk).ToList();
+            var enTexts = await _translationService.TranslateBatchAsync(ukTexts, "uk", "en");
+
+            for (int i = 0; i < Math.Min(toTranslate.Count, enTexts.Count); i++)
+            {
+                if (!string.IsNullOrEmpty(enTexts[i]))
+                    toTranslate[i].desc.En = enTexts[i];
+            }
         }
 
         public async Task ScrapeCategoryAsync<T>(string categoryUrl, ComponentType componentType) where T : class
@@ -213,6 +264,16 @@ namespace Scraping.Infrastructure.Services
                 try
                 {
                     Console.WriteLine("Збереження компонентів в базу даних...");
+
+                    try
+                    {
+                        await TranslateDescriptionsAsync(componentsToSave, componentsFromDb);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Помилка перекладу описів: {ex.Message}");
+                    }
+
                     int savedComponentsCount = 0;
                     int updatedComponentsCount = 0;
                     foreach (var component in componentsToSave)
@@ -266,6 +327,13 @@ namespace Scraping.Infrastructure.Services
                                             targetList?.Add(newItem);
                                         }
                                     }
+                                }
+                                else if (property.PropertyType == typeof(LocalizedDescription)
+                                    && property.GetValue(existingComponent) is LocalizedDescription existingLocalized
+                                    && newValue is LocalizedDescription newLocalized)
+                                {
+                                    existingLocalized.Uk = newLocalized.Uk;
+                                    existingLocalized.En = newLocalized.En;
                                 }
                                 else
                                 {
@@ -411,13 +479,32 @@ namespace Scraping.Infrastructure.Services
                 Console.WriteLine($"  Посилання: {componentUrl}");
                 Console.WriteLine($"  Магазинів: {result.Stores.Count}, Пропозицій: {result.Offers.Count}");
 
+                try
+                {
+                    await TranslateDescriptionsAsync([result.Component], []);
+                    Console.WriteLine("  Переклад виконано успішно.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"  Помилка перекладу: {ex.Message}");
+                }
+
                 foreach (var prop in result.Component.GetType().GetProperties())
                 {
                     var value = prop.GetValue(result.Component);
-                    Console.Write($"  {prop.Name}: {value}");
+                    if(prop.Name == "Description" && value is LocalizedDescription localized)
+                    {
+                        // Тепер у нас є змінна 'localized' типу LocalizedDescription
+                        Console.WriteLine($"  {prop.Name} (UK): {localized.Uk}");
+                        Console.WriteLine($"  {prop.Name} (EN): {localized.En}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"  {prop.Name}: {value}");
+                    }
                 }
                 Console.WriteLine("\n");
-            } 
+            }
             else
             {
                 Console.WriteLine($"  Не вдалось отримати компонент.");

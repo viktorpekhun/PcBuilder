@@ -47,10 +47,10 @@ namespace Scraping.Infrastructure.Scrapers
             var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//p[contains(@class, 'description-text')]");
             if (descriptionNode != null)
             {
-                ram.Description = descriptionNode.InnerText.Trim();
+                ram.Description.Uk = descriptionNode.InnerText.Trim();
                 if (!string.IsNullOrEmpty(modelInBrackets))
                 {
-                    ram.Description = Regex.Replace(ram.Description, $@"\({Regex.Escape(modelInBrackets)}\)", "");
+                    ram.Description.Uk = Regex.Replace(ram.Description.Uk, $@"\({Regex.Escape(modelInBrackets)}\)", "");
                 }
             }
 
@@ -79,12 +79,23 @@ namespace Scraping.Infrastructure.Scrapers
                                 ram.Type = value ?? string.Empty;
                                 break;
                             case "Ефективна частота, МГц":
-                                var frequencyMatch = Regex.Match(value, @"\d+");
-                                if (frequencyMatch.Success)
-                                    ram.Frequency = int.Parse(frequencyMatch.Value);
-                                else
-                                    ram.Frequency = 0;
-                                break;
+                                {
+                                    var frequencyMatch = Regex.Match(value, @"\d+");
+                                    if (frequencyMatch.Success)
+                                        ram.Frequency = int.Parse(frequencyMatch.Value);
+                                    else
+                                        ram.Frequency = 0;
+                                    break;
+                                }
+                            case "Ефективна частота, МТ/с":
+                                {
+                                    var frequencyMatch = Regex.Match(value, @"\d+");
+                                    if (frequencyMatch.Success)
+                                        ram.Frequency = int.Parse(frequencyMatch.Value);
+                                    else
+                                        ram.Frequency = 0;
+                                    break;
+                                }
                             case "Обсяг, ГБ":
                                 var capacityMatch = Regex.Match(value, @"\d+");
                                 if (capacityMatch.Success)

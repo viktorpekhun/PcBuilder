@@ -1,12 +1,14 @@
+using Components.Domain.Entities;
+﻿using HtmlAgilityPack;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Newtonsoft.Json.Linq;
+using PcBuilder.SharedKernel;
+using PcBuilder.SharedKernel.Enums;
 using Scraping.Application;
 using Scraping.Application.Interfaces;
-﻿using HtmlAgilityPack;
-using Newtonsoft.Json.Linq;
-using Components.Domain.Entities;
-using PcBuilder.SharedKernel;
 using Scraping.Infrastructure.Utilities;
-using PcBuilder.SharedKernel.Enums;
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Scraping.Infrastructure.Scrapers
@@ -46,10 +48,10 @@ namespace Scraping.Infrastructure.Scrapers
             var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//p[contains(@class, 'description-text')]");
             if (descriptionNode != null)
             {
-                hdd.Description = descriptionNode.InnerText.Trim();
+                hdd.Description.Uk = descriptionNode.InnerText.Trim();
                 if (!string.IsNullOrEmpty(modelInBrackets))
                 {
-                    hdd.Description = Regex.Replace(hdd.Description, $@"\({Regex.Escape(modelInBrackets)}\)", "");
+                    hdd.Description.Uk = Regex.Replace(hdd.Description.Uk, $@"\({Regex.Escape(modelInBrackets)}\)", "");
                 }
             }
 
@@ -75,10 +77,29 @@ namespace Scraping.Infrastructure.Scrapers
                                 hdd.Brand = value ?? string.Empty;
                                 break;
                             case "Обсяг, ГБ":
-                                var capacityMatch = Regex.Match(value, @"\d+");
-                                if (capacityMatch.Success)
-                                    hdd.Capacity = int.Parse(capacityMatch.Value);
-                                break;
+                                {
+                                    var capacityMatch = Regex.Match(value, @"\d+");
+                                    if (capacityMatch.Success)
+                                        hdd.Capacity = int.Parse(capacityMatch.Value);
+                                    break;
+                                }
+                            case "Об'єм, ГБ":
+                                {
+                                    var capacityMatch = Regex.Match(value, @"\d+");
+                                    if (capacityMatch.Success)
+                                        hdd.Capacity = int.Parse(capacityMatch.Value);
+                                    break;
+                                }
+                            case "Обсяг, ТБ":
+                                {
+                                    hdd.Capacity = ParseCapacityToGb(value);
+                                    break;
+                                }
+                            case "Об'єм, ТБ":
+                                {
+                                    hdd.Capacity = ParseCapacityToGb(value);
+                                    break;
+                                }
                             case "Інтерфейс підключення":
                                 hdd.Interface = value ?? string.Empty;
                                 break;
@@ -233,6 +254,17 @@ namespace Scraping.Infrastructure.Scrapers
             return new ScrapingResult<Hdd>(hdd, stores, offers);
         }
         private int? ParseInt(string? value) => int.TryParse(value, out var result) ? result : null;
+        public int ParseCapacityToGb(string input)
+        {
+            var match = Regex.Match(input, @"\d+([,\.]\d+)?");
+            if (!match.Success) return 0;
+            string normalizedValue = match.Value.Replace(',', '.');
+            if (double.TryParse(normalizedValue, NumberStyles.Any, CultureInfo.InvariantCulture, out double value))
+            {
+                return (int)Math.Round(value * 1000.0);
+            }
+            return 0;
+        }
 
     }
 }

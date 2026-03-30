@@ -48,10 +48,10 @@ namespace Scraping.Infrastructure.Scrapers
             var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//p[contains(@class, 'description-text')]");
             if (descriptionNode != null)
             {
-                cpuCooler.Description = descriptionNode.InnerText.Trim();
+                cpuCooler.Description.Uk = descriptionNode.InnerText.Trim();
                 if (!string.IsNullOrEmpty(modelInBrackets))
                 {
-                    cpuCooler.Description = Regex.Replace(cpuCooler.Description, $@"\({Regex.Escape(modelInBrackets)}\)", "");
+                    cpuCooler.Description.Uk = Regex.Replace(cpuCooler.Description.Uk, $@"\({Regex.Escape(modelInBrackets)}\)", "");
                 }
             }
 

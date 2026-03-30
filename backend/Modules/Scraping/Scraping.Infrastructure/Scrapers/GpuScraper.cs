@@ -50,10 +50,10 @@ namespace Scraping.Infrastructure.Scrapers
             var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//p[contains(@class, 'description-text')]");
             if (descriptionNode != null)
             {
-                gpu.Description = descriptionNode.InnerText.Trim();
+                gpu.Description.Uk = descriptionNode.InnerText.Trim();
                 if (!string.IsNullOrEmpty(modelInBrackets))
                 {
-                    gpu.Description = Regex.Replace(gpu.Description, $@"\({Regex.Escape(modelInBrackets)}\)", "");
+                    gpu.Description.Uk = Regex.Replace(gpu.Description.Uk, $@"\({Regex.Escape(modelInBrackets)}\)", "");
                 }
             }
 

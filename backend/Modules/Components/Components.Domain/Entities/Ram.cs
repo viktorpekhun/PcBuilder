@@ -14,8 +14,7 @@ namespace Components.Domain.Entities
         [Url]
         public string? PhotoUrl { get; set; }
 
-        [MaxLength(3000)]
-        public string? Description { get; set; }
+        public LocalizedDescription Description { get; set; } = new();
 
         [Required]
         [MaxLength(100)]

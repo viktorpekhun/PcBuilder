@@ -196,7 +196,8 @@ namespace PcBuilder.Persistence.Data
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Precision configurations
+
+
             modelBuilder.Entity<Review>()
                 .Property(u => u.Rating)
                 .HasPrecision(3, 2);
@@ -213,45 +214,103 @@ namespace PcBuilder.Persistence.Data
                 .Property(p => p.Price)
                 .HasPrecision(18, 2);
 
+
             modelBuilder.Entity<Cpu>()
                 .Property(p => p.AveragePrice)
                 .HasPrecision(18, 2);
+            modelBuilder.Entity<Cpu>()
+                .OwnsOne(p => p.Description, builder =>
+                {
+                    builder.ToJson();
+                });
+
 
             modelBuilder.Entity<Gpu>()
                 .Property(p => p.AveragePrice)
                 .HasPrecision(18, 2);
+            modelBuilder.Entity<Gpu>()
+                .OwnsOne(p => p.Description, builder =>
+                {
+                    builder.ToJson();
+                });
+
 
             modelBuilder.Entity<Ram>()
                 .Property(p => p.AveragePrice)
                 .HasPrecision(18, 2);
+            modelBuilder.Entity<Ram>()
+                .OwnsOne(p => p.Description, builder =>
+                {
+                    builder.ToJson();
+                });
+
 
             modelBuilder.Entity<Motherboard>()
                 .Property(p => p.AveragePrice)
                 .HasPrecision(18, 2);
+            modelBuilder.Entity<Motherboard>()
+                .OwnsOne(p => p.Description, builder =>
+                {
+                    builder.ToJson();
+                });
+
 
             modelBuilder.Entity<CpuCooler>()
                 .Property(p => p.AveragePrice)
                 .HasPrecision(18, 2);
+            modelBuilder.Entity<CpuCooler>()
+                .OwnsOne(p => p.Description, builder =>
+                {
+                    builder.ToJson();
+                });
+
 
             modelBuilder.Entity<PcCase>()
                 .Property(p => p.AveragePrice)
                 .HasPrecision(18, 2);
+            modelBuilder.Entity<PcCase>()
+                .OwnsOne(p => p.Description, builder =>
+                {
+                    builder.ToJson();
+                });
+
 
             modelBuilder.Entity<PowerSupply>()
                 .Property(p => p.AveragePrice)
                 .HasPrecision(18, 2);
+            modelBuilder.Entity<PowerSupply>()
+                .OwnsOne(p => p.Description, builder =>
+                {
+                    builder.ToJson();
+                });
 
             modelBuilder.Entity<Ssd>()
                 .Property(p => p.AveragePrice)
                 .HasPrecision(18, 2);
+            modelBuilder.Entity<Ssd>()
+                .OwnsOne(p => p.Description, builder =>
+                {
+                    builder.ToJson();
+                });
+
 
             modelBuilder.Entity<Hdd>()
                 .Property(p => p.AveragePrice)
                 .HasPrecision(18, 2);
+            modelBuilder.Entity<Hdd>()
+                .OwnsOne(p => p.Description, builder =>
+                {
+                    builder.ToJson();
+                });
+
 
             modelBuilder.Entity<Fan>()
-                .Property(p => p.AveragePrice)
-                .HasPrecision(18, 2);
+                .Property(p => p.AveragePrice).HasPrecision(18, 2);
+            modelBuilder.Entity<Fan>()
+                .OwnsOne(p => p.Description, builder =>
+                {
+                    builder.ToJson();
+                });
         }
     }
 }
