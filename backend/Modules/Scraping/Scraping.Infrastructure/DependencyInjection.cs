@@ -32,6 +32,7 @@ namespace Scraping.Infrastructure
 
             services.AddHttpClient<IPaginationScraper, PaginationScraper>();
             services.AddScoped<IProxyScraper, ProxyScraper>();
+            services.AddSingleton<ProxyPool>();
             services.AddScoped<ComponentScraperFactory>();
             services.AddScoped<ScraperService>();
             services.AddScoped<IDataCorrectionService, DataCorrectionService>();

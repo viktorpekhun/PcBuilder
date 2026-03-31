@@ -22,7 +22,7 @@ namespace Scraping.Infrastructure.Handlers
                 .GetMethod(nameof(ScraperService.ScrapeCategoryAsync))!
                 .MakeGenericMethod(request.EntityType);
 
-            var task = (Task)method.Invoke(_scraperService, new object[] { request.CategoryUrl, request.ComponentType })!;
+            var task = (Task)method.Invoke(_scraperService, new object[] { request.CategoryUrl, request.ComponentType, cancellationToken })!;
             await task;
 
             _cacheInvalidator.InvalidateByPrefix($"components:{request.ComponentType}");

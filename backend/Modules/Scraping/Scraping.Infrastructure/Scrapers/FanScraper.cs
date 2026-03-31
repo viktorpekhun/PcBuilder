@@ -15,9 +15,9 @@ namespace Scraping.Infrastructure.Scrapers
     public class FanScraper : IComponentScraper<Fan>
     {
         private const string BaseUrl = "https://hotline.ua";
-        public async Task<ScrapingResult<Fan>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<Fan> componentsFromDb, ConcurrentBag<Store> storesFromDb)
+        public async Task<ScrapingResult<Fan>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<Fan> componentsFromDb, ConcurrentBag<Store> storesFromDb, CancellationToken cancellationToken = default)
         {
-            var html = await client.GetStringAsync(url);
+            var html = await client.GetStringAsync(url, cancellationToken);
 
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);

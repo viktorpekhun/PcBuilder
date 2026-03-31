@@ -18,9 +18,9 @@ namespace Scraping.Infrastructure.Scrapers
     public class MotherboardScraper : IComponentScraper<Motherboard>
     {
         private const string BaseUrl = "https://hotline.ua";
-        public async Task<ScrapingResult<Motherboard>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<Motherboard> componentsFromDb, ConcurrentBag<Store> storesFromDb)
+        public async Task<ScrapingResult<Motherboard>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<Motherboard> componentsFromDb, ConcurrentBag<Store> storesFromDb, CancellationToken cancellationToken = default)
         {
-            var html = await client.GetStringAsync(url);
+            var html = await client.GetStringAsync(url, cancellationToken);
 
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);

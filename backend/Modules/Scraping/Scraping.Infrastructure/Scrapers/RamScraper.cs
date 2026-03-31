@@ -15,9 +15,9 @@ namespace Scraping.Infrastructure.Scrapers
     public class RamScraper : IComponentScraper<Ram>
     {
         private const string BaseUrl = "https://hotline.ua";
-        public async Task<ScrapingResult<Ram>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<Ram> componentsFromDb, ConcurrentBag<Store> storesFromDb)
+        public async Task<ScrapingResult<Ram>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<Ram> componentsFromDb, ConcurrentBag<Store> storesFromDb, CancellationToken cancellationToken = default)
         {
-            var html = await client.GetStringAsync(url);
+            var html = await client.GetStringAsync(url, cancellationToken);
 
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);

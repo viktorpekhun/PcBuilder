@@ -1,11 +1,12 @@
 using Components.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Logging;
 using PcBuilder.SharedKernel.Enums;
 using PcBuilder.SharedKernel.Persistence;
 using Scraping.Application.Interfaces;
 using Scraping.Infrastructure.Scrapers;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Net;
 
 namespace Scraping.Infrastructure.Services
@@ -17,43 +18,50 @@ namespace Scraping.Infrastructure.Services
         private readonly IApplicationDbContext _context;
         private readonly IProxyScraper _proxyScraper;
         private readonly ITranslationService _translationService;
+        private readonly ProxyPool _proxyPool;
+        private readonly ILogger<ScraperService> _logger;
 
-        private List<string> _proxies = new();
-        private int _proxyIndex = 0;
         private readonly object _lock = new();
+        private static readonly SemaphoreSlim _throttle = new(10, 10);
 
-        public ScraperService(ComponentScraperFactory scraperFactory, IPaginationScraper paginationScraper, IApplicationDbContext context, IProxyScraper proxyScraper, ITranslationService translationService)
+        public ScraperService(ComponentScraperFactory scraperFactory, IPaginationScraper paginationScraper, IApplicationDbContext context, IProxyScraper proxyScraper, ITranslationService translationService, ProxyPool proxyPool, ILogger<ScraperService> logger)
         {
             _scraperFactory = scraperFactory;
             _paginationScraper = paginationScraper;
             _context = context;
             _proxyScraper = proxyScraper;
             _translationService = translationService;
+            _proxyPool = proxyPool;
+            _logger = logger;
         }
 
-        private (HttpClient client, string proxy) CreateHttpClientWithProxy()
+        private (HttpClient client, string proxy)? CreateHttpClientWithProxy()
         {
-            string proxy;
-            lock (_lock)
-            {
-                _proxyIndex = new Random().Next(_proxies.Count);
-                proxy = _proxies[_proxyIndex];
-            }
+            var proxy = _proxyPool.RentProxy();
+            if (proxy == null)
+                return null;
 
-            var proxyUri = new WebProxy(proxy, false);
-            var handler = new HttpClientHandler
+            var proxyAddress = proxy.Contains("://") ? proxy : $"http://{proxy}";
+            var handler = new SocketsHttpHandler
             {
-                Proxy = proxyUri,
+                Proxy = new WebProxy(proxyAddress, false),
                 UseProxy = true,
-                ServerCertificateCustomValidationCallback = (_, _, _, _) => true
+                ConnectTimeout = TimeSpan.FromSeconds(10),
+                PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+                PooledConnectionIdleTimeout = TimeSpan.FromMinutes(2),
+                MaxConnectionsPerServer = 2,
+                SslOptions = new System.Net.Security.SslClientAuthenticationOptions
+                {
+                    RemoteCertificateValidationCallback = (_, _, _, _) => true
+                }
             };
 
             var client = new HttpClient(handler, disposeHandler: true)
             {
-                Timeout = TimeSpan.FromSeconds(15)
+                Timeout = TimeSpan.FromSeconds(25)
             };
 
-            client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36");
+            client.DefaultRequestHeaders.UserAgent.ParseAdd(Utilities.UserAgentRotator.GetRandom());
             client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("uk-UA,uk;q=0.9,en-US;q=0.8,en;q=0.7");
             client.DefaultRequestHeaders.Referrer = new Uri("https://hotline.ua/");
             client.DefaultRequestHeaders.Accept.ParseAdd("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
@@ -76,7 +84,7 @@ namespace Scraping.Infrastructure.Services
             return includeProperties;
         }
 
-        private async Task TranslateDescriptionsAsync<T>(IEnumerable<T> componentsToSave, IReadOnlyList<T> componentsFromDb) where T : class
+        private async Task TranslateDescriptionsAsync<T>(IEnumerable<T> componentsToSave, IReadOnlyList<T> componentsFromDb, CancellationToken cancellationToken = default) where T : class
         {
             var descriptionProperty = typeof(T).GetProperty("Description");
             if (descriptionProperty == null || descriptionProperty.PropertyType != typeof(LocalizedDescription))
@@ -116,7 +124,7 @@ namespace Scraping.Infrastructure.Services
                 return;
 
             var ukTexts = toTranslate.Select(x => x.desc.Uk).ToList();
-            var enTexts = await _translationService.TranslateBatchAsync(ukTexts, "uk", "en");
+            var enTexts = await _translationService.TranslateBatchAsync(ukTexts, "uk", "en", cancellationToken);
 
             for (int i = 0; i < Math.Min(toTranslate.Count, enTexts.Count); i++)
             {
@@ -125,41 +133,50 @@ namespace Scraping.Infrastructure.Services
             }
         }
 
-        public async Task ScrapeCategoryAsync<T>(string categoryUrl, ComponentType componentType) where T : class
+        public async Task ScrapeCategoryAsync<T>(string categoryUrl, ComponentType componentType, CancellationToken cancellationToken = default) where T : class
         {
-            Console.WriteLine("Початок роботи ScrapeCategoryAsync\n");
+            var totalStopwatch = Stopwatch.StartNew();
+            _logger.LogInformation("Початок скрапінгу категорії {ComponentType} з {Url}", componentType, categoryUrl);
 
             var scraper = _scraperFactory.GetScraper<T>();
             if (scraper == null)
             {
-                Console.WriteLine("Скрейпер для цього типу не знайдено!");
+                _logger.LogWarning("Скрейпер для типу {ComponentType} не знайдено", componentType);
                 return;
             }
 
-            var productLinks = await _paginationScraper.GetComponentLinksAsync(categoryUrl);
-            Console.WriteLine($"Знайдено {productLinks.Count} товарів у категорії.");
+            var productLinks = await _paginationScraper.GetComponentLinksAsync(categoryUrl, cancellationToken);
+            _logger.LogInformation("Знайдено {Count} товарів у категорії {ComponentType}", productLinks.Count, componentType);
 
             var failedLinks = new List<string>(productLinks);
-            var successfulProxies = new List<string>();
-            var failedProxies = new List<string>();
-
             var storesByName = new Dictionary<string, Store>();
 
-            while (failedLinks.Any())
+            int outerRetry = 0;
+            const int maxOuterRetries = 3;
+
+            while (failedLinks.Any() && outerRetry < maxOuterRetries)
             {
-                Console.WriteLine($"\nНовий цикл обробки {failedLinks.Count} посилань...");
-                successfulProxies = new List<string>();
-                failedProxies = new List<string>();
+                outerRetry++;
+                Console.WriteLine($"\nЦикл обробки {outerRetry}/{maxOuterRetries}: {failedLinks.Count} посилань...");
+                var successfulProxies = new ConcurrentDictionary<string, bool>();
+                var failedProxies = new ConcurrentDictionary<string, bool>();
 
-                if (_proxies.Count == 0)
+                if (_proxyPool.NeedsRefresh())
                 {
-                    Console.WriteLine("Завантаження нових проксі...");
-                    _proxies = await _proxyScraper.GetProxiesAsync();
-                    _proxyIndex = 0;
+                    Console.WriteLine("Завантаження та валідація нових проксі...");
+                    var rawProxies = await _proxyScraper.GetProxiesAsync(cancellationToken);
 
-                    if (_proxies.Count == 0)
+                    if (rawProxies.Count == 0)
                     {
                         Console.WriteLine("Не вдалося завантажити жодного проксі. Завершення.");
+                        return;
+                    }
+
+                    await _proxyPool.LoadAndValidateAsync(rawProxies, cancellationToken);
+
+                    if (_proxyPool.AvailableCount == 0)
+                    {
+                        Console.WriteLine("Жоден проксі не пройшов валідацію. Завершення.");
                         return;
                     }
                 }
@@ -174,89 +191,109 @@ namespace Scraping.Infrastructure.Services
                 {
                     query = query.Include(prop);
                 }
-                var componentsFromDb = await query.ToListAsync();
+                var componentsFromDb = await query.ToListAsync(cancellationToken);
                 ConcurrentBag<T> concurrentComponents = new ConcurrentBag<T>(componentsFromDb);
-                var existingStoresFromDb = await _context.Set<Store>().ToListAsync();
+                var existingStoresFromDb = await _context.Set<Store>().ToListAsync(cancellationToken);
                 ConcurrentBag<Store> concurrentStores = new ConcurrentBag<Store>(existingStoresFromDb);
 
                 var tasks = failedLinks.Select(async (link, index) =>
                 {
-                    int maxRetries = 3;
-                    int attempt = 0;
-                    var rnd = new Random();
-
-                    while (attempt < maxRetries)
+                    await _throttle.WaitAsync(cancellationToken);
+                    try
                     {
-                        try
+                        int maxRetries = 5;
+                        int attempt = 0;
+
+                        while (attempt < maxRetries)
                         {
-                            var (client, proxy) = CreateHttpClientWithProxy();
-                            using (client)
+                            string? currentProxy = null;
+                            try
                             {
-                                var result = await scraper.ScrapeAsync(link, client, concurrentComponents, concurrentStores);
-
-                                if (result.Component != null)
+                                var proxyResult = CreateHttpClientWithProxy();
+                                if (proxyResult == null)
                                 {
-                                    Console.WriteLine($"[{index}] Отримано компонент: {result.Component}");
-                                    Console.WriteLine($"  Посилання: {link}");
-                                    Console.WriteLine($"  Магазинів: {result.Stores.Count}, Пропозицій: {result.Offers.Count}");
+                                    Console.WriteLine($"[{index}] Немає доступних проксі, пропуск спроби.");
+                                    attempt++;
+                                    await Task.Delay(Random.Shared.Next(1000, 2000) * (attempt + 1));
+                                    continue;
+                                }
+                                var (client, proxy) = proxyResult.Value;
+                                currentProxy = proxy;
+                                using (client)
+                                {
+                                    var result = await scraper.ScrapeAsync(link, client, concurrentComponents, concurrentStores, cancellationToken);
 
-                                    foreach (var prop in result.Component.GetType().GetProperties())
+                                    if (result.Component != null)
                                     {
-                                        var value = prop.GetValue(result.Component);
-                                        Console.Write($"  {prop.Name}: {value}");
-                                    }
-                                    Console.WriteLine("\n");
+                                        Console.WriteLine($"[{index}] Отримано компонент: {result.Component}");
+                                        Console.WriteLine($"  Посилання: {link}");
+                                        Console.WriteLine($"  Магазинів: {result.Stores.Count}, Пропозицій: {result.Offers.Count}");
 
-                                    componentsToSave.Add(result.Component);
-
-                                    lock (_lock)
-                                    {
-                                        foreach (var store in result.Stores)
+                                        foreach (var prop in result.Component.GetType().GetProperties())
                                         {
-                                            if (!storesByName.TryGetValue(store.Name, out var existingStore))
+                                            var value = prop.GetValue(result.Component);
+                                            Console.Write($"  {prop.Name}: {value}");
+                                        }
+                                        Console.WriteLine("\n");
+
+                                        componentsToSave.Add(result.Component);
+
+                                        lock (_lock)
+                                        {
+                                            foreach (var store in result.Stores)
                                             {
-                                                storesByName[store.Name] = store;
-                                                storesToSave.Add(store);
-                                            }
-                                            else
-                                            {
-                                                foreach (var offer in result.Offers.Where(o => o.StoreId == store.Id))
+                                                if (!storesByName.TryGetValue(store.Name, out var existingStore))
                                                 {
-                                                    offer.StoreId = existingStore.Id;
+                                                    storesByName[store.Name] = store;
+                                                    storesToSave.Add(store);
+                                                }
+                                                else
+                                                {
+                                                    foreach (var offer in result.Offers.Where(o => o.StoreId == store.Id))
+                                                    {
+                                                        offer.StoreId = existingStore.Id;
+                                                    }
                                                 }
                                             }
+
+                                            foreach (var offer in result.Offers)
+                                            {
+                                                offersToSave.Add(offer);
+                                            }
                                         }
 
-                                        foreach (var offer in result.Offers)
-                                        {
-                                            offersToSave.Add(offer);
-                                        }
+                                        _proxyPool.ReturnProxy(proxy, success: true);
+                                        successfulProxies.TryAdd(proxy, true);
+
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        _proxyPool.ReturnProxy(proxy, success: false);
+                                        failedProxies.TryAdd(proxy, true);
                                     }
 
-                                    if (!successfulProxies.Contains(proxy))
-                                        successfulProxies.Add(proxy);
-
-                                    return;
+                                    Console.WriteLine($"[{index}] Парсинг не вдався для {link}");
                                 }
-                                else
-                                {
-                                    if (!failedProxies.Contains(proxy))
-                                        failedProxies.Add(proxy);
-                                }
-
-                                Console.WriteLine($"[{index}] Парсинг не вдався для {link}");
                             }
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"[{index}] Спроба {attempt + 1}/{maxRetries} не вдалася: {ex.Message}");
+                            catch (Exception ex)
+                            {
+                                if (currentProxy != null)
+                                    _proxyPool.ReturnProxy(currentProxy, success: false);
+                                Console.WriteLine($"[{index}] Спроба {attempt + 1}/{maxRetries} не вдалася: {ex.Message}");
+                            }
+
+                            attempt++;
+                            await Task.Delay(Random.Shared.Next(1000, 2000) * (attempt + 1));
                         }
 
-                        attempt++;
-                        await Task.Delay(rnd.Next(1500, 3000));
+                        linksToRetry.Add(link);
                     }
-
-                    linksToRetry.Add(link);
+                    finally
+                    {
+                        _throttle.Release();
+                        await Task.Delay(Random.Shared.Next(300, 800));
+                    }
                 });
 
                 await Task.WhenAll(tasks);
@@ -267,11 +304,11 @@ namespace Scraping.Infrastructure.Services
 
                     try
                     {
-                        await TranslateDescriptionsAsync(componentsToSave, componentsFromDb);
+                        await TranslateDescriptionsAsync(componentsToSave, componentsFromDb, cancellationToken);
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Помилка перекладу описів: {ex.Message}");
+                        _logger.LogWarning(ex, "Помилка перекладу описів");
                     }
 
                     int savedComponentsCount = 0;
@@ -346,7 +383,7 @@ namespace Scraping.Infrastructure.Services
                         }
                         else
                         {
-                            await _context.Set<T>().AddAsync(component);
+                            await _context.Set<T>().AddAsync(component, cancellationToken);
                             savedComponentsCount++;
                         }
                     }
@@ -355,7 +392,7 @@ namespace Scraping.Infrastructure.Services
                     int updatedStoresCount = 0;
                     foreach (var store in storesToSave)
                     {
-                        var existingStore = await _context.Set<Store>().FirstOrDefaultAsync(s => s.Id == store.Id);
+                        var existingStore = await _context.Set<Store>().FirstOrDefaultAsync(s => s.Id == store.Id, cancellationToken);
                         if (existingStore != null)
                         {
                             existingStore.Name = store.Name;
@@ -367,7 +404,7 @@ namespace Scraping.Infrastructure.Services
                         }
                         else
                         {
-                            await _context.Set<Store>().AddAsync(store);
+                            await _context.Set<Store>().AddAsync(store, cancellationToken);
                             savedStoresCount++;
                         }
                     }
@@ -380,7 +417,7 @@ namespace Scraping.Infrastructure.Services
                             .FirstOrDefaultAsync(o =>
                                 o.ComponentId == offer.ComponentId &&
                                 o.StoreId == offer.StoreId &&
-                                o.ProductOfferUrl == offer.ProductOfferUrl);
+                                o.ProductOfferUrl == offer.ProductOfferUrl, cancellationToken);
 
                         if (existingOffer != null)
                         {
@@ -390,47 +427,34 @@ namespace Scraping.Infrastructure.Services
                         }
                         else
                         {
-                            await _context.Set<ProductOffer>().AddAsync(offer);
+                            await _context.Set<ProductOffer>().AddAsync(offer, cancellationToken);
                             savedOffersCount++;
                         }
                     }
 
-                    await _context.SaveChangesAsync();
+                    await _context.SaveChangesAsync(cancellationToken);
                     Console.WriteLine($"Збережено: {savedComponentsCount} компонентів, {savedStoresCount} магазинів, {savedOffersCount} пропозицій");
                     Console.WriteLine($"Оновлено: {updatedComponentsCount} компонентів, {updatedStoresCount} магазинів, {updatedOffersCount} пропозицій");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Помилка при збереженні даних: {ex.Message}");
+                    _logger.LogError(ex, "Помилка при збереженні даних");
                 }
 
                 failedLinks = linksToRetry?.ToList() ?? new List<string>();
 
-                if (successfulProxies.Any() && successfulProxies.Count > 1)
-                {
-                    Console.WriteLine("Перехід до використання тільки успішних проксі...");
-                    _proxies = successfulProxies.Distinct().ToList();
-                    _proxyIndex = 0;
-                }
-                else
-                {
-                    if (_proxies.Count > 3)
-                    {
-                        _proxies.RemoveAll(proxy => failedProxies.Contains(proxy));
-                    }
-                    else
-                    {
-                        _proxies = new List<string>();
-                    }
-                }
-
-                Console.WriteLine("Цикл обробки завершено.");
+                _logger.LogInformation("Цикл {Cycle}/{MaxCycles}: проксі {Available} доступних, {Success} успішних, {Failed} невдалих. Залишилось {Remaining} посилань.",
+                    outerRetry, maxOuterRetries, _proxyPool.AvailableCount, successfulProxies.Count, failedProxies.Count, failedLinks.Count);
             }
 
-            Console.WriteLine("Усі посилання успішно оброблені.");
+            totalStopwatch.Stop();
+            int totalSuccessful = productLinks.Count - failedLinks.Count;
+            double successRate = productLinks.Count > 0 ? (double)totalSuccessful / productLinks.Count * 100 : 0;
+            _logger.LogInformation("Скрапінг {ComponentType} завершено за {Duration:F1}с. Успішно: {Successful}/{Total} ({SuccessRate:F1}%)",
+                componentType, totalStopwatch.Elapsed.TotalSeconds, totalSuccessful, productLinks.Count, successRate);
         }
 
-        public async Task ScrapeSingleComponentAsync<T>(string componentUrl, ComponentType componentType) where T : class
+        public async Task ScrapeSingleComponentAsync<T>(string componentUrl, ComponentType componentType, CancellationToken cancellationToken = default) where T : class
         {
             Console.WriteLine("Початок роботи ScrapeCategoryAsync\n");
 
@@ -471,7 +495,7 @@ namespace Scraping.Infrastructure.Services
 
 
 
-            var result = await scraper.ScrapeAsync(componentUrl, client, concurrentComponents, concurrentStores);
+            var result = await scraper.ScrapeAsync(componentUrl, client, concurrentComponents, concurrentStores, cancellationToken);
 
             if (result.Component != null)
             {
@@ -481,7 +505,7 @@ namespace Scraping.Infrastructure.Services
 
                 try
                 {
-                    await TranslateDescriptionsAsync([result.Component], []);
+                    await TranslateDescriptionsAsync([result.Component], [], cancellationToken);
                     Console.WriteLine("  Переклад виконано успішно.");
                 }
                 catch (Exception ex)

@@ -17,10 +17,10 @@ namespace Scraping.Infrastructure.Scrapers
     {
         private const string BaseUrl = "https://hotline.ua";
 
-        public async Task<ScrapingResult<Gpu>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<Gpu> componentsFromDb, ConcurrentBag<Store> storesFromDb)
+        public async Task<ScrapingResult<Gpu>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<Gpu> componentsFromDb, ConcurrentBag<Store> storesFromDb, CancellationToken cancellationToken = default)
         {
 
-            var html = await client.GetStringAsync(url);
+            var html = await client.GetStringAsync(url, cancellationToken);
 
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);

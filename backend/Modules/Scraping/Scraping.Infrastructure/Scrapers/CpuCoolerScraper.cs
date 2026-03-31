@@ -15,9 +15,9 @@ namespace Scraping.Infrastructure.Scrapers
     public class CpuCoolerScraper : IComponentScraper<CpuCooler>
     {
         private const string BaseUrl = "https://hotline.ua";
-        public async Task<ScrapingResult<CpuCooler>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<CpuCooler> componentsFromDb, ConcurrentBag<Store> storesFromDb)
+        public async Task<ScrapingResult<CpuCooler>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<CpuCooler> componentsFromDb, ConcurrentBag<Store> storesFromDb, CancellationToken cancellationToken = default)
         {
-            var html = await client.GetStringAsync(url);
+            var html = await client.GetStringAsync(url, cancellationToken);
 
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);

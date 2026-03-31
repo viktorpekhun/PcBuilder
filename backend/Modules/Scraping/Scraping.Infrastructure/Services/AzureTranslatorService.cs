@@ -17,16 +17,16 @@ namespace Scraping.Infrastructure.Services
             _options = options.Value;
         }
 
-        public async Task<string> TranslateAsync(string text, string from, string to)
+        public async Task<string> TranslateAsync(string text, string from, string to, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(text))
                 return string.Empty;
 
-            var results = await TranslateBatchAsync([text], from, to);
+            var results = await TranslateBatchAsync([text], from, to, cancellationToken);
             return results.FirstOrDefault() ?? string.Empty;
         }
 
-        public async Task<IReadOnlyList<string>> TranslateBatchAsync(IReadOnlyList<string> texts, string from, string to)
+        public async Task<IReadOnlyList<string>> TranslateBatchAsync(IReadOnlyList<string> texts, string from, string to, CancellationToken cancellationToken = default)
         {
             if (texts == null || texts.Count == 0)
                 return [];
@@ -64,7 +64,7 @@ namespace Scraping.Infrastructure.Services
                     try
                     {
                         if (attempt > 0)
-                            await Task.Delay(1000 * attempt);
+                            await Task.Delay(3000 * attempt, cancellationToken);
 
                         var requestBody = chunk.Select(t => new { Text = t }).ToArray();
                         var json = JsonSerializer.Serialize(requestBody);
@@ -75,7 +75,7 @@ namespace Scraping.Infrastructure.Services
                         request.Headers.Add("Ocp-Apim-Subscription-Key", _options.Key);
                         request.Headers.Add("Ocp-Apim-Subscription-Region", _options.Region);
 
-                        var response = await _httpClient.SendAsync(request);
+                        var response = await _httpClient.SendAsync(request, cancellationToken);
                         response.EnsureSuccessStatusCode();
 
                         var responseJson = await response.Content.ReadAsStringAsync();
@@ -104,7 +104,7 @@ namespace Scraping.Infrastructure.Services
                 }
 
                 if (chunks.Count > 1)
-                    await Task.Delay(200);
+                    await Task.Delay(5000, cancellationToken);
             }
 
             return results;

@@ -24,7 +24,7 @@ namespace Scraping.Infrastructure.Handlers
                 .GetMethod(nameof(ScraperService.ScrapeSingleComponentAsync))!
                 .MakeGenericMethod(request.EntityType);
 
-            var task = (Task)method.Invoke(_scraperService, new object[] { request.ComponentUrl, request.ComponentType })!;
+            var task = (Task)method.Invoke(_scraperService, new object[] { request.ComponentUrl, request.ComponentType, cancellationToken })!;
             await task;
         }
     }

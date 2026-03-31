@@ -16,9 +16,9 @@ namespace Scraping.Infrastructure.Scrapers
     public class SsdScraper : IComponentScraper<Ssd>
     {
         private const string BaseUrl = "https://hotline.ua";
-        public async Task<ScrapingResult<Ssd>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<Ssd> componentsFromDb, ConcurrentBag<Store> storesFromDb)
+        public async Task<ScrapingResult<Ssd>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<Ssd> componentsFromDb, ConcurrentBag<Store> storesFromDb, CancellationToken cancellationToken = default)
         {
-            var html = await client.GetStringAsync(url);
+            var html = await client.GetStringAsync(url, cancellationToken);
 
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
@@ -77,10 +77,19 @@ namespace Scraping.Infrastructure.Scrapers
                                 ssd.Brand = value ?? string.Empty;
                                 break;
                             case "Обсяг, ГБ":
-                                var capacityMatch = Regex.Match(value, @"\d+");
-                                if (capacityMatch.Success)
-                                    ssd.Capacity = int.Parse(capacityMatch.Value);
-                                break;
+                                {
+                                    var capacityMatch = Regex.Match(value, @"\d+");
+                                    if (capacityMatch.Success)
+                                        ssd.Capacity = int.Parse(capacityMatch.Value);
+                                    break;
+                                }
+                            case "Об'єм, ГБ":
+                                {
+                                    var capacityMatch = Regex.Match(value, @"\d+");
+                                    if (capacityMatch.Success)
+                                        ssd.Capacity = int.Parse(capacityMatch.Value);
+                                    break;
+                                }
                             case "Інтерфейс":
                                 ssd.Interface = value ?? string.Empty;
                                 break;
