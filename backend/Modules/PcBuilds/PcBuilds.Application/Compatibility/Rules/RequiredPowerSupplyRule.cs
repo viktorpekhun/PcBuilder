@@ -31,7 +31,15 @@ namespace PcBuilds.Application.Compatibility.Rules
             }
             if (gpu != null)
             {
-                summaryPower += (int)gpu.Wattage;
+                if (gpu.Wattage != null && gpu.Wattage > 0)
+                {
+                    summaryPower += (int)gpu.Wattage;
+                }
+                else if (gpu.PsuReccomended != null && gpu.PsuReccomended > 0)
+                {
+                    int estimatedGpuWattage = (int)(gpu.PsuReccomended * 0.45);
+                    summaryPower += estimatedGpuWattage;
+                }
             }
             if (motherboard != null)
             {

@@ -21,11 +21,81 @@ namespace PcBuilder.Api.Controllers
             _mediator = mediator;
         }
 
-        [HttpPost("single-gpu")]
-        public async Task<IActionResult> ScrapeGpu(CancellationToken cancellationToken)
+        //[HttpPost("single-gpu")]
+        //public async Task<IActionResult> ScrapeGpu(CancellationToken cancellationToken)
+        //{
+        //    await _mediator.Send(new ScrapeSingleComponentCommand("https://hotline.ua/ua/computer-videokarty/asus-prime-rtx5070-o12g", ComponentType.Gpu, typeof(Gpu)), cancellationToken);
+        //    return Ok("Scraping completed for GPU");
+        //}
+        [HttpPost("single-powersupply")]
+        public async Task<IActionResult> ScrapePS(
+                [FromBody] string url, CancellationToken cancellationToken)
         {
-            await _mediator.Send(new ScrapeSingleComponentCommand("https://hotline.ua/ua/computer-videokarty/asus-prime-rtx5070-o12g", ComponentType.Gpu, typeof(Gpu)), cancellationToken);
-            return Ok("Scraping completed for GPU");
+            if (string.IsNullOrEmpty(url))
+            {
+                return BadRequest("URL is required");
+            }
+
+            await _mediator.Send(new ScrapeSingleComponentCommand(
+                url,
+                ComponentType.PowerSupply,
+                typeof(PowerSupply), new[] { typeof(PowerSupplyPowerConnector) }),
+                cancellationToken);
+
+            return Ok("Scraping completed for powersupply");
+        }
+        [HttpPost("single-cpucooler")]
+        public async Task<IActionResult> ScrapeCpuCooler(
+                [FromBody] string url, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(url))
+            {
+                return BadRequest("URL is required");
+            }
+
+            await _mediator.Send(new ScrapeSingleComponentCommand(
+                url,
+                ComponentType.CpuCooler,
+                typeof(CpuCooler), new[] { typeof(CpuCoolerSocket) }),
+                cancellationToken);
+
+            return Ok("Scraping completed for CpuCooler");
+        }
+
+        [HttpPost("single-pccase")]
+        public async Task<IActionResult> ScrapePcCase(
+                [FromBody] string url, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(url))
+            {
+                return BadRequest("URL is required");
+            }
+
+            await _mediator.Send(new ScrapeSingleComponentCommand(
+                url,
+                ComponentType.PcCase,
+                typeof(PcCase), new[] { typeof(PcCaseFormFactor), typeof(PcCaseFanLocation) }),
+                cancellationToken);
+
+            return Ok("Scraping completed for PcCase");
+        }
+
+        [HttpPost("single-ram")]
+        public async Task<IActionResult> ScrapeRam(
+                [FromBody] string url, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(url))
+            {
+                return BadRequest("URL is required");
+            }
+
+            await _mediator.Send(new ScrapeSingleComponentCommand(
+                url,
+                ComponentType.Ram,
+                typeof(Ram)),
+                cancellationToken);
+
+            return Ok("Scraping completed for Ram");
         }
 
         [HttpPost("cpu")]

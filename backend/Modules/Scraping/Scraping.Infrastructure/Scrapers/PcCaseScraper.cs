@@ -260,6 +260,8 @@ namespace Scraping.Infrastructure.Scrapers
                                                 {
                                                     if (int.TryParse(sizeCapture.Value, out var size) && placeLocation.Trim() != "")
                                                     {
+                                                        if (placeLocation.Contains("живлення"))
+                                                            placeLocation = "кришка блока живлення";
                                                         pcCase.PcCaseFanLocations.Add(new PcCaseFanLocation
                                                         {
                                                             Name = placeLocation.Trim(),

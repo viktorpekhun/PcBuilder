@@ -36,7 +36,7 @@ namespace Components.Domain.Entities
         [MaxLength(50)]
         public string? EfficiencyStandart { get; set; }
         public double? EfficiencyPercent { get; set; }
-        public bool IsModular { get; set; }
+        public string Modularity { get; set; } = string.Empty;
         public double? NoiseLevelMaxDb { get; set; }
 
         [MaxLength(50)]

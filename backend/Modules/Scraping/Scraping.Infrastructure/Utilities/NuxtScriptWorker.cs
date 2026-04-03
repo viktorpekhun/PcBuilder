@@ -1,7 +1,7 @@
-﻿using HtmlAgilityPack;
+using HtmlAgilityPack;
+using Jint;
 using Newtonsoft.Json.Linq;
-using System.Diagnostics;
-using System.Text;
+using System.Text.Json;
 
 namespace Scraping.Infrastructure.Utilities
 {
@@ -14,60 +14,42 @@ namespace Scraping.Infrastructure.Utilities
 
             if (scriptNode == null)
                 return null;
-            //add null script log
 
             string jsCode = scriptNode.InnerText;
             jsCode = jsCode
-                .Replace("“", "")
-                .Replace("”", "")
-                .Replace("„", "")
-                .Replace("«", "")
-                .Replace("»", "");
-            jsCode = jsCode.Replace("‘", "").Replace("’", "");
+                .Replace("\u201C", "")
+                .Replace("\u201D", "")
+                .Replace("\u201E", "")
+                .Replace("\u00AB", "")
+                .Replace("\u00BB", "");
+            jsCode = jsCode.Replace("\u2018", "").Replace("\u2019", "");
             jsCode = jsCode.Replace("\\r\\n", "");
             jsCode = jsCode.Replace("\\\"", "");
 
             try
             {
-                var psi = new ProcessStartInfo
+                var engine = new Engine(options =>
                 {
-                    FileName = "node",
-                    Arguments = "C:\\Users\\vikto\\source\\repos\\viktorpekhun\\PcBuilder\\backend\\Modules\\Scraping\\Scraping.Infrastructure\\Utilities\\nuxt-extract.js",
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    StandardInputEncoding = Encoding.UTF8,
-                    StandardOutputEncoding = Encoding.UTF8
-                };
+                    options.TimeoutInterval(TimeSpan.FromSeconds(5));
+                    options.LimitMemory(50_000_000);
+                    options.MaxStatements(100_000);
+                });
 
-                using var process = new Process { StartInfo = psi };
-                process.Start();
+                engine.Execute("var window = {};");
+                engine.Execute(jsCode);
 
-                using (var writer = process.StandardInput)
-                {
-                    writer.Write(jsCode);
-                }
+                var nuxtValue = engine.Evaluate("JSON.stringify(window.__NUXT__)");
+                var json = nuxtValue.AsString();
 
-                string output = process.StandardOutput.ReadToEnd();
-                string errors = process.StandardError.ReadToEnd();
-                process.WaitForExit();
-
-                if (process.ExitCode != 0)
-                {
-                    Console.WriteLine("Помилка у Node.js: " + errors);
-                    return null;
-                }
-
-                return JObject.Parse(output);
+                return JObject.Parse(json);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"C# помилка: {ex.Message}");
+                Console.WriteLine($"Jint error: {ex.Message}");
                 return null;
             }
         }
+
         public static JToken? FindTokenByKey(JToken container, string key)
         {
             if (container.Type == JTokenType.Object)

@@ -141,7 +141,7 @@ namespace Scraping.Infrastructure.Scrapers
 
                 int consecutiveFailures = 0;
 
-                while (true)
+                while (true && !cancellationToken.IsCancellationRequested)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 

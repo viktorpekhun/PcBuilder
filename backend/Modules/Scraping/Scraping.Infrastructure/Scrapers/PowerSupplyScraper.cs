@@ -1,13 +1,14 @@
-using Scraping.Application;
-using Scraping.Application.Interfaces;
+using Components.Domain.Entities;
 ﻿using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;
-using Components.Domain.Entities;
 using PcBuilder.SharedKernel;
-using Scraping.Infrastructure.Utilities;
 using PcBuilder.SharedKernel.Enums;
+using Scraping.Application;
+using Scraping.Application.Interfaces;
+using Scraping.Infrastructure.Utilities;
 using System.Collections.Concurrent;
 using System.Globalization;
+using System.Net.NetworkInformation;
 using System.Text.RegularExpressions;
 
 namespace Scraping.Infrastructure.Scrapers
@@ -84,21 +85,21 @@ namespace Scraping.Infrastructure.Scrapers
                                 if (wattageMatch.Success)
                                     powerSupply.Wattage = int.Parse(wattageMatch.Value);
                                 break;
-                            case "Molex":
+                            case "Кількість Molex":
                                 var molexMatch = Regex.Match(value, @"\d+");
                                 if (molexMatch.Success)
                                     powerSupply.MolexCount = ParseInt(molexMatch.Value);
                                 else
                                     powerSupply.MolexCount = null;
                                 break;
-                            case "SATA":
+                            case "Кількість SATA":
                                 var sataMatch = Regex.Match(value, @"\d+");
                                 if (sataMatch.Success)
                                     powerSupply.SataCount = ParseInt(sataMatch.Value);
                                 else
                                     powerSupply.SataCount = null;
                                 break;
-                            case "FDD":
+                            case "Кількість FDD":
                                 var fddMatch = Regex.Match(value, @"\d+");
                                 if (fddMatch.Success)
                                     powerSupply.FddCount = ParseInt(fddMatch.Value);
@@ -131,21 +132,15 @@ namespace Scraping.Infrastructure.Scrapers
                                     powerSupply.HasApcf = false;
                                 }
                                 break;
-                            case "Стандарт 80 PLUS":
+                            case "Сертифікат 80 PLUS":
                                 powerSupply.EfficiencyStandart = value ?? string.Empty;
                                 break;
                             case "ККД (%)":
                                 powerSupply.EfficiencyPercent = ParseDouble(value);
                                 break;
-                            case "Модульне підключення кабелів":
-                                if (value?.ToLower() == "є" || value.Contains('+'))
-                                {
-                                    powerSupply.IsModular = true;
-                                }
-                                else
-                                {
-                                    powerSupply.IsModular = false;
-                                }
+                            case "Модульність":
+                                string modularity = value!.ToLower();
+                                powerSupply.Modularity = char.ToUpper(modularity[0]) + modularity[1..];
                                 break;
                             case "Рівень шуму, дБ":
                                 if (!string.IsNullOrEmpty(value) && value.Contains('-'))
@@ -166,26 +161,16 @@ namespace Scraping.Infrastructure.Scrapers
                                     powerSupply.FactoryLink = node?["url"]?.ToString().Trim();
                                     break;
                                 }
-                            case "Тип роз'єму підключення до материнської плати":
+                            case "Кількість роз'ємів підключення до материнської плати 24pin":
                                 {
-                                    var mbPinsMatch = Regex.Match(value, @"^(?<main>\d+)(?:\s*\+\s*(?<extra>\d+))?\s*[a-zA-Z]*$");
-
-                                    if (mbPinsMatch.Success)
+                                    var pinsQuantity = ParseInt(value);
+                                    powerSupply.PowerSupplyPowerConnectors.Add(new PowerSupplyPowerConnector
                                     {
-                                        int pins = int.Parse(mbPinsMatch.Groups["main"].Value);
-                                        int? additionalPins = null;
-                                        if (mbPinsMatch.Groups["extra"].Success)
-                                        {
-                                            additionalPins = ParseInt(mbPinsMatch.Groups["extra"].Value);
-                                        }
-                                        powerSupply.PowerSupplyPowerConnectors.Add(new PowerSupplyPowerConnector
-                                        {
-                                            Type = "Motherboard",
-                                            Pins = pins,
-                                            AdditionalPins = additionalPins,
-                                            Quantity = 1,
-                                        });
-                                    }
+                                        Type = "Motherboard",
+                                        Pins = 24,
+                                        AdditionalPins = null,
+                                        Quantity = pinsQuantity!.Value,
+                                    });
                                     break;
                                 }
                             case "Тип роз'єму підключення живлення процесора":
@@ -223,55 +208,40 @@ namespace Scraping.Infrastructure.Scrapers
                                     }
                                     break;
                                 }
-                            case "Роз'єми дод. живлення для відеокарт":
+                            case "Кількість 16pin для відеокарти (12VHPWR, 12V-2x6)":
                                 {
-                                    var connectors = new List<PowerSupplyPowerConnector>();
-                                    if (value.ToLower().Contains("16"))
+                                    var pinsQuantity = ParseInt(value);
+                                    powerSupply.PowerSupplyPowerConnectors.Add(new PowerSupplyPowerConnector
                                     {
-                                        value = value.ToLower().Replace("16", "12+4");
-                                        if (value.ToLower().Contains("(12vhpwr)"))
-                                        {
-                                            value = value.ToLower().Replace("(12vhpwr)", "");
-                                        }
-                                    }
-                                    if (value.ToLower().Contains("(12vhpwr)"))
+                                        Type = "GPU",
+                                        Pins = 16,
+                                        AdditionalPins = null,
+                                        Quantity = pinsQuantity!.Value,
+                                    });
+                                    break;
+                                }
+                            case "Кількість 6+2pin, 8pin для відеокарти":
+                                {
+                                    var pinsQuantity = ParseInt(value);
+                                    powerSupply.PowerSupplyPowerConnectors.Add(new PowerSupplyPowerConnector
                                     {
-                                        value = value.ToLower().Replace("(12vhpwr)", "1x12+4pin");
-                                    }
-                                    if (value.ToLower().Contains("12vhpwr"))
+                                        Type = "GPU",
+                                        Pins = 6,
+                                        AdditionalPins = 2,
+                                        Quantity = pinsQuantity!.Value,
+                                    });
+                                    break;
+                                }
+                            case "Кількість 6pin для відеокарти":
+                                {
+                                    var pinsQuantity = ParseInt(value);
+                                    powerSupply.PowerSupplyPowerConnectors.Add(new PowerSupplyPowerConnector
                                     {
-                                        value = value.ToLower().Replace("12vhpwr", "12+4pin");
-                                    }
-                                    var gpuMatch = Regex.Match(value, @"\(([^)]+)\)|^([^\(\)]+)$");
-                                    var gpuMatchResult = gpuMatch.Groups[1].Success ? gpuMatch.Groups[1].Value : gpuMatch.Groups[2].Value;
-                                    if (gpuMatch.Success)
-                                    {
-                                        var pinsList = gpuMatchResult
-                                            .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
-                                            .Select(s => s.Trim());
-
-                                        var regex = new Regex(@"(?<qty>\d+)\s*[xх]\s*(?<pins>\d+)\s*(?:\+\s*(?<addpins>\d+))?", RegexOptions.IgnoreCase);
-
-                                        foreach (var val in pinsList)
-                                        {
-                                            var match = regex.Match(val);
-
-                                            if (!match.Success) continue;
-
-                                            int quantity = int.Parse(match.Groups["qty"].Value);
-                                            int pins = int.Parse(match.Groups["pins"].Value);
-                                            int? additionalPins = match.Groups["addpins"].Success ? int.Parse(match.Groups["addpins"].Value) : null;
-
-                                            connectors.Add(new PowerSupplyPowerConnector
-                                            {
-                                                Type = "GPU",
-                                                Pins = pins,
-                                                AdditionalPins = additionalPins,
-                                                Quantity = quantity,
-                                            });
-                                        }
-                                        powerSupply.PowerSupplyPowerConnectors.AddRange(connectors);
-                                    }
+                                        Type = "GPU",
+                                        Pins = 6,
+                                        AdditionalPins = null,
+                                        Quantity = pinsQuantity!.Value,
+                                    });
                                     break;
                                 }
 

@@ -8,6 +8,6 @@ using System.Threading.Tasks;
 
 namespace Scraping.Application.Commands
 {
-    public record ScrapeSingleComponentCommand(string ComponentUrl, ComponentType ComponentType, Type EntityType) : IRequest;
+    public record ScrapeSingleComponentCommand(string ComponentUrl, ComponentType ComponentType, Type EntityType, Type[]? NestedTypes = null) : IRequest;
 
 }

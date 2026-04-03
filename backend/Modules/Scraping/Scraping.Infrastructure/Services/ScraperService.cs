@@ -8,6 +8,7 @@ using Scraping.Infrastructure.Scrapers;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace Scraping.Infrastructure.Services
 {
@@ -204,7 +205,7 @@ namespace Scraping.Infrastructure.Services
                         int maxRetries = 5;
                         int attempt = 0;
 
-                        while (attempt < maxRetries)
+                        while (attempt < maxRetries && !cancellationToken.IsCancellationRequested)
                         {
                             string? currentProxy = null;
                             try
@@ -214,7 +215,7 @@ namespace Scraping.Infrastructure.Services
                                 {
                                     Console.WriteLine($"[{index}] Немає доступних проксі, пропуск спроби.");
                                     attempt++;
-                                    await Task.Delay(Random.Shared.Next(1000, 2000) * (attempt + 1));
+                                    await Task.Delay(Random.Shared.Next(1000, 2000) * (attempt + 1), cancellationToken);
                                     continue;
                                 }
                                 var (client, proxy) = proxyResult.Value;
@@ -284,7 +285,7 @@ namespace Scraping.Infrastructure.Services
                             }
 
                             attempt++;
-                            await Task.Delay(Random.Shared.Next(1000, 2000) * (attempt + 1));
+                            await Task.Delay(Random.Shared.Next(1000, 2000) * (attempt + 1), cancellationToken);
                         }
 
                         linksToRetry.Add(link);
@@ -454,7 +455,7 @@ namespace Scraping.Infrastructure.Services
                 componentType, totalStopwatch.Elapsed.TotalSeconds, totalSuccessful, productLinks.Count, successRate);
         }
 
-        public async Task ScrapeSingleComponentAsync<T>(string componentUrl, ComponentType componentType, CancellationToken cancellationToken = default) where T : class
+        public async Task ScrapeSingleComponentAsync<T>(string componentUrl, ComponentType componentType, Type[]? NestedTypes = null, CancellationToken cancellationToken = default) where T : class
         {
             Console.WriteLine("Початок роботи ScrapeCategoryAsync\n");
 
@@ -503,28 +504,72 @@ namespace Scraping.Infrastructure.Services
                 Console.WriteLine($"  Посилання: {componentUrl}");
                 Console.WriteLine($"  Магазинів: {result.Stores.Count}, Пропозицій: {result.Offers.Count}");
 
-                try
-                {
-                    await TranslateDescriptionsAsync([result.Component], [], cancellationToken);
-                    Console.WriteLine("  Переклад виконано успішно.");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"  Помилка перекладу: {ex.Message}");
-                }
+                //try
+                //{
+                //    await TranslateDescriptionsAsync([result.Component], [], cancellationToken);
+                //    Console.WriteLine("  Переклад виконано успішно.");
+                //}
+                //catch (Exception ex)
+                //{
+                //    Console.WriteLine($"  Помилка перекладу: {ex.Message}");
+                //}
 
-                foreach (var prop in result.Component.GetType().GetProperties())
+                //foreach (var prop in result.Component.GetType().GetProperties())
+                //{
+                //    var value = prop.GetValue(result.Component);
+                //    if(prop.Name == "Description" && value is LocalizedDescription localized)
+                //    {
+                //        Console.WriteLine($"  {prop.Name} (UK): {localized.Uk}");
+                //        //Console.WriteLine($"  {prop.Name} (EN): {localized.En}");
+                //    }
+                //    else
+                //    {
+                //        Console.WriteLine($"  {prop.Name}: {value}");
+                //    }
+                //}
+                var allowedTypes = NestedTypes ?? Array.Empty<Type>();
+                var objectsToProcess = new Queue<(object Instance, int Level)>();
+                objectsToProcess.Enqueue((result.Component, 0));
+
+                while (objectsToProcess.Count > 0)
                 {
-                    var value = prop.GetValue(result.Component);
-                    if(prop.Name == "Description" && value is LocalizedDescription localized)
+                    var current = objectsToProcess.Dequeue();
+                    var indent = new string(' ', current.Level * 2);
+
+                    foreach (var prop in current.Instance.GetType().GetProperties())
                     {
-                        // Тепер у нас є змінна 'localized' типу LocalizedDescription
-                        Console.WriteLine($"  {prop.Name} (UK): {localized.Uk}");
-                        Console.WriteLine($"  {prop.Name} (EN): {localized.En}");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"  {prop.Name}: {value}");
+                        var value = prop.GetValue(current.Instance);
+                        if (value == null) continue;
+
+                        var actualType = value.GetType();
+
+                        // 1. Твоя логіка для опису
+                        if (prop.Name == "Description" && value is LocalizedDescription localized)
+                        {
+                            Console.WriteLine($"{indent}{prop.Name} (UK): {localized.Uk}");
+                        }
+                        // 2. НОВИЙ БЛОК: Якщо це список (колекція), але не рядок
+                        else if (value is System.Collections.IEnumerable collection && value is not string)
+                        {
+                            Console.WriteLine($"{indent}{prop.Name} (Collection):");
+                            foreach (var item in collection)
+                            {
+                                if (item != null)
+                                    // Додаємо кожен елемент списку в чергу, щоб розібрати його властивості
+                                    objectsToProcess.Enqueue((item, current.Level + 1));
+                            }
+                        }
+                        // 3. Якщо це поодинокий вкладений клас із дозволених
+                        else if (allowedTypes.Any(t => t.IsAssignableFrom(actualType)))
+                        {
+                            Console.WriteLine($"{indent}{prop.Name}:");
+                            objectsToProcess.Enqueue((value, current.Level + 1));
+                        }
+                        // 4. Звичайний вивід (текст, цифри тощо)
+                        else
+                        {
+                            Console.WriteLine($"{indent}{prop.Name}: {value}");
+                        }
                     }
                 }
                 Console.WriteLine("\n");

@@ -19,7 +19,7 @@ namespace Components.Application.Dtos.PowerSupplyDtos
         public bool HasApcf { get; set; }
         public string? EfficiencyStandart { get; set; }
         public double? EfficiencyPercent { get; set; }
-        public bool? IsModular { get; set; }
+        public string Modularity { get; set; } = string.Empty;
         public double? NoiseLevelMaxDb { get; set; }
         public string? Size { get; set; }
         public string? FactoryLink { get; set; }
@@ -33,7 +33,7 @@ namespace Components.Application.Dtos.PowerSupplyDtos
     public class PowerSupplyMotherboardPowerConnectorDto
     {
         public int Pins { get; set; }
-        public int? AdditionalPins { get; set; }
+        public int Quantity { get; set; }
     }
     public class PowerSupplyCpuPowerConnectorDto
     {
