@@ -5,6 +5,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using Scraping.Application.Interfaces;
 using Scraping.Infrastructure.Services;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json;
 
@@ -33,6 +34,7 @@ public class Worker : BackgroundService
         ["PcCase"] = [typeof(PcCaseFormFactor), typeof(PcCaseFanLocation)],
     };
 
+    private readonly ConcurrentDictionary<Guid, CancellationTokenSource> _activeJobs = new();
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IConnection _rabbitConnection;
     private readonly ILogger<Worker> _logger;
@@ -48,14 +50,45 @@ public class Worker : BackgroundService
     {
         _logger.LogInformation("Scraper Worker started, waiting for jobs...");
 
-        await using var channel = await _rabbitConnection.CreateChannelAsync(cancellationToken: stoppingToken);
+        // Separate channel for jobs (with prefetch=1 so we process one job at a time)
+        await using var jobChannel = await _rabbitConnection.CreateChannelAsync(cancellationToken: stoppingToken);
+        await jobChannel.QueueDeclareAsync("scrape-jobs", durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
+        await jobChannel.QueueDeclareAsync("scrape-results", durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
+        await jobChannel.BasicQosAsync(prefetchSize: 0, prefetchCount: 1, global: false, cancellationToken: stoppingToken);
 
-        await channel.QueueDeclareAsync("scrape-jobs", durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
-        await channel.QueueDeclareAsync("scrape-results", durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
-        await channel.BasicQosAsync(prefetchSize: 0, prefetchCount: 1, global: false, cancellationToken: stoppingToken);
+        // Separate channel for cancellations — must not be blocked by job channel's QoS
+        await using var cancelChannel = await _rabbitConnection.CreateChannelAsync(cancellationToken: stoppingToken);
+        await cancelChannel.QueueDeclareAsync("scrape-cancellations", durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
 
-        var consumer = new AsyncEventingBasicConsumer(channel);
-        consumer.ReceivedAsync += async (_, ea) =>
+        // Listen for cancellation messages on its own channel
+        var cancelConsumer = new AsyncEventingBasicConsumer(cancelChannel);
+        cancelConsumer.ReceivedAsync += async (_, ea) =>
+        {
+            try
+            {
+                var json = Encoding.UTF8.GetString(ea.Body.ToArray());
+                var cancelMessage = JsonSerializer.Deserialize<ScrapeJobCancelMessage>(json);
+
+                if (cancelMessage != null && _activeJobs.TryGetValue(cancelMessage.JobId, out var cts))
+                {
+                    _logger.LogInformation("Cancelling scrape job {JobId}", cancelMessage.JobId);
+                    await cts.CancelAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing cancellation message");
+            }
+            finally
+            {
+                await cancelChannel.BasicAckAsync(ea.DeliveryTag, false);
+            }
+        };
+        await cancelChannel.BasicConsumeAsync("scrape-cancellations", autoAck: false, consumer: cancelConsumer, cancellationToken: stoppingToken);
+
+        // Listen for scrape job messages on the job channel
+        var jobConsumer = new AsyncEventingBasicConsumer(jobChannel);
+        jobConsumer.ReceivedAsync += async (_, ea) =>
         {
             var body = ea.Body.ToArray();
             var json = Encoding.UTF8.GetString(body);
@@ -67,7 +100,7 @@ public class Worker : BackgroundService
                 if (message == null)
                 {
                     _logger.LogWarning("Received null scrape job message, skipping.");
-                    await channel.BasicAckAsync(ea.DeliveryTag, false);
+                    await jobChannel.BasicAckAsync(ea.DeliveryTag, false);
                     return;
                 }
 
@@ -76,62 +109,77 @@ public class Worker : BackgroundService
                 if (!EntityTypeMap.TryGetValue(message.EntityTypeName, out var entityType))
                 {
                     _logger.LogWarning("Unknown entity type: {EntityTypeName}", message.EntityTypeName);
-                    await PublishResultAsync(channel, message.JobId, message.ComponentType, false, $"Unknown entity type: {message.EntityTypeName}", stoppingToken);
-                    await channel.BasicAckAsync(ea.DeliveryTag, false);
+                    await PublishResultAsync(jobChannel, message.JobId, message.ComponentType, false, $"Unknown entity type: {message.EntityTypeName}", stoppingToken);
+                    await jobChannel.BasicAckAsync(ea.DeliveryTag, false);
                     return;
                 }
 
-                using var scope = _scopeFactory.CreateScope();
-                var scraperService = scope.ServiceProvider.GetRequiredService<ScraperService>();
+                using var jobCts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+                _activeJobs[message.JobId] = jobCts;
 
-                if (message.Kind == "Category")
+                try
                 {
-                    var method = typeof(ScraperService)
-                        .GetMethod(nameof(ScraperService.ScrapeCategoryAsync))!
-                        .MakeGenericMethod(entityType);
+                    using var scope = _scopeFactory.CreateScope();
+                    var scraperService = scope.ServiceProvider.GetRequiredService<ScraperService>();
 
-                    var task = (Task)method.Invoke(scraperService, [message.Url, Enum.Parse<ComponentType>(message.ComponentType), stoppingToken])!;
-                    await task;
+                    if (message.Kind == "Category")
+                    {
+                        var method = typeof(ScraperService)
+                            .GetMethod(nameof(ScraperService.ScrapeCategoryAsync))!
+                            .MakeGenericMethod(entityType);
+
+                        var task = (Task)method.Invoke(scraperService, [message.Url, Enum.Parse<ComponentType>(message.ComponentType), jobCts.Token])!;
+                        await task;
+                    }
+                    else if (message.Kind == "SingleComponent")
+                    {
+                        var nestedTypes = message.NestedTypeNames?
+                            .Select(n => NestedTypeMap.TryGetValue(message.EntityTypeName, out var types) ? types : Array.Empty<Type>())
+                            .SelectMany(t => t)
+                            .Distinct()
+                            .ToArray();
+
+                        var method = typeof(ScraperService)
+                            .GetMethod(nameof(ScraperService.ScrapeSingleComponentAsync))!
+                            .MakeGenericMethod(entityType);
+
+                        var task = (Task)method.Invoke(scraperService, [message.Url, Enum.Parse<ComponentType>(message.ComponentType), nestedTypes, jobCts.Token])!;
+                        await task;
+                    }
+
+                    if (message.CorrectGpuModels)
+                    {
+                        var correctionService = scope.ServiceProvider.GetRequiredService<IDataCorrectionService>();
+                        await correctionService.CorrectGpuModels();
+                        _logger.LogInformation("GPU model correction completed for job {JobId}", message.JobId);
+                    }
+
+                    await PublishResultAsync(jobChannel, message.JobId, message.ComponentType, true, null, stoppingToken);
+                    _logger.LogInformation("Scrape job {JobId} for {ComponentType} completed successfully", message.JobId, message.ComponentType);
                 }
-                else if (message.Kind == "SingleComponent")
+                catch (OperationCanceledException) when (jobCts.IsCancellationRequested && !stoppingToken.IsCancellationRequested)
                 {
-                    var nestedTypes = message.NestedTypeNames?
-                        .Select(n => NestedTypeMap.TryGetValue(message.EntityTypeName, out var types) ? types : Array.Empty<Type>())
-                        .SelectMany(t => t)
-                        .Distinct()
-                        .ToArray();
-
-                    var method = typeof(ScraperService)
-                        .GetMethod(nameof(ScraperService.ScrapeSingleComponentAsync))!
-                        .MakeGenericMethod(entityType);
-
-                    var task = (Task)method.Invoke(scraperService, [message.Url, Enum.Parse<ComponentType>(message.ComponentType), nestedTypes, stoppingToken])!;
-                    await task;
+                    _logger.LogInformation("Scrape job {JobId} for {ComponentType} was cancelled", message.JobId, message.ComponentType);
+                    await PublishResultAsync(jobChannel, message.JobId, message.ComponentType, false, "Cancelled", stoppingToken);
                 }
-
-                if (message.CorrectGpuModels)
+                finally
                 {
-                    var correctionService = scope.ServiceProvider.GetRequiredService<IDataCorrectionService>();
-                    await correctionService.CorrectGpuModels();
-                    _logger.LogInformation("GPU model correction completed for job {JobId}", message.JobId);
+                    _activeJobs.TryRemove(message.JobId, out CancellationTokenSource? _);
                 }
-
-                await PublishResultAsync(channel, message.JobId, message.ComponentType, true, null, stoppingToken);
-                _logger.LogInformation("Scrape job {JobId} for {ComponentType} completed successfully", message.JobId, message.ComponentType);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Scrape job {JobId} failed", message?.JobId);
                 if (message != null)
-                    await PublishResultAsync(channel, message.JobId, message.ComponentType, false, ex.Message, stoppingToken);
+                    await PublishResultAsync(jobChannel, message.JobId, message.ComponentType, false, ex.Message, stoppingToken);
             }
             finally
             {
-                await channel.BasicAckAsync(ea.DeliveryTag, false);
+                await jobChannel.BasicAckAsync(ea.DeliveryTag, false);
             }
         };
 
-        await channel.BasicConsumeAsync("scrape-jobs", autoAck: false, consumer: consumer, cancellationToken: stoppingToken);
+        await jobChannel.BasicConsumeAsync("scrape-jobs", autoAck: false, consumer: jobConsumer, cancellationToken: stoppingToken);
 
         // Keep the worker alive until cancellation
         await Task.Delay(Timeout.Infinite, stoppingToken).ContinueWith(_ => { }, CancellationToken.None);

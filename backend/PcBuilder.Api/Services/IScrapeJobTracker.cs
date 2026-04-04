@@ -9,5 +9,6 @@ namespace PcBuilder.Api.Services
         IReadOnlyList<ScrapeJobStatus> GetAllStatuses();
         bool HasActiveJob(string componentType);
         void MarkCompleted(Guid jobId, string? errorMessage = null);
+        void MarkCancelled(Guid jobId);
     }
 }

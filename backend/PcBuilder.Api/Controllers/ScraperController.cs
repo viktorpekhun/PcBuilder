@@ -35,6 +35,21 @@ namespace PcBuilder.Api.Controllers
             return Ok(status);
         }
 
+        [HttpDelete("jobs/{jobId:guid}")]
+        public async Task<IActionResult> CancelJob(Guid jobId, CancellationToken cancellationToken)
+        {
+            var status = _tracker.GetStatus(jobId);
+            if (status == null) return NotFound();
+
+            if (status.State is "Completed" or "Failed" or "Cancelled")
+                return Conflict($"Job is already {status.State}.");
+
+            _tracker.MarkCancelled(jobId);
+            await _publisher.PublishAsync("scrape-cancellations", new ScrapeJobCancelMessage(jobId), cancellationToken);
+
+            return Ok(new { jobId, status = "Cancelling" });
+        }
+
         [HttpPost("single-powersupply")]
         public async Task<IActionResult> ScrapePS([FromBody] string url, CancellationToken cancellationToken)
         {

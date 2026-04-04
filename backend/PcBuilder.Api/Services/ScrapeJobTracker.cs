@@ -38,5 +38,13 @@ namespace PcBuilder.Api.Services
                 status.ErrorMessage = errorMessage;
             }
         }
+
+        public void MarkCancelled(Guid jobId)
+        {
+            if (_jobs.TryGetValue(jobId, out var status))
+            {
+                status.State = "Cancelling";
+            }
+        }
     }
 }

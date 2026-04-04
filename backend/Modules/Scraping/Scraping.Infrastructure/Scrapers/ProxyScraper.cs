@@ -45,6 +45,10 @@ namespace Scraping.Infrastructure.Scrapers
                 proxies.AddRange(matches.Select(m => m.Value));
                 Console.WriteLine($"Завантажено {proxies.Count} проксі з ProxyScrape");
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 Console.WriteLine($"Помилка ProxyScrape: {ex.Message}");
@@ -85,6 +89,10 @@ namespace Scraping.Infrastructure.Scrapers
 
                 Console.WriteLine($"Завантажено {proxies.Count} проксі з free-proxy-list.net");
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 Console.WriteLine($"Помилка free-proxy-list.net: {ex.Message}");
@@ -107,6 +115,10 @@ namespace Scraping.Infrastructure.Scrapers
 
                 proxies.AddRange(matches.Select(m => m.Value));
                 Console.WriteLine($"Завантажено {proxies.Count} проксі з {sourceName}");
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch (Exception ex)
             {

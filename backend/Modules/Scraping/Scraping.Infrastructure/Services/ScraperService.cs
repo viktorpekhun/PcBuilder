@@ -157,6 +157,8 @@ namespace Scraping.Infrastructure.Services
 
             while (failedLinks.Any() && outerRetry < maxOuterRetries)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 outerRetry++;
                 Console.WriteLine($"\nЦикл обробки {outerRetry}/{maxOuterRetries}: {failedLinks.Count} посилань...");
                 var successfulProxies = new ConcurrentDictionary<string, bool>();
@@ -202,6 +204,8 @@ namespace Scraping.Infrastructure.Services
                     await _throttle.WaitAsync(cancellationToken);
                     try
                     {
+                        cancellationToken.ThrowIfCancellationRequested();
+
                         int maxRetries = 5;
                         int attempt = 0;
 
@@ -277,6 +281,12 @@ namespace Scraping.Infrastructure.Services
                                     Console.WriteLine($"[{index}] Парсинг не вдався для {link}");
                                 }
                             }
+                            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                            {
+                                if (currentProxy != null)
+                                    _proxyPool.ReturnProxy(currentProxy, success: false);
+                                throw;
+                            }
                             catch (Exception ex)
                             {
                                 if (currentProxy != null)
@@ -299,6 +309,8 @@ namespace Scraping.Infrastructure.Services
 
                 await Task.WhenAll(tasks);
 
+                cancellationToken.ThrowIfCancellationRequested();
+
                 try
                 {
                     Console.WriteLine("Збереження компонентів в базу даних...");
@@ -306,6 +318,10 @@ namespace Scraping.Infrastructure.Services
                     try
                     {
                         await TranslateDescriptionsAsync(componentsToSave, componentsFromDb, cancellationToken);
+                    }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                    {
+                        throw;
                     }
                     catch (Exception ex)
                     {
@@ -437,6 +453,11 @@ namespace Scraping.Infrastructure.Services
                     Console.WriteLine($"Збережено: {savedComponentsCount} компонентів, {savedStoresCount} магазинів, {savedOffersCount} пропозицій");
                     Console.WriteLine($"Оновлено: {updatedComponentsCount} компонентів, {updatedStoresCount} магазинів, {updatedOffersCount} пропозицій");
                 }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    _logger.LogInformation("Збереження скасовано");
+                    throw;
+                }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Помилка при збереженні даних");
@@ -457,7 +478,9 @@ namespace Scraping.Infrastructure.Services
 
         public async Task ScrapeSingleComponentAsync<T>(string componentUrl, ComponentType componentType, Type[]? NestedTypes = null, CancellationToken cancellationToken = default) where T : class
         {
-            Console.WriteLine("Початок роботи ScrapeCategoryAsync\n");
+            cancellationToken.ThrowIfCancellationRequested();
+
+            Console.WriteLine("Початок роботи ScrapeSingleComponentAsync\n");
 
             var scraper = _scraperFactory.GetScraper<T>();
             if (scraper == null)

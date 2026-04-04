@@ -37,7 +37,7 @@ namespace Scraping.Infrastructure.Scrapers
             _httpClient.DefaultRequestHeaders.Add("Cookie", "city_id=223; language=uk;");
         }
 
-        public async Task<JToken> GetPageAsync(int page)
+        public async Task<JToken> GetPageAsync(int page, CancellationToken cancellationToken = default)
         {
             var variables = new Dictionary<string, object>
             {
@@ -77,10 +77,10 @@ namespace Scraping.Infrastructure.Scrapers
             };
 
             var content = new StringContent(JsonSerializer.Serialize(query), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync("/svc/frontend-api/graphql", content);
+            var response = await _httpClient.PostAsync("/svc/frontend-api/graphql", content, cancellationToken);
 
             response.EnsureSuccessStatusCode();
-            var jsonString = await response.Content.ReadAsStringAsync();
+            var jsonString = await response.Content.ReadAsStringAsync(cancellationToken);
 
             return JToken.Parse(jsonString);
         }
@@ -155,7 +155,7 @@ namespace Scraping.Infrastructure.Scrapers
                             if (pageAttempt > 0)
                                 await Task.Delay(2000 * pageAttempt, cancellationToken);
 
-                            json = await client.GetPageAsync(currentPage);
+                            json = await client.GetPageAsync(currentPage, cancellationToken);
                             consecutiveFailures = 0;
                             break;
                         }

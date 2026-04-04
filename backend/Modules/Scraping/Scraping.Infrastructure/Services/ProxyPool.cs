@@ -67,6 +67,8 @@ namespace Scraping.Infrastructure.Services
         {
             try
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var proxyAddress = proxy.Contains("://") ? proxy : $"http://{proxy}";
                 var handler = new HttpClientHandler
                 {
@@ -87,6 +89,10 @@ namespace Scraping.Infrastructure.Services
                 var response = await client.SendAsync(request, cancellationToken);
                 return response.IsSuccessStatusCode || response.StatusCode == System.Net.HttpStatusCode.Redirect
                     || response.StatusCode == System.Net.HttpStatusCode.MovedPermanently;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch
             {
