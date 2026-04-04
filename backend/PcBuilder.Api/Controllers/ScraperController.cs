@@ -1,10 +1,8 @@
 using Components.Domain.Entities;
-using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
-using PcBuilder.SharedKernel.Enums;
-using Scraping.Application.Commands;
+using PcBuilder.Api.Models;
+using PcBuilder.Api.Services;
+using PcBuilder.Contracts.Messages;
 
 namespace PcBuilder.Api.Controllers
 {
@@ -14,159 +12,144 @@ namespace PcBuilder.Api.Controllers
     //[EnableRateLimiting("scraper")]
     public class ScraperController : ControllerBase
     {
-        private readonly IMediator _mediator;
+        private readonly IRabbitMqPublisher _publisher;
+        private readonly IScrapeJobTracker _tracker;
 
-        public ScraperController(IMediator mediator)
+        public ScraperController(IRabbitMqPublisher publisher, IScrapeJobTracker tracker)
         {
-            _mediator = mediator;
+            _publisher = publisher;
+            _tracker = tracker;
         }
 
-        //[HttpPost("single-gpu")]
-        //public async Task<IActionResult> ScrapeGpu(CancellationToken cancellationToken)
-        //{
-        //    await _mediator.Send(new ScrapeSingleComponentCommand("https://hotline.ua/ua/computer-videokarty/asus-prime-rtx5070-o12g", ComponentType.Gpu, typeof(Gpu)), cancellationToken);
-        //    return Ok("Scraping completed for GPU");
-        //}
+        [HttpGet("jobs")]
+        public IActionResult GetAllJobs()
+        {
+            return Ok(_tracker.GetAllStatuses());
+        }
+
+        [HttpGet("jobs/{jobId:guid}")]
+        public IActionResult GetJobStatus(Guid jobId)
+        {
+            var status = _tracker.GetStatus(jobId);
+            if (status == null) return NotFound();
+            return Ok(status);
+        }
+
         [HttpPost("single-powersupply")]
-        public async Task<IActionResult> ScrapePS(
-                [FromBody] string url, CancellationToken cancellationToken)
+        public async Task<IActionResult> ScrapePS([FromBody] string url, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(url))
-            {
                 return BadRequest("URL is required");
-            }
 
-            await _mediator.Send(new ScrapeSingleComponentCommand(
-                url,
-                ComponentType.PowerSupply,
-                typeof(PowerSupply), new[] { typeof(PowerSupplyPowerConnector) }),
-                cancellationToken);
-
-            return Ok("Scraping completed for powersupply");
+            return await EnqueueSingleAsync(url, "PowerSupply", nameof(PowerSupply), cancellationToken);
         }
+
         [HttpPost("single-cpucooler")]
-        public async Task<IActionResult> ScrapeCpuCooler(
-                [FromBody] string url, CancellationToken cancellationToken)
+        public async Task<IActionResult> ScrapeCpuCooler([FromBody] string url, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(url))
-            {
                 return BadRequest("URL is required");
-            }
 
-            await _mediator.Send(new ScrapeSingleComponentCommand(
-                url,
-                ComponentType.CpuCooler,
-                typeof(CpuCooler), new[] { typeof(CpuCoolerSocket) }),
-                cancellationToken);
-
-            return Ok("Scraping completed for CpuCooler");
+            return await EnqueueSingleAsync(url, "CpuCooler", nameof(CpuCooler), cancellationToken);
         }
 
         [HttpPost("single-pccase")]
-        public async Task<IActionResult> ScrapePcCase(
-                [FromBody] string url, CancellationToken cancellationToken)
+        public async Task<IActionResult> ScrapePcCase([FromBody] string url, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(url))
-            {
                 return BadRequest("URL is required");
-            }
 
-            await _mediator.Send(new ScrapeSingleComponentCommand(
-                url,
-                ComponentType.PcCase,
-                typeof(PcCase), new[] { typeof(PcCaseFormFactor), typeof(PcCaseFanLocation) }),
-                cancellationToken);
-
-            return Ok("Scraping completed for PcCase");
+            return await EnqueueSingleAsync(url, "PcCase", nameof(PcCase), cancellationToken);
         }
 
         [HttpPost("single-ram")]
-        public async Task<IActionResult> ScrapeRam(
-                [FromBody] string url, CancellationToken cancellationToken)
+        public async Task<IActionResult> ScrapeRam([FromBody] string url, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(url))
-            {
                 return BadRequest("URL is required");
-            }
 
-            await _mediator.Send(new ScrapeSingleComponentCommand(
-                url,
-                ComponentType.Ram,
-                typeof(Ram)),
-                cancellationToken);
-
-            return Ok("Scraping completed for Ram");
+            return await EnqueueSingleAsync(url, "Ram", nameof(Ram), cancellationToken);
         }
 
         [HttpPost("cpu")]
         public async Task<IActionResult> ScrapeCpus(CancellationToken cancellationToken)
-        {
-            await _mediator.Send(new ScrapeCategoryCommand("https://hotline.ua/ua/computer/processory", ComponentType.Cpu, typeof(Cpu)), cancellationToken);
-            return Ok("Scraping completed for CPUs");
-        }
+            => await EnqueueCategoryAsync("https://hotline.ua/ua/computer/processory", "Cpu", nameof(Cpu), cancellationToken);
 
         [HttpPost("gpu")]
         public async Task<IActionResult> ScrapeGpus(CancellationToken cancellationToken)
-        {
-            await _mediator.Send(new ScrapeCategoryCommand("https://hotline.ua/ua/computer/videokarty/3991-36447-36449-36450-41408-43657-86245-380200-586473-643446-678073-21168069", ComponentType.Gpu, typeof(Gpu)), cancellationToken);
-            await _mediator.Send(new CorrectGpuModelsCommand(), cancellationToken);
-            return Ok("Scraping completed for GPUs");
-        }
+            => await EnqueueCategoryAsync(
+                "https://hotline.ua/ua/computer/videokarty/3991-36447-36449-36450-41408-43657-86245-380200-586473-643446-678073-21168069",
+                "Gpu", nameof(Gpu), cancellationToken, correctGpuModels: true);
 
         [HttpPost("motherboard")]
         public async Task<IActionResult> ScrapeMotherboards(CancellationToken cancellationToken)
-        {
-            await _mediator.Send(new ScrapeCategoryCommand("https://hotline.ua/ua/computer/materinskie-platy/448-449-4367-4987-40811-100226-672507/", ComponentType.Motherboard, typeof(Motherboard)), cancellationToken);
-            return Ok("Scraping completed for Motherboards");
-        }
+            => await EnqueueCategoryAsync("https://hotline.ua/ua/computer/materinskie-platy/448-449-4367-4987-40811-100226-672507/", "Motherboard", nameof(Motherboard), cancellationToken);
 
         [HttpPost("cpu-cooler")]
         public async Task<IActionResult> ScrapeCpuCoolers(CancellationToken cancellationToken)
-        {
-            await _mediator.Send(new ScrapeCategoryCommand("https://hotline.ua/ua/computer/kulery-i-radiatory/1570-3486-376753/", ComponentType.CpuCooler, typeof(CpuCooler)), cancellationToken);
-            return Ok("Scraping completed for Cpu Coolers");
-        }
+            => await EnqueueCategoryAsync("https://hotline.ua/ua/computer/kulery-i-radiatory/1570-3486-376753/", "CpuCooler", nameof(CpuCooler), cancellationToken);
 
         [HttpPost("pc-case")]
         public async Task<IActionResult> ScrapePcCases(CancellationToken cancellationToken)
-        {
-            await _mediator.Send(new ScrapeCategoryCommand("https://hotline.ua/ua/computer/korpusa/", ComponentType.PcCase, typeof(PcCase)), cancellationToken);
-            return Ok("Scraping completed for PC Cases");
-        }
+            => await EnqueueCategoryAsync("https://hotline.ua/ua/computer/korpusa/", "PcCase", nameof(PcCase), cancellationToken);
 
         [HttpPost("power-supply")]
         public async Task<IActionResult> ScrapePowerSupplies(CancellationToken cancellationToken)
-        {
-            await _mediator.Send(new ScrapeCategoryCommand("https://hotline.ua/ua/computer/bloki-pitaniya/2573/", ComponentType.PowerSupply, typeof(PowerSupply)), cancellationToken);
-            return Ok("Scraping completed for Power Supplies");
-        }
+            => await EnqueueCategoryAsync("https://hotline.ua/ua/computer/bloki-pitaniya/2573/", "PowerSupply", nameof(PowerSupply), cancellationToken);
 
         [HttpPost("ram")]
         public async Task<IActionResult> ScrapeRams(CancellationToken cancellationToken)
-        {
-            await _mediator.Send(new ScrapeCategoryCommand("https://hotline.ua/ua/computer/moduli-pamyati-dlya-pk-i-noutbukov/3102/", ComponentType.Ram, typeof(Ram)), cancellationToken);
-            return Ok("Scraping completed for Rams");
-        }
+            => await EnqueueCategoryAsync("https://hotline.ua/ua/computer/moduli-pamyati-dlya-pk-i-noutbukov/3102/", "Ram", nameof(Ram), cancellationToken);
 
         [HttpPost("ssd")]
         public async Task<IActionResult> ScrapeSsds(CancellationToken cancellationToken)
-        {
-            await _mediator.Send(new ScrapeCategoryCommand("https://hotline.ua/ua/computer/diski-ssd/9376-389297-574411-619041-19934740/", ComponentType.Ssd, typeof(Ssd)), cancellationToken);
-            return Ok("Scraping completed for Ssds");
-        }
+            => await EnqueueCategoryAsync("https://hotline.ua/ua/computer/diski-ssd/9376-389297-574411-619041-19934740/", "Ssd", nameof(Ssd), cancellationToken);
 
         [HttpPost("hdd")]
         public async Task<IActionResult> ScrapeHdds(CancellationToken cancellationToken)
-        {
-            await _mediator.Send(new ScrapeCategoryCommand("https://hotline.ua/ua/computer/zhestkie-diski/9517/", ComponentType.Hdd, typeof(Hdd)), cancellationToken);
-            return Ok("Scraping completed for Hdds");
-        }
+            => await EnqueueCategoryAsync("https://hotline.ua/ua/computer/zhestkie-diski/9517/", "Hdd", nameof(Hdd), cancellationToken);
 
         [HttpPost("fan")]
         public async Task<IActionResult> ScrapeFans(CancellationToken cancellationToken)
+            => await EnqueueCategoryAsync("https://hotline.ua/ua/computer/kulery-i-radiatory/1569/", "Fan", nameof(Fan), cancellationToken);
+
+        private async Task<IActionResult> EnqueueCategoryAsync(string url, string componentType, string entityTypeName, CancellationToken ct, bool correctGpuModels = false)
         {
-            await _mediator.Send(new ScrapeCategoryCommand("https://hotline.ua/ua/computer/kulery-i-radiatory/1569/", ComponentType.Fan, typeof(Fan)), cancellationToken);
-            return Ok("Scraping completed for Fans");
+            if (_tracker.HasActiveJob(componentType))
+                return Conflict($"A scrape job for {componentType} is already running or queued.");
+
+            var jobId = Guid.NewGuid();
+            var message = new ScrapeJobMessage(jobId, url, componentType, entityTypeName, "Category", null, correctGpuModels);
+
+            _tracker.TrackJob(new ScrapeJobStatus
+            {
+                JobId = jobId,
+                ComponentType = componentType,
+                State = "Queued",
+                QueuedAt = DateTime.UtcNow
+            });
+
+            await _publisher.PublishAsync("scrape-jobs", message, ct);
+
+            return Accepted($"/api/scraper/jobs/{jobId}", new { jobId, status = "Queued", componentType });
+        }
+
+        private async Task<IActionResult> EnqueueSingleAsync(string url, string componentType, string entityTypeName, CancellationToken ct)
+        {
+            var jobId = Guid.NewGuid();
+            var message = new ScrapeJobMessage(jobId, url, componentType, entityTypeName, "SingleComponent", null, false);
+
+            _tracker.TrackJob(new ScrapeJobStatus
+            {
+                JobId = jobId,
+                ComponentType = componentType,
+                State = "Queued",
+                QueuedAt = DateTime.UtcNow
+            });
+
+            await _publisher.PublishAsync("scrape-jobs", message, ct);
+
+            return Accepted($"/api/scraper/jobs/{jobId}", new { jobId, status = "Queued", componentType });
         }
     }
 }

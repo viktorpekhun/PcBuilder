@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using PcBuilder.Api.Middleware;
+using PcBuilder.Api.Services;
 using PcBuilder.Persistence;
 using Components.Infrastructure;
 using Auth.Infrastructure;
@@ -10,7 +11,7 @@ using PcBuilds.Infrastructure;
 using MediatR;
 using PcBuilder.SharedKernel.Behaviors;
 using PcBuilder.SharedKernel.Caching;
-using Scraping.Infrastructure;
+using RabbitMQ.Client;
 using Serilog;
 using Swashbuckle.AspNetCore.Filters;
 using System.IdentityModel.Tokens.Jwt;
@@ -28,11 +29,26 @@ builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddComponentsModule();
 builder.Services.AddAuthModule();
 builder.Services.AddPcBuildsModule();
-builder.Services.AddScrapingModule(builder.Configuration);
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<CacheService>();
 builder.Services.AddSingleton<ICacheInvalidator>(sp => sp.GetRequiredService<CacheService>());
+
+var rabbitConfig = builder.Configuration.GetSection("RabbitMq");
+builder.Services.AddSingleton<IConnection>(_ =>
+{
+    var factory = new ConnectionFactory
+    {
+        HostName = rabbitConfig["HostName"] ?? "localhost",
+        Port = rabbitConfig.GetValue<int>("Port", 5672),
+        UserName = rabbitConfig["UserName"] ?? "guest",
+        Password = rabbitConfig["Password"] ?? "guest",
+    };
+    return factory.CreateConnectionAsync().GetAwaiter().GetResult();
+});
+builder.Services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
+builder.Services.AddSingleton<IScrapeJobTracker, ScrapeJobTracker>();
+builder.Services.AddHostedService<ScrapeResultConsumer>();
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));
 builder.Services.AddHealthChecks()
     .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")!);

@@ -1,0 +1,77 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: pcbuilder-sqlserver
+    ports:
+      - "1433:1433"
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "${SA_PASSWORD:-YourStrong!Passw0rd}"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$${SA_PASSWORD:-YourStrong!Passw0rd}" -C -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: pcbuilder-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics check_port_connectivity
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: PcBuilder.Api/Dockerfile
+    container_name: pcbuilder-api
+    ports:
+      - "5000:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=PcBuilder;User Id=sa;Password=${SA_PASSWORD:-YourStrong!Passw0rd};TrustServerCertificate=True"
+      RabbitMq__HostName: rabbitmq
+      Jwt__Secret: "${JWT_SECRET:-super-secret-key-for-development-only-change-in-prod}"
+      AzureTranslator__Key: "${AZURE_TRANSLATOR_KEY:-}"
+      AzureTranslator__Region: "${AZURE_TRANSLATOR_REGION:-}"
+      Cors__AllowedOrigins__0: "http://localhost:5173"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  scraper-worker:
+    build:
+      context: ./backend
+      dockerfile: PcBuilder.ScraperWorker/Dockerfile
+    container_name: pcbuilder-scraper-worker
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=PcBuilder;User Id=sa;Password=${SA_PASSWORD:-YourStrong!Passw0rd};TrustServerCertificate=True"
+      RabbitMq__HostName: rabbitmq
+      AzureTranslator__Key: "${AZURE_TRANSLATOR_KEY:-}"
+      AzureTranslator__Region: "${AZURE_TRANSLATOR_REGION:-}"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  sqlserver_data:
+  rabbitmq_data:
