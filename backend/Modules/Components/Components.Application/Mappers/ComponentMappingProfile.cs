@@ -25,20 +25,17 @@ namespace Components.Application.Mappers
 
             // CPU
             CreateMap<Cpu, CpuDto>()
-                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description.En))
                 .ForMember(dest => dest.ProductOffers, opt => opt.Ignore());
             CreateMap<Cpu, CpuListDto>();
 
             // GPU
             CreateMap<Gpu, GpuDto>()
-                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description.En))
                 .ForMember(dest => dest.ProductOffers, opt => opt.Ignore());
             CreateMap<Gpu, GpuListDto>();
             CreateMap<GpuPowerConnector, GpuPowerConnectorDto>();
 
             // Motherboard
             CreateMap<Motherboard, MotherboardDto>()
-                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description.En))
                 .ForMember(dest => dest.ProductOffers, opt => opt.Ignore());
             CreateMap<Motherboard, MotherboardListDto>();
             CreateMap<CpuPowerConnector, CpuPowerConnectorDto>();
@@ -49,20 +46,17 @@ namespace Components.Application.Mappers
 
             // RAM
             CreateMap<Ram, RamDto>()
-                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description.En))
                 .ForMember(dest => dest.ProductOffers, opt => opt.Ignore());
             CreateMap<Ram, RamListDto>();
 
             // CPU Cooler
             CreateMap<CpuCooler, CpuCoolerDto>()
-                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description.En))
                 .ForMember(dest => dest.ProductOffers, opt => opt.Ignore());
             CreateMap<CpuCooler, CpuCoolerListDto>();
             CreateMap<CpuCoolerSocket, CpuCoolerSocketDto>();
 
             // PC Case
             CreateMap<PcCase, PcCaseDto>()
-                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description.En))
                 .ForMember(dest => dest.ProductOffers, opt => opt.Ignore());
             CreateMap<PcCase, PcCaseListDto>();
             CreateMap<PcCaseFormFactor, PcCaseFormFactorDto>();
@@ -70,7 +64,6 @@ namespace Components.Application.Mappers
 
             // Power Supply — connectors filtered by Type
             CreateMap<PowerSupply, PowerSupplyDto>()
-                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description.En))
                 .ForMember(dest => dest.PowerSupplyMotherboardPowerConnectors,
                     opt => opt.MapFrom(src => src.PowerSupplyPowerConnectors.Where(c => c.Type == "Motherboard")))
                 .ForMember(dest => dest.PowerSupplyCpuPowerConnectors,
@@ -89,19 +82,16 @@ namespace Components.Application.Mappers
 
             // SSD
             CreateMap<Ssd, SsdDto>()
-                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description.En))
                 .ForMember(dest => dest.ProductOffers, opt => opt.Ignore());
             CreateMap<Ssd, SsdListDto>();
 
             // HDD
             CreateMap<Hdd, HddDto>()
-                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description.En))
                 .ForMember(dest => dest.ProductOffers, opt => opt.Ignore());
             CreateMap<Hdd, HddListDto>();
 
             // Fan
             CreateMap<Fan, FanDto>()
-                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description.En))
                 .ForMember(dest => dest.ProductOffers, opt => opt.Ignore());
             CreateMap<Fan, FanListDto>();
         }

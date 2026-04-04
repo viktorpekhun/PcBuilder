@@ -199,7 +199,7 @@ export const componentSpecFullConfigs: Record<string, FullSpecConfig[]> = {
             renderAsSeparateRows: true,
             getLabelFromItem: (item) => String(item.type),
             getValueFromItem: (item) => item.value,
-            valueUnit: ''
+            unit: ''
         },
         {
             key: 'rearPorts',
@@ -208,7 +208,7 @@ export const componentSpecFullConfigs: Record<string, FullSpecConfig[]> = {
             renderAsSeparateRows: true,
             getLabelFromItem: (item) => String(item.type),
             getValueFromItem: (item) => item.quantity,
-            valueUnit: ''
+            unit: ''
         },
     ],
     pcCase: [

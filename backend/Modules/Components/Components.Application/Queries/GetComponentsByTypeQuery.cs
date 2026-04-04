@@ -1,4 +1,3 @@
-using Components.Application.Dtos;
 using MediatR;
 using PcBuilder.SharedKernel;
 using PcBuilder.SharedKernel.Caching;
@@ -9,7 +8,7 @@ namespace Components.Application.Queries
 {
     public record GetComponentsByTypeQuery(
         ComponentType ComponentType,
-        ResourceParameters Parameters) : IRequest<Result<PagedResponse<IComponentListDto>>>, ICacheableQuery
+        ResourceParameters Parameters) : IRequest<Result<PagedResponse<object>>>, ICacheableQuery
     {
         public string CacheKey => $"components:{ComponentType}:list:{Parameters.ToCacheKey()}";
         public TimeSpan CacheDuration => TimeSpan.FromMinutes(5);

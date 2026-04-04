@@ -45,16 +45,6 @@ namespace Scraping.Infrastructure.Scrapers
                 return new ScrapingResult<Ssd>(null, new List<Store>(), new List<ProductOffer>());
             }
 
-            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//p[contains(@class, 'description-text')]");
-            if (descriptionNode != null)
-            {
-                ssd.Description.Uk = descriptionNode.InnerText.Trim();
-                if (!string.IsNullOrEmpty(modelInBrackets))
-                {
-                    ssd.Description.Uk = Regex.Replace(ssd.Description.Uk, $@"\({Regex.Escape(modelInBrackets)}\)", "");
-                }
-            }
-
 
             var nuxtData = NuxtScriptWorker.ExtractNuxtDataFromHtml(htmlDoc);
             if (nuxtData != null)

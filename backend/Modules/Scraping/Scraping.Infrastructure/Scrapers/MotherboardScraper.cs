@@ -47,16 +47,6 @@ namespace Scraping.Infrastructure.Scrapers
                 return new ScrapingResult<Motherboard>(null, new List<Store>(), new List<ProductOffer>());
             }
 
-            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//p[contains(@class, 'description-text')]");
-            if (descriptionNode != null)
-            {
-                motherboard.Description.Uk = descriptionNode.InnerText.Trim();
-                if (!string.IsNullOrEmpty(modelInBrackets))
-                {
-                    motherboard.Description.Uk = Regex.Replace(motherboard.Description.Uk, $@"\({Regex.Escape(modelInBrackets)}\)", "");
-                }
-            }
-
 
             var nuxtData = NuxtScriptWorker.ExtractNuxtDataFromHtml(htmlDoc);
             if (nuxtData != null)

@@ -149,7 +149,7 @@ namespace PcBuilder.Api.Controllers
             return Accepted($"/api/scraper/jobs/{jobId}", new { jobId, status = "Queued", componentType });
         }
 
-        private async Task<IActionResult> EnqueueSingleAsync(string url, string componentType, string entityTypeName, CancellationToken ct)
+        private async Task<IActionResult> EnqueueSingleAsync(string url, string componentType, string entityTypeName, CancellationToken cancellationToken)
         {
             var jobId = Guid.NewGuid();
             var message = new ScrapeJobMessage(jobId, url, componentType, entityTypeName, "SingleComponent", null, false);
@@ -162,7 +162,7 @@ namespace PcBuilder.Api.Controllers
                 QueuedAt = DateTime.UtcNow
             });
 
-            await _publisher.PublishAsync("scrape-jobs", message, ct);
+            await _publisher.PublishAsync("scrape-jobs", message, cancellationToken);
 
             return Accepted($"/api/scraper/jobs/{jobId}", new { jobId, status = "Queued", componentType });
         }

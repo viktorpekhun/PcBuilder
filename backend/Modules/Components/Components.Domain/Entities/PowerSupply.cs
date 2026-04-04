@@ -14,8 +14,6 @@ namespace Components.Domain.Entities
         [Url]
         public string? PhotoUrl { get; set; }
 
-        public LocalizedDescription Description { get; set; } = new();
-
         [Required]
         [MaxLength(100)]
         public string Brand { get; set; } = string.Empty;
@@ -36,7 +34,7 @@ namespace Components.Domain.Entities
         [MaxLength(50)]
         public string? EfficiencyStandart { get; set; }
         public double? EfficiencyPercent { get; set; }
-        public string Modularity { get; set; } = string.Empty;
+        public string? Modularity { get; set; }
         public double? NoiseLevelMaxDb { get; set; }
 
         [MaxLength(50)]

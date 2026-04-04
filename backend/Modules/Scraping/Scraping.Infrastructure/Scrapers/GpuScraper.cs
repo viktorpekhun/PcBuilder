@@ -47,16 +47,6 @@ namespace Scraping.Infrastructure.Scrapers
                 return new ScrapingResult<Gpu>(null, new List<Store>(), new List<ProductOffer>());
             }
 
-            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//p[contains(@class, 'description-text')]");
-            if (descriptionNode != null)
-            {
-                gpu.Description.Uk = descriptionNode.InnerText.Trim();
-                if (!string.IsNullOrEmpty(modelInBrackets))
-                {
-                    gpu.Description.Uk = Regex.Replace(gpu.Description.Uk, $@"\({Regex.Escape(modelInBrackets)}\)", "");
-                }
-            }
-
 
             var nuxtData = NuxtScriptWorker.ExtractNuxtDataFromHtml(htmlDoc);
             if (nuxtData != null)

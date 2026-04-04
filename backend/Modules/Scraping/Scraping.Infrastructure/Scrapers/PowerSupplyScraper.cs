@@ -47,16 +47,6 @@ namespace Scraping.Infrastructure.Scrapers
                 return new ScrapingResult<PowerSupply>(null, new List<Store>(), new List<ProductOffer>());
             }
 
-            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//p[contains(@class, 'description-text')]");
-            if (descriptionNode != null)
-            {
-                powerSupply.Description.Uk = descriptionNode.InnerText.Trim();
-                if (!string.IsNullOrEmpty(modelInBrackets))
-                {
-                    powerSupply.Description.Uk = Regex.Replace(powerSupply.Description.Uk, $@"\({Regex.Escape(modelInBrackets)}\)", "");
-                }
-            }
-
 
             var nuxtData = NuxtScriptWorker.ExtractNuxtDataFromHtml(htmlDoc);
             if (nuxtData != null)

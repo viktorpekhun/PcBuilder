@@ -85,54 +85,54 @@ namespace Scraping.Infrastructure.Services
             return includeProperties;
         }
 
-        private async Task TranslateDescriptionsAsync<T>(IEnumerable<T> componentsToSave, IReadOnlyList<T> componentsFromDb, CancellationToken cancellationToken = default) where T : class
-        {
-            var descriptionProperty = typeof(T).GetProperty("Description");
-            if (descriptionProperty == null || descriptionProperty.PropertyType != typeof(LocalizedDescription))
-                return;
+        //private async Task TranslateDescriptionsAsync<T>(IEnumerable<T> componentsToSave, IReadOnlyList<T> componentsFromDb, CancellationToken cancellationToken = default) where T : class
+        //{
+        //    var descriptionProperty = typeof(T).GetProperty("Description");
+        //    if (descriptionProperty == null || descriptionProperty.PropertyType != typeof(LocalizedDescription))
+        //        return;
 
-            var nameProperty = typeof(T).GetProperty("Name");
+        //    var nameProperty = typeof(T).GetProperty("Name");
 
-            var toTranslate = new List<(T component, LocalizedDescription desc)>();
+        //    var toTranslate = new List<(T component, LocalizedDescription desc)>();
 
-            foreach (var component in componentsToSave)
-            {
-                var desc = descriptionProperty.GetValue(component) as LocalizedDescription;
-                if (desc == null || string.IsNullOrWhiteSpace(desc.Uk))
-                    continue;
+        //    foreach (var component in componentsToSave)
+        //    {
+        //        var desc = descriptionProperty.GetValue(component) as LocalizedDescription;
+        //        if (desc == null || string.IsNullOrWhiteSpace(desc.Uk))
+        //            continue;
 
-                var componentName = nameProperty?.GetValue(component) as string;
-                var existingComponent = componentsFromDb.FirstOrDefault(c =>
-                {
-                    var name = nameProperty?.GetValue(c) as string;
-                    return name == componentName;
-                });
+        //        var componentName = nameProperty?.GetValue(component) as string;
+        //        var existingComponent = componentsFromDb.FirstOrDefault(c =>
+        //        {
+        //            var name = nameProperty?.GetValue(c) as string;
+        //            return name == componentName;
+        //        });
 
-                if (existingComponent != null)
-                {
-                    var existingDesc = descriptionProperty.GetValue(existingComponent) as LocalizedDescription;
-                    if (existingDesc != null && !string.IsNullOrEmpty(existingDesc.En))
-                    {
-                        desc.En = existingDesc.En;
-                        continue;
-                    }
-                }
+        //        if (existingComponent != null)
+        //        {
+        //            var existingDesc = descriptionProperty.GetValue(existingComponent) as LocalizedDescription;
+        //            if (existingDesc != null && !string.IsNullOrEmpty(existingDesc.En))
+        //            {
+        //                desc.En = existingDesc.En;
+        //                continue;
+        //            }
+        //        }
 
-                toTranslate.Add((component, desc));
-            }
+        //        toTranslate.Add((component, desc));
+        //    }
 
-            if (toTranslate.Count == 0)
-                return;
+        //    if (toTranslate.Count == 0)
+        //        return;
 
-            var ukTexts = toTranslate.Select(x => x.desc.Uk).ToList();
-            var enTexts = await _translationService.TranslateBatchAsync(ukTexts, "uk", "en", cancellationToken);
+        //    var ukTexts = toTranslate.Select(x => x.desc.Uk).ToList();
+        //    var enTexts = await _translationService.TranslateBatchAsync(ukTexts, "uk", "en", cancellationToken);
 
-            for (int i = 0; i < Math.Min(toTranslate.Count, enTexts.Count); i++)
-            {
-                if (!string.IsNullOrEmpty(enTexts[i]))
-                    toTranslate[i].desc.En = enTexts[i];
-            }
-        }
+        //    for (int i = 0; i < Math.Min(toTranslate.Count, enTexts.Count); i++)
+        //    {
+        //        if (!string.IsNullOrEmpty(enTexts[i]))
+        //            toTranslate[i].desc.En = enTexts[i];
+        //    }
+        //}
 
         public async Task ScrapeCategoryAsync<T>(string categoryUrl, ComponentType componentType, CancellationToken cancellationToken = default) where T : class
         {
@@ -315,18 +315,18 @@ namespace Scraping.Infrastructure.Services
                 {
                     Console.WriteLine("Збереження компонентів в базу даних...");
 
-                    try
-                    {
-                        await TranslateDescriptionsAsync(componentsToSave, componentsFromDb, cancellationToken);
-                    }
-                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-                    {
-                        throw;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Помилка перекладу описів");
-                    }
+                    //try
+                    //{
+                    //    await TranslateDescriptionsAsync(componentsToSave, componentsFromDb, cancellationToken);
+                    //}
+                    //catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                    //{
+                    //    throw;
+                    //}
+                    //catch (Exception ex)
+                    //{
+                    //    _logger.LogWarning(ex, "Помилка перекладу описів");
+                    //}
 
                     int savedComponentsCount = 0;
                     int updatedComponentsCount = 0;
@@ -382,13 +382,13 @@ namespace Scraping.Infrastructure.Services
                                         }
                                     }
                                 }
-                                else if (property.PropertyType == typeof(LocalizedDescription)
-                                    && property.GetValue(existingComponent) is LocalizedDescription existingLocalized
-                                    && newValue is LocalizedDescription newLocalized)
-                                {
-                                    existingLocalized.Uk = newLocalized.Uk;
-                                    existingLocalized.En = newLocalized.En;
-                                }
+                                //else if (property.PropertyType == typeof(LocalizedDescription)
+                                //    && property.GetValue(existingComponent) is LocalizedDescription existingLocalized
+                                //    && newValue is LocalizedDescription newLocalized)
+                                //{
+                                //    existingLocalized.Uk = newLocalized.Uk;
+                                //    existingLocalized.En = newLocalized.En;
+                                //}
                                 else
                                 {
                                     property.SetValue(existingComponent, newValue);
@@ -567,12 +567,9 @@ namespace Scraping.Infrastructure.Services
                         var actualType = value.GetType();
 
                         // 1. Твоя логіка для опису
-                        if (prop.Name == "Description" && value is LocalizedDescription localized)
-                        {
-                            Console.WriteLine($"{indent}{prop.Name} (UK): {localized.Uk}");
-                        }
+
                         // 2. НОВИЙ БЛОК: Якщо це список (колекція), але не рядок
-                        else if (value is System.Collections.IEnumerable collection && value is not string)
+                        if (value is System.Collections.IEnumerable collection && value is not string)
                         {
                             Console.WriteLine($"{indent}{prop.Name} (Collection):");
                             foreach (var item in collection)

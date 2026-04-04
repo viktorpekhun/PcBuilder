@@ -7,7 +7,6 @@ namespace Components.Application.Dtos.PcCaseDtos
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? PhotoUrl { get; set; }
-        public string? Description { get; set; }
         public string Brand { get; set; } = string.Empty;
         public string? SizeStandard { get; set; }
         public string? SizeDimentions { get; set; }
