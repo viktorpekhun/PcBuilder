@@ -27,6 +27,7 @@
     <ProjectReference Include="..\PcBuilder.Persistence\PcBuilder.Persistence.csproj" />
     <ProjectReference Include="..\Modules\Components\Components.Infrastructure\Components.Infrastructure.csproj" />
     <ProjectReference Include="..\Modules\Auth\Auth.Infrastructure\Auth.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Scraping\Scraping.Infrastructure\Scraping.Infrastructure.csproj" />
     <ProjectReference Include="..\Modules\PcBuilds\PcBuilds.Infrastructure\PcBuilds.Infrastructure.csproj" />
     <ProjectReference Include="..\PcBuilder.Contracts\PcBuilder.Contracts.csproj" />
   </ItemGroup>

@@ -36,6 +36,7 @@ namespace Scraping.Infrastructure
             services.AddScoped<ComponentScraperFactory>();
             services.AddScoped<ScraperService>();
             services.AddScoped<IDataCorrectionService, DataCorrectionService>();
+            services.AddScoped<IComponentTranslationService, ComponentTranslationService>();
 
             return services;
         }

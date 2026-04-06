@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PcBuilder.Persistence.Data;
 
@@ -11,9 +12,11 @@ using PcBuilder.Persistence.Data;
 namespace PcBuilder.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260405120424_AddLocalizedPcCaseFields")]
+    partial class AddLocalizedPcCaseFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -60,7 +63,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Cpu", b =>
@@ -132,7 +135,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Cpus", (string)null);
+                    b.ToTable("Cpus");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.CpuCooler", b =>
@@ -198,6 +201,10 @@ namespace PcBuilder.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("RadiatorMaterial")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("SpeedControl")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -221,7 +228,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("CpuCoolers", null, t =>
+                    b.ToTable("CpuCoolers", t =>
                         {
                             t.HasCheckConstraint("CHK_CpuCooler_Type", "Type IN ('Air', 'Water')");
                         });
@@ -245,7 +252,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("CpuCoolerId");
 
-                    b.ToTable("CpuCoolerSockets", (string)null);
+                    b.ToTable("CpuCoolerSockets");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.CpuPowerConnector", b =>
@@ -267,7 +274,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("MotherboardId");
 
-                    b.ToTable("CpuPowerConnectors", (string)null);
+                    b.ToTable("CpuPowerConnectors");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Fan", b =>
@@ -283,10 +290,18 @@ namespace PcBuilder.Persistence.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("BearingType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("Brand")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Color")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Connector")
                         .HasMaxLength(50)
@@ -342,7 +357,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Fans", (string)null);
+                    b.ToTable("Fans");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Gpu", b =>
@@ -426,7 +441,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Gpus", (string)null);
+                    b.ToTable("Gpus");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.GpuPowerConnector", b =>
@@ -448,7 +463,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("GpuId");
 
-                    b.ToTable("GpuPowerConnectors", (string)null);
+                    b.ToTable("GpuPowerConnectors");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Hdd", b =>
@@ -511,7 +526,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Hdds", (string)null);
+                    b.ToTable("Hdds");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.InnerPort", b =>
@@ -537,7 +552,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("MotherboardId");
 
-                    b.ToTable("InnerPorts", (string)null);
+                    b.ToTable("InnerPorts");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.M2Slot", b =>
@@ -562,7 +577,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("MotherboardId");
 
-                    b.ToTable("M2Slots", (string)null);
+                    b.ToTable("M2Slots");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Motherboard", b =>
@@ -662,7 +677,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Motherboards", (string)null);
+                    b.ToTable("Motherboards");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.PcCase", b =>
@@ -670,6 +685,10 @@ namespace PcBuilder.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AdditionalFanPlaces")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
 
                     b.Property<decimal?>("AveragePrice")
                         .HasPrecision(18, 2)
@@ -741,7 +760,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PcCases", (string)null);
+                    b.ToTable("PcCases");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.PcCaseFanLocation", b =>
@@ -763,7 +782,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("PcCaseId");
 
-                    b.ToTable("PcCaseFanLocations", (string)null);
+                    b.ToTable("PcCaseFanLocations");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.PcCaseFormFactor", b =>
@@ -784,7 +803,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("PcCaseId");
 
-                    b.ToTable("PcCaseFormFactors", (string)null);
+                    b.ToTable("PcCaseFormFactors");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.PcleSlot", b =>
@@ -809,7 +828,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("MotherboardId");
 
-                    b.ToTable("PcleSlots", (string)null);
+                    b.ToTable("PcleSlots");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.PowerSupply", b =>
@@ -854,6 +873,9 @@ namespace PcBuilder.Persistence.Migrations
                     b.Property<int?>("InputMinVoltage")
                         .HasColumnType("int");
 
+                    b.Property<string>("Modularity")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("MolexCount")
                         .HasColumnType("int");
 
@@ -883,7 +905,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PowerSupplies", (string)null);
+                    b.ToTable("PowerSupplies");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.PowerSupplyPowerConnector", b =>
@@ -913,7 +935,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("PowerSupplyId");
 
-                    b.ToTable("PowerSupplyPowerConnectors", (string)null);
+                    b.ToTable("PowerSupplyPowerConnectors");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.ProductOffer", b =>
@@ -945,7 +967,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("ComponentId", "ComponentType");
 
-                    b.ToTable("ProductOffers", (string)null);
+                    b.ToTable("ProductOffers");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Ram", b =>
@@ -969,6 +991,10 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.Property<int?>("Capacity")
                         .HasColumnType("int");
+
+                    b.Property<string>("Color")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<bool>("Ecc")
                         .HasColumnType("bit");
@@ -1016,7 +1042,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Rams", (string)null);
+                    b.ToTable("Rams");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.RearPort", b =>
@@ -1040,7 +1066,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("MotherboardId");
 
-                    b.ToTable("RearPorts", (string)null);
+                    b.ToTable("RearPorts");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Ssd", b =>
@@ -1120,7 +1146,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Ssds", (string)null);
+                    b.ToTable("Ssds");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Store", b =>
@@ -1144,7 +1170,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Stores", (string)null);
+                    b.ToTable("Stores");
                 });
 
             modelBuilder.Entity("PcBuilds.Domain.Entities.PcBuild", b =>
@@ -1246,7 +1272,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PcBuilds", (string)null);
+                    b.ToTable("PcBuilds");
                 });
 
             modelBuilder.Entity("PcBuilds.Domain.Entities.PcBuild_Fan", b =>
@@ -1397,35 +1423,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Reviews", (string)null);
-                });
-
-            modelBuilder.Entity("Components.Domain.Entities.CpuCooler", b =>
-                {
-                    b.OwnsOne("Components.Domain.ValueObjects.LocalizedString", "RadiatorMaterial", b1 =>
-                        {
-                            b1.Property<Guid>("CpuCoolerId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<string>("En")
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
-                                .HasColumnName("RadiatorMaterial_En");
-
-                            b1.Property<string>("Uk")
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
-                                .HasColumnName("RadiatorMaterial_Uk");
-
-                            b1.HasKey("CpuCoolerId");
-
-                            b1.ToTable("CpuCoolers", (string)null);
-
-                            b1.WithOwner()
-                                .HasForeignKey("CpuCoolerId");
-                        });
-
-                    b.Navigation("RadiatorMaterial");
+                    b.ToTable("Reviews");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.CpuCoolerSocket", b =>
@@ -1448,59 +1446,6 @@ namespace PcBuilder.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Motherboard");
-                });
-
-            modelBuilder.Entity("Components.Domain.Entities.Fan", b =>
-                {
-                    b.OwnsOne("Components.Domain.ValueObjects.LocalizedString", "BearingType", b1 =>
-                        {
-                            b1.Property<Guid>("FanId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<string>("En")
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
-                                .HasColumnName("BearingType_En");
-
-                            b1.Property<string>("Uk")
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
-                                .HasColumnName("BearingType_Uk");
-
-                            b1.HasKey("FanId");
-
-                            b1.ToTable("Fans", (string)null);
-
-                            b1.WithOwner()
-                                .HasForeignKey("FanId");
-                        });
-
-                    b.OwnsOne("Components.Domain.ValueObjects.LocalizedString", "Color", b1 =>
-                        {
-                            b1.Property<Guid>("FanId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<string>("En")
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
-                                .HasColumnName("Color_En");
-
-                            b1.Property<string>("Uk")
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
-                                .HasColumnName("Color_Uk");
-
-                            b1.HasKey("FanId");
-
-                            b1.ToTable("Fans", (string)null);
-
-                            b1.WithOwner()
-                                .HasForeignKey("FanId");
-                        });
-
-                    b.Navigation("BearingType");
-
-                    b.Navigation("Color");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.GpuPowerConnector", b =>
@@ -1538,29 +1483,6 @@ namespace PcBuilder.Persistence.Migrations
 
             modelBuilder.Entity("Components.Domain.Entities.PcCase", b =>
                 {
-                    b.OwnsOne("Components.Domain.ValueObjects.LocalizedString", "AdditionalFanPlaces", b1 =>
-                        {
-                            b1.Property<Guid>("PcCaseId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<string>("En")
-                                .HasMaxLength(200)
-                                .HasColumnType("nvarchar(200)")
-                                .HasColumnName("AdditionalFanPlaces_En");
-
-                            b1.Property<string>("Uk")
-                                .HasMaxLength(200)
-                                .HasColumnType("nvarchar(200)")
-                                .HasColumnName("AdditionalFanPlaces_Uk");
-
-                            b1.HasKey("PcCaseId");
-
-                            b1.ToTable("PcCases", (string)null);
-
-                            b1.WithOwner()
-                                .HasForeignKey("PcCaseId");
-                        });
-
                     b.OwnsOne("Components.Domain.ValueObjects.LocalizedString", "BuiltInFans", b1 =>
                         {
                             b1.Property<Guid>("PcCaseId")
@@ -1572,13 +1494,14 @@ namespace PcBuilder.Persistence.Migrations
                                 .HasColumnName("BuiltInFans_En");
 
                             b1.Property<string>("Uk")
+                                .IsRequired()
                                 .HasMaxLength(200)
                                 .HasColumnType("nvarchar(200)")
                                 .HasColumnName("BuiltInFans_Uk");
 
                             b1.HasKey("PcCaseId");
 
-                            b1.ToTable("PcCases", (string)null);
+                            b1.ToTable("PcCases");
 
                             b1.WithOwner()
                                 .HasForeignKey("PcCaseId");
@@ -1595,19 +1518,18 @@ namespace PcBuilder.Persistence.Migrations
                                 .HasColumnName("PsuLocation_En");
 
                             b1.Property<string>("Uk")
+                                .IsRequired()
                                 .HasMaxLength(100)
                                 .HasColumnType("nvarchar(100)")
                                 .HasColumnName("PsuLocation_Uk");
 
                             b1.HasKey("PcCaseId");
 
-                            b1.ToTable("PcCases", (string)null);
+                            b1.ToTable("PcCases");
 
                             b1.WithOwner()
                                 .HasForeignKey("PcCaseId");
                         });
-
-                    b.Navigation("AdditionalFanPlaces");
 
                     b.Navigation("BuiltInFans");
 
@@ -1640,7 +1562,7 @@ namespace PcBuilder.Persistence.Migrations
 
                             b1.HasKey("PcCaseFanLocationId");
 
-                            b1.ToTable("PcCaseFanLocations", (string)null);
+                            b1.ToTable("PcCaseFanLocations");
 
                             b1.WithOwner()
                                 .HasForeignKey("PcCaseFanLocationId");
@@ -1674,34 +1596,6 @@ namespace PcBuilder.Persistence.Migrations
                     b.Navigation("Motherboard");
                 });
 
-            modelBuilder.Entity("Components.Domain.Entities.PowerSupply", b =>
-                {
-                    b.OwnsOne("Components.Domain.ValueObjects.LocalizedString", "Modularity", b1 =>
-                        {
-                            b1.Property<Guid>("PowerSupplyId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<string>("En")
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
-                                .HasColumnName("Modularity_En");
-
-                            b1.Property<string>("Uk")
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
-                                .HasColumnName("Modularity_Uk");
-
-                            b1.HasKey("PowerSupplyId");
-
-                            b1.ToTable("PowerSupplies", (string)null);
-
-                            b1.WithOwner()
-                                .HasForeignKey("PowerSupplyId");
-                        });
-
-                    b.Navigation("Modularity");
-                });
-
             modelBuilder.Entity("Components.Domain.Entities.PowerSupplyPowerConnector", b =>
                 {
                     b.HasOne("Components.Domain.Entities.PowerSupply", "PowerSupply")
@@ -1722,34 +1616,6 @@ namespace PcBuilder.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Store");
-                });
-
-            modelBuilder.Entity("Components.Domain.Entities.Ram", b =>
-                {
-                    b.OwnsOne("Components.Domain.ValueObjects.LocalizedString", "Color", b1 =>
-                        {
-                            b1.Property<Guid>("RamId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<string>("En")
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
-                                .HasColumnName("Color_En");
-
-                            b1.Property<string>("Uk")
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
-                                .HasColumnName("Color_Uk");
-
-                            b1.HasKey("RamId");
-
-                            b1.ToTable("Rams", (string)null);
-
-                            b1.WithOwner()
-                                .HasForeignKey("RamId");
-                        });
-
-                    b.Navigation("Color");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.RearPort", b =>

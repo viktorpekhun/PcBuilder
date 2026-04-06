@@ -1,3 +1,4 @@
+using Components.Domain.ValueObjects;
 using System.ComponentModel.DataAnnotations;
 
 namespace Components.Domain.Entities
@@ -34,7 +35,7 @@ namespace Components.Domain.Entities
         [MaxLength(50)]
         public string? EfficiencyStandart { get; set; }
         public double? EfficiencyPercent { get; set; }
-        public string? Modularity { get; set; }
+        public LocalizedString? Modularity { get; set; }
         public double? NoiseLevelMaxDb { get; set; }
 
         [MaxLength(50)]

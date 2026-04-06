@@ -1,8 +1,11 @@
 using Components.Domain.Entities;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using PcBuilder.Api.Models;
 using PcBuilder.Api.Services;
 using PcBuilder.Contracts.Messages;
+using Scraping.Application.Commands;
+using Scraping.Infrastructure.Handlers;
 
 namespace PcBuilder.Api.Controllers
 {
@@ -14,11 +17,13 @@ namespace PcBuilder.Api.Controllers
     {
         private readonly IRabbitMqPublisher _publisher;
         private readonly IScrapeJobTracker _tracker;
+        private readonly ISender _sender;
 
-        public ScraperController(IRabbitMqPublisher publisher, IScrapeJobTracker tracker)
+        public ScraperController(IRabbitMqPublisher publisher, IScrapeJobTracker tracker, ISender sender)
         {
             _publisher = publisher;
             _tracker = tracker;
+            _sender = sender;
         }
 
         [HttpGet("jobs")]
@@ -48,6 +53,41 @@ namespace PcBuilder.Api.Controllers
             await _publisher.PublishAsync("scrape-cancellations", new ScrapeJobCancelMessage(jobId), cancellationToken);
 
             return Ok(new { jobId, status = "Cancelling" });
+        }
+
+        [HttpPost("translate/pc-case")]
+        public async Task<IActionResult> TranslatePcCase(CancellationToken cancellationToken)
+        {
+            await _sender.Send(new TranslatePcCaseFieldsCommand(), cancellationToken);
+            return Ok();
+        }
+
+        [HttpPost("translate/fan")]
+        public async Task<IActionResult> TranslateFan(CancellationToken cancellationToken)
+        {
+            await _sender.Send(new TranslateFanFieldsCommand(), cancellationToken);
+            return Ok();
+        }
+
+        [HttpPost("translate/power-supply")]
+        public async Task<IActionResult> TranslatePowerSupply(CancellationToken cancellationToken)
+        {
+            await _sender.Send(new TranslatePowerSupplyFieldsCommand(), cancellationToken);
+            return Ok();
+        }
+
+        [HttpPost("translate/cpu-cooler")]
+        public async Task<IActionResult> TranslateCpuCooler(CancellationToken cancellationToken)
+        {
+            await _sender.Send(new TranslateCpuCoolerFieldsCommand(), cancellationToken);
+            return Ok();
+        }
+
+        [HttpPost("translate/ram")]
+        public async Task<IActionResult> TranslateRam(CancellationToken cancellationToken)
+        {
+            await _sender.Send(new TranslateRamFieldsCommand(), cancellationToken);
+            return Ok();
         }
 
         [HttpPost("single-powersupply")]

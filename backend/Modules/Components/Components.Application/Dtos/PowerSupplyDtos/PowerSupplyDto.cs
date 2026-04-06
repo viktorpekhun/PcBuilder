@@ -1,5 +1,6 @@
 using Components.Application.Dtos;
-﻿
+using Components.Domain.ValueObjects;
+
 namespace Components.Application.Dtos.PowerSupplyDtos
 {
     public class PowerSupplyDto : IComponentDetailDto
@@ -18,7 +19,7 @@ namespace Components.Application.Dtos.PowerSupplyDtos
         public bool HasApcf { get; set; }
         public string? EfficiencyStandart { get; set; }
         public double? EfficiencyPercent { get; set; }
-        public string? Modularity { get; set; }
+        public LocalizedString? Modularity { get; set; }
         public double? NoiseLevelMaxDb { get; set; }
         public string? Size { get; set; }
         public string? FactoryLink { get; set; }

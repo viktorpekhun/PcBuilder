@@ -367,11 +367,32 @@ namespace Scraping.Infrastructure.Scrapers
                                 }
                             case "USB 3.2 Gen 2" or "USB 3.2 Gen 1" or "USB 2.0 на платі":
                                 {
-                                    innerPorts.Add(new InnerPort
+                                    if (string.IsNullOrEmpty(value))
+                                        break;
+                                    if (key == "USB 2.0 на платі")
                                     {
-                                        Type = key,
-                                        Value = value
-                                    });
+                                        innerPorts.Add(new InnerPort
+                                        {
+                                            Type = "USB 2.0",
+                                            Value = value.Trim().Split(' ')[0]
+                                        });
+                                    }
+                                    else if (key == "USB 3.2 Gen 1")
+                                    {
+                                        innerPorts.Add(new InnerPort
+                                        {
+                                            Type = key,
+                                            Value = value.Trim().Split(' ')[0]
+                                        });
+                                    }
+                                    else
+                                    {
+                                        innerPorts.Add(new InnerPort
+                                        {
+                                            Type = key,
+                                            Value = value
+                                        });
+                                    }
                                     break;
                                 }
 

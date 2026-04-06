@@ -11,6 +11,7 @@ using Components.Application.Dtos.PowerSupplyDtos;
 using Components.Application.Dtos.RamDtos;
 using Components.Application.Dtos.SsdDtos;
 using Components.Domain.Entities;
+using Components.Domain.ValueObjects;
 
 namespace Components.Application.Mappers
 {
@@ -61,6 +62,7 @@ namespace Components.Application.Mappers
             CreateMap<PcCase, PcCaseListDto>();
             CreateMap<PcCaseFormFactor, PcCaseFormFactorDto>();
             CreateMap<PcCaseFanLocation, PcCaseFanLocationDto>();
+            CreateMap<LocalizedString, LocalizedStringDto>();
 
             // Power Supply — connectors filtered by Type
             CreateMap<PowerSupply, PowerSupplyDto>()

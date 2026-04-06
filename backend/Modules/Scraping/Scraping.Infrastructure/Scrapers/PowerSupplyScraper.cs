@@ -10,6 +10,7 @@ using System.Collections.Concurrent;
 using System.Globalization;
 using System.Net.NetworkInformation;
 using System.Text.RegularExpressions;
+using Components.Domain.ValueObjects;
 
 namespace Scraping.Infrastructure.Scrapers
 {
@@ -129,9 +130,16 @@ namespace Scraping.Infrastructure.Scrapers
                                 powerSupply.EfficiencyPercent = ParseDouble(value);
                                 break;
                             case "Модульність":
-                                string modularity = value!.ToLower();
-                                powerSupply.Modularity = char.ToUpper(modularity[0]) + modularity[1..];
-                                break;
+                                {
+                                    if (string.IsNullOrEmpty(value))
+                                    {
+                                        powerSupply.Modularity = null;
+                                        break;
+                                    }
+
+                                    powerSupply.Modularity = new LocalizedString { Uk = char.ToUpper(value[0]) + value.Substring(1) };
+                                    break;
+                                }
                             case "Рівень шуму, дБ":
                                 if (!string.IsNullOrEmpty(value) && value.Contains('-'))
                                 {

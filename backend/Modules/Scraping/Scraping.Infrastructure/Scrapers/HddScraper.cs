@@ -91,7 +91,10 @@ namespace Scraping.Infrastructure.Scrapers
                                     break;
                                 }
                             case "Інтерфейс підключення":
-                                hdd.Interface = value ?? string.Empty;
+                                if (value == "SATA III")
+                                    hdd.Interface = "SATA rev. 3.0" ?? string.Empty;
+                                else
+                                    hdd.Interface = value ?? string.Empty;
                                 break;
                             case "Форм-фактор, дюйм":
                                 hdd.FormFactor = value ?? string.Empty;

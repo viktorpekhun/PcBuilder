@@ -3,6 +3,7 @@ using Scraping.Application.Interfaces;
 ﻿using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;
 using Components.Domain.Entities;
+using Components.Domain.ValueObjects;
 using PcBuilder.SharedKernel;
 using Scraping.Infrastructure.Utilities;
 using PcBuilder.SharedKernel.Enums;
@@ -79,8 +80,16 @@ namespace Scraping.Infrastructure.Scrapers
                                 pcCase.PsuWattage = ParseInt(value);
                                 break;
                             case "Розташування":
-                                pcCase.PsuLocation = value ?? string.Empty;
-                                break;
+                                {
+                                    if (string.IsNullOrEmpty(value))
+                                    {
+                                        pcCase.PsuLocation = null;
+                                        break;
+                                    }
+                                    
+                                    pcCase.PsuLocation = new LocalizedString { Uk = char.ToUpper(value[0]) + value.Substring(1) };
+                                    break;
+                                }
                             case "Максимальна висота процесорного кулера, мм":
                                 var coolerLengthMatch = Regex.Match(value, @"\d+(\.\d+)?");
                                 if (coolerLengthMatch.Success)
@@ -114,8 +123,16 @@ namespace Scraping.Infrastructure.Scrapers
                                 }
                                 break;
                             case "Вбудовані вентилятори/розташування":
-                                pcCase.BuiltInFans = value ?? string.Empty;
-                                break;
+                                {
+                                    if (string.IsNullOrEmpty(value))
+                                    {
+                                        pcCase.BuiltInFans = null;
+                                        break;
+                                    }
+
+                                    pcCase.BuiltInFans = new LocalizedString { Uk = char.ToUpper(value[0]) + value.Substring(1) };
+                                    break;
+                                }
                             case "Кількість 2,5 відсіків":
                                 var slots25match = Regex.Match(value, @"\d+");
                                 if (slots25match.Success)
@@ -218,29 +235,70 @@ namespace Scraping.Infrastructure.Scrapers
 
                                     foreach (var place in fanPlaces)
                                     {
-                                        string placeLocation = "";
-                                        string placeTypes = "";
+                                        string placeLocation;
+                                        string placeTypes;
 
-                                        var parts = place.Split('/', StringSplitOptions.RemoveEmptyEntries)
-                                                         .Select(p => p.Trim())
-                                                         .ToList();
-
-                                        foreach (var part in parts)
+                                        // Format: "Location: sizes"  e.g. "Передня панель: 2x 120 мм/2x 140 мм"
+                                        var colonIdx = place.IndexOf(':');
+                                        if (colonIdx > 0 && !Regex.IsMatch(place.Substring(0, colonIdx), @"\d"))
                                         {
-                                            if (Regex.IsMatch(part, @"\d"))
-                                                placeTypes += (placeTypes == "" ? "" : " / ") + part;
-                                            else
-                                                placeLocation += (placeLocation == "" ? "" : " / ") + part;
+                                            placeLocation = place.Substring(0, colonIdx).Trim();
+                                            placeTypes = place.Substring(colonIdx + 1).Trim();
+                                        }
+                                        // Format: "sizes (Location)"  e.g. "2х120 мм (передня панель)"
+                                        else if (Regex.IsMatch(place, @"\(([^)]+)\)"))
+                                        {
+                                            var locMatch = Regex.Match(place, @"\(([^)]+)\)");
+                                            placeLocation = locMatch.Groups[1].Value.Trim();
+                                            placeTypes = Regex.Replace(place, @"\s*\([^)]+\)", "").Trim();
+                                        }
+                                        else
+                                        {
+                                            // Format: "Location/sizes" or "sizes/Location"  e.g. "3х120мм / на передній панелі"
+                                            var parts = place.Split('/', StringSplitOptions.RemoveEmptyEntries)
+                                                             .Select(p => p.Trim())
+                                                             .ToList();
+
+                                            placeLocation = string.Join(" / ", parts.Where(p => !Regex.IsMatch(p, @"\d")));
+                                            placeTypes = string.Join(" / ", parts.Where(p => Regex.IsMatch(p, @"\d")));
+
+                                            // Format: "Location sizes"  e.g. "нижня панель 2x120 мм"
+                                            if (string.IsNullOrEmpty(placeLocation) && parts.Count == 1)
+                                            {
+                                                var sizeStart = Regex.Match(place, @"\d+\s*[xхXХ]?\s*\d+");
+                                                if (sizeStart.Success && sizeStart.Index > 0)
+                                                {
+                                                    placeLocation = place.Substring(0, sizeStart.Index).Trim();
+                                                    placeTypes = place.Substring(sizeStart.Index).Trim();
+                                                }
+                                            }
                                         }
 
-                                        var fanTypes = placeTypes
-                                            .Split("або", StringSplitOptions.RemoveEmptyEntries)
+                                        if (string.IsNullOrEmpty(placeLocation))
+                                        {
+                                            if (string.IsNullOrEmpty(value))
+                                            {
+                                                pcCase.BuiltInFans = new LocalizedString { Uk = null };
+                                                continue;
+                                            }
+                                            pcCase.BuiltInFans = new LocalizedString { Uk = char.ToUpper(value[0]) + value.Substring(1) };
+                                            continue;
+                                        }
+
+                                        if (placeLocation.Contains("живлення"))
+                                            placeLocation = "кришка блока живлення";
+
+                                        placeLocation = char.ToUpper(placeLocation[0]) + placeLocation.Substring(1);
+
+                                        // Split by "або" or "/" to get individual size options
+                                        var fanTypes = Regex.Split(placeTypes, @"\s*або\s*|\s*/\s*")
                                             .Select(s => s.Trim())
+                                            .Where(s => !string.IsNullOrEmpty(s))
                                             .ToList();
 
                                         foreach (var fanType in fanTypes)
                                         {
-                                            var matches = Regex.Matches(fanType, @"(?<count>\d+)\s*[xх]?\s*((?<size>\d+)\s*(мм|mm)?\s*[\/,]?\s*)+", RegexOptions.IgnoreCase);
+                                            var matches = Regex.Matches(fanType, @"(?<count>\d+)\s*[xхXХ]?\s*((?<size>\d+)\s*(мм|mm)?\s*)+", RegexOptions.IgnoreCase);
 
                                             foreach (Match match in matches)
                                             {
@@ -248,20 +306,23 @@ namespace Scraping.Infrastructure.Scrapers
 
                                                 foreach (Capture sizeCapture in match.Groups["size"].Captures)
                                                 {
-                                                    if (int.TryParse(sizeCapture.Value, out var size) && placeLocation.Trim() != "")
+                                                    if (int.TryParse(sizeCapture.Value, out var size))
                                                     {
-                                                        if (placeLocation.Contains("живлення"))
-                                                            placeLocation = "кришка блока живлення";
                                                         pcCase.PcCaseFanLocations.Add(new PcCaseFanLocation
                                                         {
-                                                            Name = placeLocation.Trim(),
+                                                            Name = new LocalizedString { Uk = placeLocation },
                                                             FanSize = size,
                                                             MaxFans = count
                                                         });
                                                     }
                                                     else
                                                     {
-                                                        pcCase.AdditionalFanPlaces = value ?? string.Empty;
+                                                        if (string.IsNullOrEmpty(value))
+                                                        {
+                                                            pcCase.BuiltInFans = new LocalizedString { Uk = null };
+                                                            continue;
+                                                        }
+                                                        pcCase.BuiltInFans = new LocalizedString { Uk = char.ToUpper(value[0]) + value.Substring(1) };
                                                     }
                                                 }
                                             }

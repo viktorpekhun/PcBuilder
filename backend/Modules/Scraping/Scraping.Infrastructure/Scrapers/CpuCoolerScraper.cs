@@ -1,11 +1,12 @@
-using Scraping.Application;
-using Scraping.Application.Interfaces;
+using Components.Domain.Entities;
+using Components.Domain.ValueObjects;
 ﻿using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;
-using Components.Domain.Entities;
 using PcBuilder.SharedKernel;
-using Scraping.Infrastructure.Utilities;
 using PcBuilder.SharedKernel.Enums;
+using Scraping.Application;
+using Scraping.Application.Interfaces;
+using Scraping.Infrastructure.Utilities;
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -92,8 +93,16 @@ namespace Scraping.Infrastructure.Scrapers
                                 }
                                 break;
                             case "Матеріал радіатора":
-                                cpuCooler.RadiatorMaterial = value ?? string.Empty;
-                                break;
+                                {
+                                    if (string.IsNullOrEmpty(value))
+                                    {
+                                        cpuCooler.RadiatorMaterial = null;
+                                        break;
+                                    }
+
+                                    cpuCooler.RadiatorMaterial = new LocalizedString { Uk = char.ToUpper(value[0]) + value.Substring(1) };
+                                    break;
+                                }
                             case "Регулювання обертів":
                                 cpuCooler.SpeedControl = value ?? string.Empty;
                                 break;

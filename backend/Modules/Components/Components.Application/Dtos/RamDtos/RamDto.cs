@@ -1,5 +1,6 @@
 using Components.Application.Dtos;
-﻿
+using Components.Domain.ValueObjects;
+
 namespace Components.Application.Dtos.RamDtos
 {
     public class RamDto : IComponentDetailDto
@@ -26,7 +27,7 @@ namespace Components.Application.Dtos.RamDtos
 
         public string? Bufferization { get; set; }
 
-        public string? Color { get; set; }
+        public LocalizedString? Color { get; set; }
         public int? Wattage { get; set; }
 
         public string? FactoryLink { get; set; }

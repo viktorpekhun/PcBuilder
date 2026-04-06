@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Components.Domain.ValueObjects;
 
 namespace Components.Domain.Entities
 {
@@ -26,18 +27,15 @@ namespace Components.Domain.Entities
         public double? Weight { get; set; }
         public int? PsuWattage { get; set; }
 
-        [MaxLength(100)]
-        public string? PsuLocation { get; set; }
+        public LocalizedString? PsuLocation { get; set; }
 
         public double? MaxGpuLength { get; set; }
         public double? MaxCpuCoolerHeight { get; set; }
         public bool HasDustFilters { get; set; }
 
-        [MaxLength(200)]
-        public string? BuiltInFans { get; set; }
+        public LocalizedString? BuiltInFans { get; set; }
 
-        [MaxLength(400)]
-        public string? AdditionalFanPlaces { get; set; }
+        public LocalizedString? AdditionalFanPlaces { get; set; }
         public int? Slot25Quant { get; set; }
         public int? Slot35Quant { get; set; }
         public int? Slot525Quant { get; set; }

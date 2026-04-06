@@ -32,6 +32,8 @@ public class Worker : BackgroundService
         ["PowerSupply"] = [typeof(PowerSupplyPowerConnector)],
         ["CpuCooler"] = [typeof(CpuCoolerSocket)],
         ["PcCase"] = [typeof(PcCaseFormFactor), typeof(PcCaseFanLocation)],
+        ["Gpu"] = [typeof(GpuPowerConnector)],
+        ["Motherboard"] = [typeof(CpuPowerConnector), typeof(RearPort), typeof(InnerPort), typeof(M2Slot), typeof(PcleSlot)],
     };
 
     private readonly ConcurrentDictionary<Guid, CancellationTokenSource> _activeJobs = new();
@@ -147,12 +149,26 @@ public class Worker : BackgroundService
                         await task;
                     }
 
-                    if (message.CorrectGpuModels)
-                    {
-                        var correctionService = scope.ServiceProvider.GetRequiredService<IDataCorrectionService>();
-                        await correctionService.CorrectGpuModels();
-                        _logger.LogInformation("GPU model correction completed for job {JobId}", message.JobId);
-                    }
+                    //if (message.CorrectGpuModels)
+                    //{
+                    //    var correctionService = scope.ServiceProvider.GetRequiredService<IDataCorrectionService>();
+                    //    await correctionService.CorrectGpuModels();
+                    //    _logger.LogInformation("GPU model correction completed for job {JobId}", message.JobId);
+                    //}
+
+                    //if (message.ComponentType == "PcCase")
+                    //{
+                    //    var translationService = scope.ServiceProvider.GetRequiredService<IComponentTranslationService>();
+                    //    await translationService.TranslatePcCaseFieldsAsync(jobCts.Token);
+                    //    _logger.LogInformation("PcCase field translation completed for job {JobId}", message.JobId);
+                    //}
+
+                    //if (message.ComponentType == "Ram")
+                    //{
+                    //    var translationService = scope.ServiceProvider.GetRequiredService<IComponentTranslationService>();
+                    //    await translationService.TranslateRamFieldsAsync(jobCts.Token);
+                    //    _logger.LogInformation("Ram field translation completed for job {JobId}", message.JobId);
+                    //}
 
                     await PublishResultAsync(jobChannel, message.JobId, message.ComponentType, true, null, stoppingToken);
                     _logger.LogInformation("Scrape job {JobId} for {ComponentType} completed successfully", message.JobId, message.ComponentType);
