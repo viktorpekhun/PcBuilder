@@ -5,28 +5,21 @@ namespace Components.Domain.Entities
 {
     public class Fan
     {
-        [Key]
         public Guid Id { get; set; }
 
-        [Required]
-        [MaxLength(2000)]
         public string Name { get; set; } = string.Empty;
 
         [Url]
         public string? PhotoUrl { get; set; }
 
-        [Required]
-        [MaxLength(100)]
         public string Brand { get; set; } = string.Empty;
 
         public int? ModuleCount { get; set; }
 
         public LocalizedString? BearingType { get; set; }
 
-        [MaxLength(50)]
         public string? SpeedControl { get; set; }
 
-        [MaxLength(50)]
         public string? Connector { get; set; }
 
         public LocalizedString? Color { get; set; }

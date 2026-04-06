@@ -1,15 +1,12 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using Auth.Domain.Entities;
 
 namespace PcBuilds.Domain.Entities
 {
     public class Review
     {
-        [Key]
         public Guid Id { get; set; }
 
-        [Required]
         [Range(0, 5, ErrorMessage = "Rating must be between 0.00 and 5.00.")]
         public decimal Rating { get; set; }
 
@@ -19,14 +16,10 @@ namespace PcBuilds.Domain.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        [Required]
         public Guid UserId { get; set; }
-        [ForeignKey("UserId")]
         public User User { get; set; } = null!;
 
-        [Required]
         public Guid PcBuildId { get; set; }
-        [ForeignKey("PcBuildId")]
         public PcBuild PcBuild { get; set; } = null!;
     }
 }

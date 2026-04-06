@@ -5,24 +5,17 @@ namespace Components.Domain.Entities
 {
     public class PcCase
     {
-        [Key]
         public Guid Id { get; set; }
 
-        [Required]
-        [MaxLength(255)]
         public string Name { get; set; } = string.Empty;
 
         [Url]
         public string? PhotoUrl { get; set; }
 
-        [Required]
-        [MaxLength(100)]
         public string Brand { get; set; } = string.Empty;
 
-        [MaxLength(100)]
         public string? SizeStandard { get; set; }
 
-        [MaxLength(100)]
         public string? SizeDimentions { get; set; }
         public double? Weight { get; set; }
         public int? PsuWattage { get; set; }
@@ -41,7 +34,6 @@ namespace Components.Domain.Entities
         public int? Slot525Quant { get; set; }
         public int? ExpansionSlotQuant { get; set; }
 
-        [MaxLength(100)]
         public string? Usb { get; set; }
         public bool HasHeadphones { get; set; }
         public bool HasMicrophone { get; set; }

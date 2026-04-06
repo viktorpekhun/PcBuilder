@@ -4,31 +4,21 @@ namespace Components.Domain.Entities
 {
     public class Motherboard
     {
-        [Key]
         public Guid Id { get; set; }
 
-        [Required]
-        [MaxLength(255)]
         public string Name { get; set; } = string.Empty;
 
         [Url]
         public string? PhotoUrl { get; set; }
 
-        [Required]
-        [MaxLength(100)]
         public string Brand { get; set; } = string.Empty;
 
-        [Required]
-        [MaxLength(50)]
         public string Socket { get; set; } = string.Empty;
 
-        [Required]
-        [MaxLength(50)]
         public string Chipset { get; set; } = string.Empty;
 
         public int? DimmSlots { get; set; }
 
-        [MaxLength(20)]
         public string? DimmType { get; set; }
         public int? DimmFrequency { get; set; }
         public int? DimmCapacity { get; set; }
@@ -37,25 +27,18 @@ namespace Components.Domain.Entities
         public int? FanQuantity { get; set; }
         public int? PcleX1Quantity { get; set; }
 
-        [MaxLength(100)]
         public string? Ethernet { get; set; }
 
-        [MaxLength(100)]
         public string? Audio { get; set; }
 
-        [MaxLength(100)]
         public string? Wifi { get; set; }
 
-        [MaxLength(100)]
         public string? Bluetooth { get; set; }
 
-        [MaxLength(255)]
         public string? VideoPorts { get; set; }
 
-        [MaxLength(50)]
         public string? FormFactor { get; set; }
 
-        [MaxLength(50)]
         public string? SizeDimentions { get; set; }
 
         public int? Wattage { get; set; }

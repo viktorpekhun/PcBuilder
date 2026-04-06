@@ -4,31 +4,21 @@ namespace Components.Domain.Entities
 {
     public class Gpu
     {
-        [Key]
         public Guid Id { get; set; }
 
-        [Required]
-        [MaxLength(255)]
         public string Name { get; set; } = string.Empty;
 
         [Url]
         public string? PhotoUrl { get; set; }
 
-        [Required]
-        [MaxLength(100)]
         public string Brand { get; set; } = string.Empty;
 
-        [Required]
-        [MaxLength(100)]
         public string GpuManufacturer { get; set; } = string.Empty;
 
-        [Required]
-        [MaxLength(100)]
         public string GpuModel { get; set; } = string.Empty;
 
         public int? Memory { get; set; }
 
-        [MaxLength(20)]
         public string? MemoryType { get; set; }
 
         public double? PcleVersion { get; set; }

@@ -4,7 +4,6 @@ namespace Auth.Domain.Entities
 {
     public class User
     {
-        [Key]
         public Guid Id { get; set; }
 
         [Required(ErrorMessage = "Email is required.")]

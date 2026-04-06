@@ -5,25 +5,17 @@ namespace Components.Domain.Entities
 {
     public class PowerSupply
     {
-        [Key]
         public Guid Id { get; set; }
 
-        [Required]
-        [MaxLength(255)]
         public string Name { get; set; } = string.Empty;
 
         [Url]
         public string? PhotoUrl { get; set; }
 
-        [Required]
-        [MaxLength(100)]
         public string Brand { get; set; } = string.Empty;
 
-        [Required]
-        [MaxLength(50)]
         public string FormFactor { get; set; } = string.Empty;
 
-        [Required]
         public int Wattage { get; set; }
         public int? MolexCount { get; set; }
         public int? SataCount { get; set; }
@@ -32,13 +24,11 @@ namespace Components.Domain.Entities
         public int? InputMaxVoltage { get; set; }
         public bool HasApcf { get; set; }
 
-        [MaxLength(50)]
         public string? EfficiencyStandart { get; set; }
         public double? EfficiencyPercent { get; set; }
         public LocalizedString? Modularity { get; set; }
         public double? NoiseLevelMaxDb { get; set; }
 
-        [MaxLength(50)]
         public string? Size { get; set; }
 
         [Url]

@@ -5,22 +5,15 @@ namespace Components.Domain.Entities
 {
     public class CpuCooler
     {
-        [Key]
         public Guid Id { get; set; }
 
-        [Required]
-        [MaxLength(255)]
         public string Name { get; set; } = string.Empty;
 
         [Url]
         public string? PhotoUrl { get; set; }
 
-        [Required]
-        [MaxLength(100)]
         public string Brand { get; set; } = string.Empty;
 
-        [Required]
-        [MaxLength(100)]
         public string Type { get; set; } = string.Empty;
 
         public int? FanCount { get; set; }
@@ -28,10 +21,8 @@ namespace Components.Domain.Entities
 
         public LocalizedString? RadiatorMaterial { get; set; }
 
-        [MaxLength(100)]
         public string? SpeedControl { get; set; }
 
-        [MaxLength(100)]
         public string? PowerConnector { get; set; }
 
         public int? MaxPowerDissipation { get; set; }
