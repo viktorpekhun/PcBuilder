@@ -5,6 +5,6 @@ namespace Scraping.Application.Interfaces
 {
     public interface IComponentScraper<TComponent> where TComponent : class
     {
-        Task<ScrapingResult<TComponent>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<TComponent> componentsFromDb, ConcurrentBag<Store> storesFromDb);
+        Task<ScrapingResult<TComponent>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<TComponent> componentsFromDb, ConcurrentBag<Store> storesFromDb, CancellationToken cancellationToken = default);
     }
 }

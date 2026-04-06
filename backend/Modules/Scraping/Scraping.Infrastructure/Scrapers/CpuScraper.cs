@@ -17,10 +17,10 @@ namespace Scraping.Infrastructure.Scrapers
     {
         private const string BaseUrl = "https://hotline.ua";
 
-        public async Task<ScrapingResult<Cpu>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<Cpu> componentsFromDb, ConcurrentBag<Store> storesFromDb)
+        public async Task<ScrapingResult<Cpu>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<Cpu> componentsFromDb, ConcurrentBag<Store> storesFromDb, CancellationToken cancellationToken = default)
         {
 
-            var html = await client.GetStringAsync(url);
+            var html = await client.GetStringAsync(url, cancellationToken);
 
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
@@ -34,6 +34,7 @@ namespace Scraping.Infrastructure.Scrapers
             if (titleNode != null)
             {
                 cpu.Name = titleNode.InnerText.Trim();
+                cpu.Name = Regex.Replace(cpu.Name, @"Процесор", "", RegexOptions.IgnoreCase).Trim();
                 var match = Regex.Match(cpu.Name, @"\((.*?)\)");
                 if (match.Success)
                 {
@@ -44,16 +45,6 @@ namespace Scraping.Infrastructure.Scrapers
             else
             {
                 return new ScrapingResult<Cpu>(null, new List<Store>(), new List<ProductOffer>());
-            }
-
-            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//div[contains(@class, 'description__content')]");
-            if (descriptionNode != null)
-            {
-                cpu.Description = descriptionNode.InnerText.Trim();
-                if (!string.IsNullOrEmpty(modelInBrackets))
-                {
-                    cpu.Description = Regex.Replace(cpu.Description, $@"\({Regex.Escape(modelInBrackets)}\)", "");
-                }
             }
 
 

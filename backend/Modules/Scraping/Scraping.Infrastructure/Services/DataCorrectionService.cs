@@ -21,10 +21,26 @@ namespace Scraping.Infrastructure.Services
             foreach (var gpu in gpusWithNullWattage)
             {
                 string gpuModel = gpu.GpuModel.ToLower();
-                var rightGpu = gpus.FirstOrDefault(g => g.GpuModel.ToLower() == gpuModel && g.Wattage != null);
+                var rightGpu = gpus
+                    .Where(g => g.GpuModel.ToLower() == gpuModel && g.Wattage != null)
+                    .MinBy(g => g.Wattage);
                 if (rightGpu != null)
                 {
                     gpu.Wattage = rightGpu.Wattage;
+                    _context.Set<Gpu>().Update(gpu);
+                }
+            }
+
+            var gpusWithNullPsuRecommended = gpus.Where(g => g.PsuReccomended == null).ToList();
+            foreach (var gpu in gpusWithNullPsuRecommended)
+            {
+                string gpuModel = gpu.GpuModel.ToLower();
+                var rightGpu = gpus
+                    .Where(g => g.GpuModel.ToLower() == gpuModel && g.PsuReccomended != null)
+                    .MinBy(g => g.PsuReccomended);
+                if (rightGpu != null)
+                {
+                    gpu.PsuReccomended = rightGpu.PsuReccomended;
                     _context.Set<Gpu>().Update(gpu);
                 }
             }

@@ -1,12 +1,14 @@
+using Components.Domain.Entities;
+﻿using HtmlAgilityPack;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Newtonsoft.Json.Linq;
+using PcBuilder.SharedKernel;
+using PcBuilder.SharedKernel.Enums;
 using Scraping.Application;
 using Scraping.Application.Interfaces;
-﻿using HtmlAgilityPack;
-using Newtonsoft.Json.Linq;
-using Components.Domain.Entities;
-using PcBuilder.SharedKernel;
 using Scraping.Infrastructure.Utilities;
-using PcBuilder.SharedKernel.Enums;
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Scraping.Infrastructure.Scrapers
@@ -14,9 +16,9 @@ namespace Scraping.Infrastructure.Scrapers
     public class HddScraper : IComponentScraper<Hdd>
     {
         private const string BaseUrl = "https://hotline.ua";
-        public async Task<ScrapingResult<Hdd>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<Hdd> componentsFromDb, ConcurrentBag<Store> storesFromDb)
+        public async Task<ScrapingResult<Hdd>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<Hdd> componentsFromDb, ConcurrentBag<Store> storesFromDb, CancellationToken cancellationToken = default)
         {
-            var html = await client.GetStringAsync(url);
+            var html = await client.GetStringAsync(url, cancellationToken);
 
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
@@ -30,6 +32,7 @@ namespace Scraping.Infrastructure.Scrapers
             if (titleNode != null)
             {
                 hdd.Name = titleNode.InnerText.Trim();
+                hdd.Name = Regex.Replace(hdd.Name, @"Жорсткий диск", "", RegexOptions.IgnoreCase).Trim();
                 var match = Regex.Match(hdd.Name, @"\((.*?)\)");
                 if (match.Success)
                 {
@@ -40,16 +43,6 @@ namespace Scraping.Infrastructure.Scrapers
             else
             {
                 return new ScrapingResult<Hdd>(null, new List<Store>(), new List<ProductOffer>());
-            }
-
-            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//div[contains(@class, 'description__content')]");
-            if (descriptionNode != null)
-            {
-                hdd.Description = descriptionNode.InnerText.Trim();
-                if (!string.IsNullOrEmpty(modelInBrackets))
-                {
-                    hdd.Description = Regex.Replace(hdd.Description, $@"\({Regex.Escape(modelInBrackets)}\)", "");
-                }
             }
 
 
@@ -74,12 +67,34 @@ namespace Scraping.Infrastructure.Scrapers
                                 hdd.Brand = value ?? string.Empty;
                                 break;
                             case "Обсяг, ГБ":
-                                var capacityMatch = Regex.Match(value, @"\d+");
-                                if (capacityMatch.Success)
-                                    hdd.Capacity = int.Parse(capacityMatch.Value);
-                                break;
+                                {
+                                    var capacityMatch = Regex.Match(value, @"\d+");
+                                    if (capacityMatch.Success)
+                                        hdd.Capacity = int.Parse(capacityMatch.Value);
+                                    break;
+                                }
+                            case "Об'єм, ГБ":
+                                {
+                                    var capacityMatch = Regex.Match(value, @"\d+");
+                                    if (capacityMatch.Success)
+                                        hdd.Capacity = int.Parse(capacityMatch.Value);
+                                    break;
+                                }
+                            case "Обсяг, ТБ":
+                                {
+                                    hdd.Capacity = ParseCapacityToGb(value);
+                                    break;
+                                }
+                            case "Об'єм, ТБ":
+                                {
+                                    hdd.Capacity = ParseCapacityToGb(value);
+                                    break;
+                                }
                             case "Інтерфейс підключення":
-                                hdd.Interface = value ?? string.Empty;
+                                if (value == "SATA III")
+                                    hdd.Interface = "SATA rev. 3.0" ?? string.Empty;
+                                else
+                                    hdd.Interface = value ?? string.Empty;
                                 break;
                             case "Форм-фактор, дюйм":
                                 hdd.FormFactor = value ?? string.Empty;
@@ -232,6 +247,17 @@ namespace Scraping.Infrastructure.Scrapers
             return new ScrapingResult<Hdd>(hdd, stores, offers);
         }
         private int? ParseInt(string? value) => int.TryParse(value, out var result) ? result : null;
+        public int ParseCapacityToGb(string input)
+        {
+            var match = Regex.Match(input, @"\d+([,\.]\d+)?");
+            if (!match.Success) return 0;
+            string normalizedValue = match.Value.Replace(',', '.');
+            if (double.TryParse(normalizedValue, NumberStyles.Any, CultureInfo.InvariantCulture, out double value))
+            {
+                return (int)Math.Round(value * 1000.0);
+            }
+            return 0;
+        }
 
     }
 }

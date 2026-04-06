@@ -1,11 +1,12 @@
-using Scraping.Application;
-using Scraping.Application.Interfaces;
+using Components.Domain.Entities;
+using Components.Domain.ValueObjects;
 ﻿using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;
-using Components.Domain.Entities;
 using PcBuilder.SharedKernel;
-using Scraping.Infrastructure.Utilities;
 using PcBuilder.SharedKernel.Enums;
+using Scraping.Application;
+using Scraping.Application.Interfaces;
+using Scraping.Infrastructure.Utilities;
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -15,9 +16,9 @@ namespace Scraping.Infrastructure.Scrapers
     public class FanScraper : IComponentScraper<Fan>
     {
         private const string BaseUrl = "https://hotline.ua";
-        public async Task<ScrapingResult<Fan>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<Fan> componentsFromDb, ConcurrentBag<Store> storesFromDb)
+        public async Task<ScrapingResult<Fan>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<Fan> componentsFromDb, ConcurrentBag<Store> storesFromDb, CancellationToken cancellationToken = default)
         {
-            var html = await client.GetStringAsync(url);
+            var html = await client.GetStringAsync(url, cancellationToken);
 
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
@@ -31,6 +32,7 @@ namespace Scraping.Infrastructure.Scrapers
             if (titleNode != null)
             {
                 fan.Name = titleNode.InnerText.Trim();
+                fan.Name = Regex.Replace(fan.Name, @"Вентилятор", "", RegexOptions.IgnoreCase).Trim();
                 var match = Regex.Match(fan.Name, @"\((.*?)\)");
                 if (match.Success)
                 {
@@ -41,16 +43,6 @@ namespace Scraping.Infrastructure.Scrapers
             else
             {
                 return new ScrapingResult<Fan>(null, new List<Store>(), new List<ProductOffer>());
-            }
-
-            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//div[contains(@class, 'description__content')]");
-            if (descriptionNode != null)
-            {
-                fan.Description = descriptionNode.InnerText.Trim();
-                if (!string.IsNullOrEmpty(modelInBrackets))
-                {
-                    fan.Description = Regex.Replace(fan.Description, $@"\({Regex.Escape(modelInBrackets)}\)", "");
-                }
             }
 
 
@@ -78,8 +70,16 @@ namespace Scraping.Infrastructure.Scrapers
                                 fan.ModuleCount = ParseInt(value);
                                 break;
                             case "Тип підшипника":
-                                fan.BearingType = value ?? string.Empty;
-                                break;
+                                {
+                                    if (string.IsNullOrEmpty(value))
+                                    {
+                                        fan.BearingType = null;
+                                        break;
+                                    }
+
+                                    fan.BearingType = new LocalizedString { Uk = char.ToUpper(value[0]) + value.Substring(1) };
+                                    break;
+                                }
                             case "Регулювання обертів":
                                 fan.SpeedControl = value ?? string.Empty;
                                 break;
@@ -87,8 +87,16 @@ namespace Scraping.Infrastructure.Scrapers
                                 fan.Connector = value ?? string.Empty;
                                 break;
                             case "Колір вентилятора":
-                                fan.Color = value ?? string.Empty;
-                                break;
+                                {
+                                    if (string.IsNullOrEmpty(value))
+                                    {
+                                        fan.Color = null;
+                                        break;
+                                    }
+
+                                    fan.Color = new LocalizedString { Uk = char.ToUpper(value[0]) + value.Substring(1) };
+                                    break;
+                                }
                             case "Мінімальна швидкість обертання, об / хв":
                                 fan.MinSpeed = ParseInt(value);
                                 break;

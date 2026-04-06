@@ -1,5 +1,6 @@
 using Components.Application.Dtos;
-﻿using System.ComponentModel.DataAnnotations;
+using Components.Domain.ValueObjects;
+using System.ComponentModel.DataAnnotations;
 
 namespace Components.Application.Dtos.FanDtos
 {
@@ -8,13 +9,12 @@ namespace Components.Application.Dtos.FanDtos
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? PhotoUrl { get; set; }
-        public string? Description { get; set; }
         public string Brand { get; set; } = string.Empty;
         public int? ModuleCount { get; set; }
-        public string? BearingType { get; set; }
+        public LocalizedString? BearingType { get; set; }
         public string? SpeedControl { get; set; }
         public string? Connector { get; set; }
-        public string? Color { get; set; }
+        public LocalizedString? Color { get; set; }
         public int? MinSpeed { get; set; }
         public int? MaxSpeed { get; set; }
         public double? AirflowCfm { get; set; }

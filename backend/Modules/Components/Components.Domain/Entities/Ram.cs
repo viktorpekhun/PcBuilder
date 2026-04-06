@@ -1,3 +1,4 @@
+using Components.Domain.ValueObjects;
 using System.ComponentModel.DataAnnotations;
 
 namespace Components.Domain.Entities
@@ -13,9 +14,6 @@ namespace Components.Domain.Entities
 
         [Url]
         public string? PhotoUrl { get; set; }
-
-        [MaxLength(3000)]
-        public string? Description { get; set; }
 
         [Required]
         [MaxLength(100)]
@@ -40,8 +38,7 @@ namespace Components.Domain.Entities
         [MaxLength(50)]
         public string? Bufferization { get; set; }
 
-        [MaxLength(50)]
-        public string? Color { get; set; }
+        public LocalizedString? Color { get; set; }
         public int? Wattage { get; set; }
 
         [Url]

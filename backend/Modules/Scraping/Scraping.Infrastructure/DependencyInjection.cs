@@ -1,6 +1,8 @@
 using Components.Domain.Entities;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Scraping.Application.Interfaces;
+using Scraping.Infrastructure.Configuration;
 using Scraping.Infrastructure.Handlers;
 using Scraping.Infrastructure.Scrapers;
 using Scraping.Infrastructure.Services;
@@ -9,8 +11,11 @@ namespace Scraping.Infrastructure
 {
     public static class DependencyInjection
     {
-        public static IServiceCollection AddScrapingModule(this IServiceCollection services)
+        public static IServiceCollection AddScrapingModule(this IServiceCollection services, IConfiguration configuration)
         {
+            services.Configure<AzureTranslatorOptions>(configuration.GetSection(AzureTranslatorOptions.SectionName));
+            services.AddHttpClient<ITranslationService, AzureTranslatorService>();
+
             services.AddMediatR(cfg =>
                 cfg.RegisterServicesFromAssembly(typeof(ScrapeCategoryCommandHandler).Assembly));
 
@@ -27,9 +32,11 @@ namespace Scraping.Infrastructure
 
             services.AddHttpClient<IPaginationScraper, PaginationScraper>();
             services.AddScoped<IProxyScraper, ProxyScraper>();
+            services.AddSingleton<ProxyPool>();
             services.AddScoped<ComponentScraperFactory>();
             services.AddScoped<ScraperService>();
             services.AddScoped<IDataCorrectionService, DataCorrectionService>();
+            services.AddScoped<IComponentTranslationService, ComponentTranslationService>();
 
             return services;
         }

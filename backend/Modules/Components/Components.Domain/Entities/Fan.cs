@@ -1,3 +1,4 @@
+using Components.Domain.ValueObjects;
 using System.ComponentModel.DataAnnotations;
 
 namespace Components.Domain.Entities
@@ -14,17 +15,13 @@ namespace Components.Domain.Entities
         [Url]
         public string? PhotoUrl { get; set; }
 
-        [MaxLength(3000)]
-        public string? Description { get; set; }
-
         [Required]
         [MaxLength(100)]
         public string Brand { get; set; } = string.Empty;
 
         public int? ModuleCount { get; set; }
 
-        [MaxLength(100)]
-        public string? BearingType { get; set; }
+        public LocalizedString? BearingType { get; set; }
 
         [MaxLength(50)]
         public string? SpeedControl { get; set; }
@@ -32,8 +29,7 @@ namespace Components.Domain.Entities
         [MaxLength(50)]
         public string? Connector { get; set; }
 
-        [MaxLength(50)]
-        public string? Color { get; set; }
+        public LocalizedString? Color { get; set; }
 
         public int? MinSpeed { get; set; }
         public int? MaxSpeed { get; set; }

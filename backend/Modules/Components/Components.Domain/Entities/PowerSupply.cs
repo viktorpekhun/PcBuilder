@@ -1,3 +1,4 @@
+using Components.Domain.ValueObjects;
 using System.ComponentModel.DataAnnotations;
 
 namespace Components.Domain.Entities
@@ -13,9 +14,6 @@ namespace Components.Domain.Entities
 
         [Url]
         public string? PhotoUrl { get; set; }
-
-        [MaxLength(3000)]
-        public string? Description { get; set; }
 
         [Required]
         [MaxLength(100)]
@@ -37,7 +35,7 @@ namespace Components.Domain.Entities
         [MaxLength(50)]
         public string? EfficiencyStandart { get; set; }
         public double? EfficiencyPercent { get; set; }
-        public bool IsModular { get; set; }
+        public LocalizedString? Modularity { get; set; }
         public double? NoiseLevelMaxDb { get; set; }
 
         [MaxLength(50)]

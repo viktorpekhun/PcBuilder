@@ -399,62 +399,6 @@
 }
 
 
-.component-description {
-    margin-top: 8px;
-    line-height: 1.3;
-    text-align: left;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-.component-description h3 {
-    font-size: 18px;
-    margin: 0;
-}
-.component-description p {
-    margin: 0;
-    font-size: 15px;
-}
-
-.description-content {
-    line-height: 1.5;
-    transition: max-height 0.3s ease;
-    overflow: hidden;
-}
-
-.description-content.collapsed {
-    max-height: 14.5em;
-    position: relative;
-}
-
-.description-content.collapsed::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 40px;
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
-    pointer-events: none;
-}
-
-.description-toggle {
-    background: none;
-    border: none;
-    color: #007bff;
-    cursor: pointer;
-    padding: 8px 0;
-    font-weight: 500;
-    display: block;
-    margin-top: 8px;
-    align-self: flex-end;
-}
-
-.description-toggle:hover {
-    text-decoration: underline;
-}
-
 .store-rating {
     display: flex;
     gap: 10px;

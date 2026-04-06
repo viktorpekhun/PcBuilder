@@ -14,9 +14,6 @@ namespace Components.Domain.Entities
         [Url]
         public string? PhotoUrl { get; set; }
 
-        [MaxLength(3000)]
-        public string? Description { get; set; }
-
         [Required]
         [MaxLength(100)]
         public string Brand { get; set; } = string.Empty;

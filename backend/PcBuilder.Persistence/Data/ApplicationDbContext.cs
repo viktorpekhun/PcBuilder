@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PcBuilder.SharedKernel.Persistence;
 using Components.Domain.Entities;
+using Components.Domain.ValueObjects;
 using Auth.Domain.Entities;
 using PcBuilds.Domain.Entities;
 
@@ -104,11 +105,19 @@ namespace PcBuilder.Persistence.Data
                 .HasForeignKey(cf => cf.PcCaseId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<PcCaseFanLocation>()
-                .HasOne(cf => cf.PcCase)
-                .WithMany(c => c.PcCaseFanLocations)
-                .HasForeignKey(cf => cf.PcCaseId)
-                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<PcCaseFanLocation>(entity =>
+            {
+                entity.HasOne(cf => cf.PcCase)
+                    .WithMany(c => c.PcCaseFanLocations)
+                    .HasForeignKey(cf => cf.PcCaseId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.OwnsOne(p => p.Name, b =>
+                {
+                    b.Property(l => l.Uk).HasColumnName("Name_Uk").HasMaxLength(50).IsRequired();
+                    b.Property(l => l.En).HasColumnName("Name_En").HasMaxLength(50);
+                });
+            });
 
             modelBuilder.Entity<PowerSupplyPowerConnector>()
                 .HasOne(c => c.PowerSupply)
@@ -196,7 +205,8 @@ namespace PcBuilder.Persistence.Data
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Precision configurations
+
+
             modelBuilder.Entity<Review>()
                 .Property(u => u.Rating)
                 .HasPrecision(3, 2);
@@ -213,45 +223,115 @@ namespace PcBuilder.Persistence.Data
                 .Property(p => p.Price)
                 .HasPrecision(18, 2);
 
+
             modelBuilder.Entity<Cpu>()
                 .Property(p => p.AveragePrice)
                 .HasPrecision(18, 2);
+            //modelBuilder.Entity<Cpu>()
+            //    .OwnsOne(p => p.Description, builder =>
+            //    {
+            //        builder.ToJson();
+            //    });
+
 
             modelBuilder.Entity<Gpu>()
                 .Property(p => p.AveragePrice)
                 .HasPrecision(18, 2);
 
-            modelBuilder.Entity<Ram>()
-                .Property(p => p.AveragePrice)
-                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Ram>(entity =>
+            {
+                entity.Property(p => p.AveragePrice).HasPrecision(18, 2);
+
+                entity.OwnsOne(p => p.Color, b =>
+                {
+                    b.Property(l => l.Uk).HasColumnName("Color_Uk").HasMaxLength(100).IsRequired();
+                    b.Property(l => l.En).HasColumnName("Color_En").HasMaxLength(100);
+                });
+            });
+
 
             modelBuilder.Entity<Motherboard>()
                 .Property(p => p.AveragePrice)
                 .HasPrecision(18, 2);
 
-            modelBuilder.Entity<CpuCooler>()
-                .Property(p => p.AveragePrice)
-                .HasPrecision(18, 2);
 
-            modelBuilder.Entity<PcCase>()
-                .Property(p => p.AveragePrice)
-                .HasPrecision(18, 2);
+            modelBuilder.Entity<CpuCooler>(entity =>
+            {
+                entity.Property(p => p.AveragePrice).HasPrecision(18, 2);
 
-            modelBuilder.Entity<PowerSupply>()
-                .Property(p => p.AveragePrice)
-                .HasPrecision(18, 2);
+                entity.OwnsOne(p => p.RadiatorMaterial, b =>
+                {
+                    b.Property(l => l.Uk).HasColumnName("RadiatorMaterial_Uk").HasMaxLength(100).IsRequired();
+                    b.Property(l => l.En).HasColumnName("RadiatorMaterial_En").HasMaxLength(100);
+                });
+            });
+
+
+            modelBuilder.Entity<PcCase>(entity =>
+            {
+                entity.Property(p => p.AveragePrice).HasPrecision(18, 2);
+
+                entity.OwnsOne(p => p.PsuLocation, b =>
+                {
+                    b.Property(l => l.Uk).HasColumnName("PsuLocation_Uk").HasMaxLength(100).IsRequired();
+                    b.Property(l => l.En).HasColumnName("PsuLocation_En").HasMaxLength(100);
+                });
+
+                entity.OwnsOne(p => p.BuiltInFans, b =>
+                {
+                    b.Property(l => l.Uk).HasColumnName("BuiltInFans_Uk").HasMaxLength(200).IsRequired();
+                    b.Property(l => l.En).HasColumnName("BuiltInFans_En").HasMaxLength(200);
+                });
+
+                entity.OwnsOne(p => p.AdditionalFanPlaces, b =>
+                {
+                    b.Property(l => l.Uk).HasColumnName("AdditionalFanPlaces_Uk").HasMaxLength(200).IsRequired();
+                    b.Property(l => l.En).HasColumnName("AdditionalFanPlaces_En").HasMaxLength(200);
+                });
+            });
+
+
+            modelBuilder.Entity<PowerSupply>(entity =>
+            {
+                entity.Property(p => p.AveragePrice).HasPrecision(18, 2);
+
+                entity.OwnsOne(p => p.Modularity, b =>
+                {
+                    b.Property(l => l.Uk).HasColumnName("Modularity_Uk").HasMaxLength(100).IsRequired();
+                    b.Property(l => l.En).HasColumnName("Modularity_En").HasMaxLength(100);
+                });
+            });
+
 
             modelBuilder.Entity<Ssd>()
                 .Property(p => p.AveragePrice)
                 .HasPrecision(18, 2);
 
+
             modelBuilder.Entity<Hdd>()
                 .Property(p => p.AveragePrice)
                 .HasPrecision(18, 2);
 
-            modelBuilder.Entity<Fan>()
-                .Property(p => p.AveragePrice)
-                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Fan>(entity =>
+            {
+                entity.Property(p => p.AveragePrice).HasPrecision(18, 2);
+
+                entity.OwnsOne(p => p.BearingType, b =>
+                {
+                    b.Property(l => l.Uk).HasColumnName("BearingType_Uk").HasMaxLength(100).IsRequired();
+                    b.Property(l => l.En).HasColumnName("BearingType_En").HasMaxLength(100);
+                });
+
+                entity.OwnsOne(p => p.Color, b =>
+                {
+                    b.Property(l => l.Uk).HasColumnName("Color_Uk").HasMaxLength(100).IsRequired();
+                    b.Property(l => l.En).HasColumnName("Color_En").HasMaxLength(100);
+                });
+            });
+                
+
         }
     }
 }

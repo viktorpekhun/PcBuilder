@@ -7,17 +7,16 @@ namespace Components.Application.Dtos.PcCaseDtos
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? PhotoUrl { get; set; }
-        public string? Description { get; set; }
         public string Brand { get; set; } = string.Empty;
         public string? SizeStandard { get; set; }
         public string? SizeDimentions { get; set; }
         public double? Weight { get; set; }
-        public string? PsuLocation { get; set; }
+        public LocalizedStringDto? PsuLocation { get; set; }
         public double? MaxGpuLength { get; set; }
         public double? MaxCpuCoolerHeight { get; set; }
         public bool HasDustFilters { get; set; }
-        public string? BuiltInFans { get; set; }
-        public string? AdditionalFanPlaces { get; set; }
+        public LocalizedStringDto? BuiltInFans { get; set; }
+        public LocalizedStringDto? AdditionalFanPlaces { get; set; }
         public int? Slot25Quant { get; set; }
         public int? Slot35Quant { get; set; }
         public int? Slot525Quant { get; set; }
@@ -38,7 +37,7 @@ namespace Components.Application.Dtos.PcCaseDtos
     }
     public class PcCaseFanLocationDto
     {
-        public string Name { get; set; } = string.Empty;
+        public LocalizedStringDto Name { get; set; } = new();
         public int FanSize { get; set; }
         public int MaxFans { get; set; }
     }

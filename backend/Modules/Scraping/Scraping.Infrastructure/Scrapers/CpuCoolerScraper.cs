@@ -1,11 +1,12 @@
-using Scraping.Application;
-using Scraping.Application.Interfaces;
+using Components.Domain.Entities;
+using Components.Domain.ValueObjects;
 ﻿using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;
-using Components.Domain.Entities;
 using PcBuilder.SharedKernel;
-using Scraping.Infrastructure.Utilities;
 using PcBuilder.SharedKernel.Enums;
+using Scraping.Application;
+using Scraping.Application.Interfaces;
+using Scraping.Infrastructure.Utilities;
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -15,9 +16,9 @@ namespace Scraping.Infrastructure.Scrapers
     public class CpuCoolerScraper : IComponentScraper<CpuCooler>
     {
         private const string BaseUrl = "https://hotline.ua";
-        public async Task<ScrapingResult<CpuCooler>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<CpuCooler> componentsFromDb, ConcurrentBag<Store> storesFromDb)
+        public async Task<ScrapingResult<CpuCooler>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<CpuCooler> componentsFromDb, ConcurrentBag<Store> storesFromDb, CancellationToken cancellationToken = default)
         {
-            var html = await client.GetStringAsync(url);
+            var html = await client.GetStringAsync(url, cancellationToken);
 
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
@@ -31,6 +32,8 @@ namespace Scraping.Infrastructure.Scrapers
             if (titleNode != null)
             {
                 cpuCooler.Name = titleNode.InnerText.Trim();
+                cpuCooler.Name = Regex.Replace(cpuCooler.Name, @"Повітряне охолодження", "", RegexOptions.IgnoreCase).Trim();
+                cpuCooler.Name = Regex.Replace(cpuCooler.Name, @"Водяне охолодження", "", RegexOptions.IgnoreCase).Trim();
                 var match = Regex.Match(cpuCooler.Name, @"\((.*?)\)");
                 if (match.Success)
                 {
@@ -41,16 +44,6 @@ namespace Scraping.Infrastructure.Scrapers
             else
             {
                 return new ScrapingResult<CpuCooler>(null, new List<Store>(), new List<ProductOffer>());
-            }
-
-            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//div[contains(@class, 'description__content')]");
-            if (descriptionNode != null)
-            {
-                cpuCooler.Description = descriptionNode.InnerText.Trim();
-                if (!string.IsNullOrEmpty(modelInBrackets))
-                {
-                    cpuCooler.Description = Regex.Replace(cpuCooler.Description, $@"\({Regex.Escape(modelInBrackets)}\)", "");
-                }
             }
 
 
@@ -100,8 +93,16 @@ namespace Scraping.Infrastructure.Scrapers
                                 }
                                 break;
                             case "Матеріал радіатора":
-                                cpuCooler.RadiatorMaterial = value ?? string.Empty;
-                                break;
+                                {
+                                    if (string.IsNullOrEmpty(value))
+                                    {
+                                        cpuCooler.RadiatorMaterial = null;
+                                        break;
+                                    }
+
+                                    cpuCooler.RadiatorMaterial = new LocalizedString { Uk = char.ToUpper(value[0]) + value.Substring(1) };
+                                    break;
+                                }
                             case "Регулювання обертів":
                                 cpuCooler.SpeedControl = value ?? string.Empty;
                                 break;

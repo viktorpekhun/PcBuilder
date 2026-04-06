@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Components.Domain.ValueObjects;
 
 namespace Components.Domain.Entities
 {
@@ -8,9 +9,7 @@ namespace Components.Domain.Entities
         [Key]
         public Guid Id { get; set; }
 
-        [Required]
-        [MaxLength(50)]
-        public string Name { get; set; } = string.Empty;
+        public LocalizedString Name { get; set; } = new();
 
         [Required]
         public int FanSize { get; set; }

@@ -37,7 +37,7 @@ namespace Scraping.Infrastructure.Scrapers
             _httpClient.DefaultRequestHeaders.Add("Cookie", "city_id=223; language=uk;");
         }
 
-        public async Task<JToken> GetPageAsync(int page)
+        public async Task<JToken> GetPageAsync(int page, CancellationToken cancellationToken = default)
         {
             var variables = new Dictionary<string, object>
             {
@@ -77,10 +77,10 @@ namespace Scraping.Infrastructure.Scrapers
             };
 
             var content = new StringContent(JsonSerializer.Serialize(query), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync("/svc/frontend-api/graphql", content);
+            var response = await _httpClient.PostAsync("/svc/frontend-api/graphql", content, cancellationToken);
 
             response.EnsureSuccessStatusCode();
-            var jsonString = await response.Content.ReadAsStringAsync();
+            var jsonString = await response.Content.ReadAsStringAsync(cancellationToken);
 
             return JToken.Parse(jsonString);
         }
@@ -122,11 +122,11 @@ namespace Scraping.Infrastructure.Scrapers
         }
 
 
-        public async Task<List<string>> GetComponentLinksAsync(string categoryUrl)
+        public async Task<List<string>> GetComponentLinksAsync(string categoryUrl, CancellationToken cancellationToken = default)
         {
             var componentLinks = new List<string>();
             int currentPage = 0;
-            string html = await _httpClient.GetStringAsync(categoryUrl);
+            string html = await _httpClient.GetStringAsync(categoryUrl, cancellationToken);
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
 
@@ -139,24 +139,67 @@ namespace Scraping.Infrastructure.Scrapers
 
                 var client = new HotlineGraphQLClient(tokenData.ToString(), categoryUrl);
 
-                while (true)
+                int consecutiveFailures = 0;
+
+                while (true && !cancellationToken.IsCancellationRequested)
                 {
-                    var json = await client.GetPageAsync(currentPage);
-                    var products = json["data"]?["byPathSectionQueryProducts"]?["collection"];
-                    foreach (var product in products)
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    JToken? json = null;
+                    const int maxPageRetries = 3;
+
+                    for (int pageAttempt = 0; pageAttempt < maxPageRetries; pageAttempt++)
                     {
-                        var productUrl = product?["url"].ToString().Trim();
-                        var fullUrl = $"{BASE_URL}{productUrl}";
-                        componentLinks.Add(fullUrl);
+                        try
+                        {
+                            if (pageAttempt > 0)
+                                await Task.Delay(2000 * pageAttempt, cancellationToken);
+
+                            json = await client.GetPageAsync(currentPage, cancellationToken);
+                            consecutiveFailures = 0;
+                            break;
+                        }
+                        catch (OperationCanceledException) { throw; }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Сторінка {currentPage}, спроба {pageAttempt + 1}/{maxPageRetries} не вдалася: {ex.Message}");
+                        }
                     }
-                    Console.WriteLine($"Fetched {products.Count()} products from page {currentPage}.");
-                    if (products == null || products.Count() == 0)
+
+                    if (json == null)
+                    {
+                        consecutiveFailures++;
+                        Console.WriteLine($"Пропуск сторінки {currentPage} після {maxPageRetries} спроб.");
+
+                        if (consecutiveFailures >= 3)
+                        {
+                            Console.WriteLine("3 послідовні невдалі сторінки, завершення пагінації.");
+                            break;
+                        }
+
+                        currentPage++;
+                        await Task.Delay(2000, cancellationToken);
+                        continue;
+                    }
+
+                    var products = json["data"]?["byPathSectionQueryProducts"]?["collection"];
+                    if (products == null || !products.Any())
                     {
                         break;
                     }
 
+                    foreach (var product in products)
+                    {
+                        var productUrl = product?["url"]?.ToString().Trim();
+                        if (!string.IsNullOrEmpty(productUrl))
+                        {
+                            componentLinks.Add($"{BASE_URL}{productUrl}");
+                        }
+                    }
+                    Console.WriteLine($"Fetched {products.Count()} products from page {currentPage}.");
+
                     currentPage++;
-                    await Task.Delay(2000);
+                    await Task.Delay(2000, cancellationToken);
                 }
 
             }

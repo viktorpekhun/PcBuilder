@@ -1,11 +1,12 @@
-using Scraping.Application;
-using Scraping.Application.Interfaces;
+using Components.Domain.Entities;
+using Components.Domain.ValueObjects;
 ﻿using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;
-using Components.Domain.Entities;
 using PcBuilder.SharedKernel;
-using Scraping.Infrastructure.Utilities;
 using PcBuilder.SharedKernel.Enums;
+using Scraping.Application;
+using Scraping.Application.Interfaces;
+using Scraping.Infrastructure.Utilities;
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -15,9 +16,9 @@ namespace Scraping.Infrastructure.Scrapers
     public class RamScraper : IComponentScraper<Ram>
     {
         private const string BaseUrl = "https://hotline.ua";
-        public async Task<ScrapingResult<Ram>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<Ram> componentsFromDb, ConcurrentBag<Store> storesFromDb)
+        public async Task<ScrapingResult<Ram>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<Ram> componentsFromDb, ConcurrentBag<Store> storesFromDb, CancellationToken cancellationToken = default)
         {
-            var html = await client.GetStringAsync(url);
+            var html = await client.GetStringAsync(url, cancellationToken);
 
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
@@ -31,6 +32,7 @@ namespace Scraping.Infrastructure.Scrapers
             if (titleNode != null)
             {
                 ram.Name = titleNode.InnerText.Trim();
+                ram.Name = Regex.Replace(ram.Name, @"Пам'ять для настільних комп'ютерів", "", RegexOptions.IgnoreCase).Trim();
                 var match = Regex.Match(ram.Name, @"\((.*?)\)");
                 if (match.Success)
                 {
@@ -41,16 +43,6 @@ namespace Scraping.Infrastructure.Scrapers
             else
             {
                 return new ScrapingResult<Ram>(null, new List<Store>(), new List<ProductOffer>());
-            }
-
-            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//div[contains(@class, 'description__content')]");
-            if (descriptionNode != null)
-            {
-                ram.Description = descriptionNode.InnerText.Trim();
-                if (!string.IsNullOrEmpty(modelInBrackets))
-                {
-                    ram.Description = Regex.Replace(ram.Description, $@"\({Regex.Escape(modelInBrackets)}\)", "");
-                }
             }
 
 
@@ -78,12 +70,23 @@ namespace Scraping.Infrastructure.Scrapers
                                 ram.Type = value ?? string.Empty;
                                 break;
                             case "Ефективна частота, МГц":
-                                var frequencyMatch = Regex.Match(value, @"\d+");
-                                if (frequencyMatch.Success)
-                                    ram.Frequency = int.Parse(frequencyMatch.Value);
-                                else
-                                    ram.Frequency = 0;
-                                break;
+                                {
+                                    var frequencyMatch = Regex.Match(value, @"\d+");
+                                    if (frequencyMatch.Success)
+                                        ram.Frequency = int.Parse(frequencyMatch.Value);
+                                    else
+                                        ram.Frequency = 0;
+                                    break;
+                                }
+                            case "Ефективна частота, МТ/с":
+                                {
+                                    var frequencyMatch = Regex.Match(value, @"\d+");
+                                    if (frequencyMatch.Success)
+                                        ram.Frequency = int.Parse(frequencyMatch.Value);
+                                    else
+                                        ram.Frequency = 0;
+                                    break;
+                                }
                             case "Обсяг, ГБ":
                                 var capacityMatch = Regex.Match(value, @"\d+");
                                 if (capacityMatch.Success)
@@ -122,8 +125,16 @@ namespace Scraping.Infrastructure.Scrapers
                                 ram.Bufferization = value ?? string.Empty;
                                 break;
                             case "Колір":
-                                ram.Color = value ?? string.Empty;
-                                break;
+                                {
+                                    if (string.IsNullOrEmpty(value))
+                                    {
+                                        ram.Color = null;
+                                        break;
+                                    }
+
+                                    ram.Color = new LocalizedString { Uk = char.ToUpper(value[0]) + value.Substring(1) };
+                                    break;
+                                }
                             case "productOnVendorSite":
                                 ram.FactoryLink = node?["url"]?.ToString().Trim();
                                 break;

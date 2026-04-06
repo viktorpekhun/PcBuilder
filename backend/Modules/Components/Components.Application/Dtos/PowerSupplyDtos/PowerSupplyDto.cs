@@ -1,5 +1,6 @@
 using Components.Application.Dtos;
-﻿
+using Components.Domain.ValueObjects;
+
 namespace Components.Application.Dtos.PowerSupplyDtos
 {
     public class PowerSupplyDto : IComponentDetailDto
@@ -7,7 +8,6 @@ namespace Components.Application.Dtos.PowerSupplyDtos
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? PhotoUrl { get; set; }
-        public string? Description { get; set; }
         public string Brand { get; set; } = string.Empty;
         public string FormFactor { get; set; } = string.Empty;
         public int Wattage { get; set; }
@@ -19,7 +19,7 @@ namespace Components.Application.Dtos.PowerSupplyDtos
         public bool HasApcf { get; set; }
         public string? EfficiencyStandart { get; set; }
         public double? EfficiencyPercent { get; set; }
-        public bool? IsModular { get; set; }
+        public LocalizedString? Modularity { get; set; }
         public double? NoiseLevelMaxDb { get; set; }
         public string? Size { get; set; }
         public string? FactoryLink { get; set; }
@@ -33,7 +33,7 @@ namespace Components.Application.Dtos.PowerSupplyDtos
     public class PowerSupplyMotherboardPowerConnectorDto
     {
         public int Pins { get; set; }
-        public int? AdditionalPins { get; set; }
+        public int Quantity { get; set; }
     }
     public class PowerSupplyCpuPowerConnectorDto
     {

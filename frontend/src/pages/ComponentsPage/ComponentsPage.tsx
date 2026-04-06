@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
 import { componentService, parsePagination } from "../../api/component.service";
-import type { ComponentType, IComponentBase, IResourceParameters } from "../../types/component.types";
+import type { ComponentType, ComponentListMap, IResourceParameters } from "../../types/component.types";
 import type { FilterConfig } from '../../components/FilterPanel/filterConfigs';
 import { filterConfigs } from '../../components/FilterPanel/filterConfigs';
 import { componentSpecConfigs } from "./componentSpecsConfigs";
@@ -16,7 +16,7 @@ type FilterValues = Record<string, string[] | RangeValue>;
 function ComponentsPage() {
     const { type } = useParams<{ type: string }>();
     const navigate = useNavigate();
-    const [components, setComponents] = useState<IComponentBase[]>([]);
+    const [components, setComponents] = useState<ComponentListMap[ComponentType][]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [filters, setFilters] = useState<FilterValues>({});
@@ -80,6 +80,7 @@ function ComponentsPage() {
 
             const response = await componentService.getAll(type as ComponentType, params);
             const pagination = parsePagination(response.headers as Record<string, string>);
+            console.log(response.data)
 
             if (pagination) {
                 setComponents(response.data);

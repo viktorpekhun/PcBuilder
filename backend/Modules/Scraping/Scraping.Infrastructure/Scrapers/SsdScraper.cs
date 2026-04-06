@@ -16,9 +16,9 @@ namespace Scraping.Infrastructure.Scrapers
     public class SsdScraper : IComponentScraper<Ssd>
     {
         private const string BaseUrl = "https://hotline.ua";
-        public async Task<ScrapingResult<Ssd>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<Ssd> componentsFromDb, ConcurrentBag<Store> storesFromDb)
+        public async Task<ScrapingResult<Ssd>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<Ssd> componentsFromDb, ConcurrentBag<Store> storesFromDb, CancellationToken cancellationToken = default)
         {
-            var html = await client.GetStringAsync(url);
+            var html = await client.GetStringAsync(url, cancellationToken);
 
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
@@ -32,6 +32,7 @@ namespace Scraping.Infrastructure.Scrapers
             if (titleNode != null)
             {
                 ssd.Name = titleNode.InnerText.Trim();
+                ssd.Name = Regex.Replace(ssd.Name, @"SSD накопичувач", "", RegexOptions.IgnoreCase).Trim();
                 var match = Regex.Match(ssd.Name, @"\((.*?)\)");
                 if (match.Success)
                 {
@@ -42,16 +43,6 @@ namespace Scraping.Infrastructure.Scrapers
             else
             {
                 return new ScrapingResult<Ssd>(null, new List<Store>(), new List<ProductOffer>());
-            }
-
-            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//div[contains(@class, 'description__content')]");
-            if (descriptionNode != null)
-            {
-                ssd.Description = descriptionNode.InnerText.Trim();
-                if (!string.IsNullOrEmpty(modelInBrackets))
-                {
-                    ssd.Description = Regex.Replace(ssd.Description, $@"\({Regex.Escape(modelInBrackets)}\)", "");
-                }
             }
 
 
@@ -76,10 +67,19 @@ namespace Scraping.Infrastructure.Scrapers
                                 ssd.Brand = value ?? string.Empty;
                                 break;
                             case "Обсяг, ГБ":
-                                var capacityMatch = Regex.Match(value, @"\d+");
-                                if (capacityMatch.Success)
-                                    ssd.Capacity = int.Parse(capacityMatch.Value);
-                                break;
+                                {
+                                    var capacityMatch = Regex.Match(value, @"\d+");
+                                    if (capacityMatch.Success)
+                                        ssd.Capacity = int.Parse(capacityMatch.Value);
+                                    break;
+                                }
+                            case "Об'єм, ГБ":
+                                {
+                                    var capacityMatch = Regex.Match(value, @"\d+");
+                                    if (capacityMatch.Success)
+                                        ssd.Capacity = int.Parse(capacityMatch.Value);
+                                    break;
+                                }
                             case "Інтерфейс":
                                 ssd.Interface = value ?? string.Empty;
                                 break;

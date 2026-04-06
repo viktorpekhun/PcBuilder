@@ -15,6 +15,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="RabbitMQ.Client" Version="7.1.2" />
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.1" />
@@ -26,8 +27,9 @@
     <ProjectReference Include="..\PcBuilder.Persistence\PcBuilder.Persistence.csproj" />
     <ProjectReference Include="..\Modules\Components\Components.Infrastructure\Components.Infrastructure.csproj" />
     <ProjectReference Include="..\Modules\Auth\Auth.Infrastructure\Auth.Infrastructure.csproj" />
-    <ProjectReference Include="..\Modules\PcBuilds\PcBuilds.Infrastructure\PcBuilds.Infrastructure.csproj" />
     <ProjectReference Include="..\Modules\Scraping\Scraping.Infrastructure\Scraping.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\PcBuilds\PcBuilds.Infrastructure\PcBuilds.Infrastructure.csproj" />
+    <ProjectReference Include="..\PcBuilder.Contracts\PcBuilder.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

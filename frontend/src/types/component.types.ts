@@ -193,7 +193,6 @@ export interface IFanList extends IComponentBase {
 // =====================
 
 export interface ICpuDetail extends ICpuList {
-    description?: string;
     cache?: number;
     dimmType?: string;
     techprocess?: string;
@@ -210,7 +209,6 @@ export interface IGpuPowerConnector {
 }
 
 export interface IGpuDetail extends IGpuList {
-    description?: string;
     cudaCores?: number;
     memorySpeed?: number;
     sizeLength?: number;
@@ -224,7 +222,6 @@ export interface IGpuDetail extends IGpuList {
 }
 
 export interface IRamDetail extends IRamList {
-    description?: string;
     moduleQuantity?: number;
     ecc: boolean;
     expo: boolean;
@@ -257,7 +254,6 @@ export interface IInnerPort {
 }
 
 export interface IMotherboardDetail extends IMotherboardList {
-    description?: string;
     sata3Count?: number;
     powerMotherboard?: number;
     fanQuantity?: number;
@@ -277,7 +273,6 @@ export interface IMotherboardDetail extends IMotherboardList {
 }
 
 export interface ICpuCoolerDetail extends ICpuCoolerList {
-    description?: string;
     fanCount?: number;
     minSpeed?: number;
     airflowCfm?: number;
@@ -296,7 +291,6 @@ export interface IPcCaseFanLocation {
 }
 
 export interface IPcCaseDetail extends IPcCaseList {
-    description?: string;
     weight?: number;
     maxGpuLength?: number;
     maxCpuCoolerHeight?: number;
@@ -316,21 +310,34 @@ export interface IPcCaseDetail extends IPcCaseList {
 
 export interface IPowerSupplyMotherboardConnector {
     pins: number;
+    quantity: number
+}
+
+export interface IPowerSupplyCpuConnector {
+    pins: number;
     additionalPins?: number;
+    quantity: number
+}
+
+export interface IPowerSupplyGpuConnector {
+    pins: number;
+    additionalPins?: number;
+    quantity: number
 }
 
 export interface IPowerSupplyDetail extends IPowerSupplyList {
-    description?: string;
     molexCount?: number;
     sataCount?: number;
     fddCount?: number;
     inputMinVoltage?: number;
     inputMaxVoltage?: number;
     hasApcf: boolean;
-    isModular?: boolean;
+    Modularity?: string;
     size?: string;
     factoryLink?: string;
     powerSupplyMotherboardPowerConnectors: IPowerSupplyMotherboardConnector[];
+    powerSupplyCpuPowerConnectors: IPowerSupplyCpuConnector[];
+    powerSupplyGpuPowerConnectors: IPowerSupplyGpuConnector[];
     productOffers: IProductOffer[];
 }
 
@@ -348,7 +355,6 @@ export interface ISsdDetail extends ISsdList {
 }
 
 export interface IHddDetail extends IHddList {
-    description?: string;
     speed?: number;
     writingTechnology?: string;
     noiceDb?: number;
@@ -358,7 +364,6 @@ export interface IHddDetail extends IHddList {
 }
 
 export interface IFanDetail extends IFanList {
-    description?: string;
     minSpeed?: number;
     airflowCfm?: number;
     voltage?: number;

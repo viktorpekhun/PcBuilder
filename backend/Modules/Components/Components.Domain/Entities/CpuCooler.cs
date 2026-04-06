@@ -1,3 +1,4 @@
+using Components.Domain.ValueObjects;
 using System.ComponentModel.DataAnnotations;
 
 namespace Components.Domain.Entities
@@ -14,9 +15,6 @@ namespace Components.Domain.Entities
         [Url]
         public string? PhotoUrl { get; set; }
 
-        [MaxLength(3000)]
-        public string? Description { get; set; }
-
         [Required]
         [MaxLength(100)]
         public string Brand { get; set; } = string.Empty;
@@ -28,8 +26,7 @@ namespace Components.Domain.Entities
         public int? FanCount { get; set; }
         public double? FanSize { get; set; }
 
-        [MaxLength(100)]
-        public string? RadiatorMaterial { get; set; }
+        public LocalizedString? RadiatorMaterial { get; set; }
 
         [MaxLength(100)]
         public string? SpeedControl { get; set; }

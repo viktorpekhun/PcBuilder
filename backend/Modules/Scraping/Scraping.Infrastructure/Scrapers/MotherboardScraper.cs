@@ -18,9 +18,9 @@ namespace Scraping.Infrastructure.Scrapers
     public class MotherboardScraper : IComponentScraper<Motherboard>
     {
         private const string BaseUrl = "https://hotline.ua";
-        public async Task<ScrapingResult<Motherboard>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<Motherboard> componentsFromDb, ConcurrentBag<Store> storesFromDb)
+        public async Task<ScrapingResult<Motherboard>> ScrapeAsync(string url, HttpClient client, ConcurrentBag<Motherboard> componentsFromDb, ConcurrentBag<Store> storesFromDb, CancellationToken cancellationToken = default)
         {
-            var html = await client.GetStringAsync(url);
+            var html = await client.GetStringAsync(url, cancellationToken);
 
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
@@ -34,6 +34,7 @@ namespace Scraping.Infrastructure.Scrapers
             if (titleNode != null)
             {
                 motherboard.Name = titleNode.InnerText.Trim();
+                motherboard.Name = Regex.Replace(motherboard.Name, @"Материнська плата", "", RegexOptions.IgnoreCase).Trim();
                 var match = Regex.Match(motherboard.Name, @"\((.*?)\)");
                 if (match.Success)
                 {
@@ -44,16 +45,6 @@ namespace Scraping.Infrastructure.Scrapers
             else
             {
                 return new ScrapingResult<Motherboard>(null, new List<Store>(), new List<ProductOffer>());
-            }
-
-            var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//div[contains(@class, 'description__content')]");
-            if (descriptionNode != null)
-            {
-                motherboard.Description = descriptionNode.InnerText.Trim();
-                if (!string.IsNullOrEmpty(modelInBrackets))
-                {
-                    motherboard.Description = Regex.Replace(motherboard.Description, $@"\({Regex.Escape(modelInBrackets)}\)", "");
-                }
             }
 
 
@@ -376,11 +367,32 @@ namespace Scraping.Infrastructure.Scrapers
                                 }
                             case "USB 3.2 Gen 2" or "USB 3.2 Gen 1" or "USB 2.0 на платі":
                                 {
-                                    innerPorts.Add(new InnerPort
+                                    if (string.IsNullOrEmpty(value))
+                                        break;
+                                    if (key == "USB 2.0 на платі")
                                     {
-                                        Type = key,
-                                        Value = value
-                                    });
+                                        innerPorts.Add(new InnerPort
+                                        {
+                                            Type = "USB 2.0",
+                                            Value = value.Trim().Split(' ')[0]
+                                        });
+                                    }
+                                    else if (key == "USB 3.2 Gen 1")
+                                    {
+                                        innerPorts.Add(new InnerPort
+                                        {
+                                            Type = key,
+                                            Value = value.Trim().Split(' ')[0]
+                                        });
+                                    }
+                                    else
+                                    {
+                                        innerPorts.Add(new InnerPort
+                                        {
+                                            Type = key,
+                                            Value = value
+                                        });
+                                    }
                                     break;
                                 }
 

@@ -21,7 +21,7 @@ using Components.Application.Queries;
 
 namespace Components.Application.Handlers
 {
-    public class GetComponentsByTypeHandler : IRequestHandler<GetComponentsByTypeQuery, Result<PagedResponse<IComponentListDto>>>
+    public class GetComponentsByTypeHandler : IRequestHandler<GetComponentsByTypeQuery, Result<PagedResponse<object>>>
     {
         private readonly IApplicationDbContext _context;
         private readonly IMapper _mapper;
@@ -32,7 +32,7 @@ namespace Components.Application.Handlers
             _mapper = mapper;
         }
 
-        public async Task<Result<PagedResponse<IComponentListDto>>> Handle(GetComponentsByTypeQuery request, CancellationToken cancellationToken)
+        public async Task<Result<PagedResponse<object>>> Handle(GetComponentsByTypeQuery request, CancellationToken cancellationToken)
         {
             (IEnumerable<object> componentEntities, int totalCount) = request.ComponentType switch
             {
@@ -52,7 +52,7 @@ namespace Components.Application.Handlers
                 _ => (Enumerable.Empty<object>(), 0)
             };
 
-            List<IComponentListDto> mappedItems = request.ComponentType switch
+            List<object> mappedItems = request.ComponentType switch
             {
                 ComponentType.Cpu => MapList<Cpu, CpuListDto>(componentEntities),
                 ComponentType.Gpu => MapList<Gpu, GpuListDto>(componentEntities),
@@ -67,15 +67,15 @@ namespace Components.Application.Handlers
                 _ => throw new InvalidOperationException("Unreachable")
             };
 
-            return Result<PagedResponse<IComponentListDto>>.Success(
-                new PagedResponse<IComponentListDto>(mappedItems, totalCount, request.Parameters));
+            return Result<PagedResponse<object>>.Success(
+                new PagedResponse<object>(mappedItems, totalCount, request.Parameters));
         }
 
-        private List<IComponentListDto> MapList<TEntity, TDto>(IEnumerable<object> entities)
+        private List<object> MapList<TEntity, TDto>(IEnumerable<object> entities)
             where TEntity : class
             where TDto : IComponentListDto
         {
-            return _mapper.Map<List<TDto>>(entities.Cast<TEntity>()).Cast<IComponentListDto>().ToList();
+            return _mapper.Map<List<TDto>>(entities.Cast<TEntity>()).Cast<object>().ToList();
         }
 
         private async Task<(IEnumerable<object>, int)> GetFilteredComponentsAndCount<T>(

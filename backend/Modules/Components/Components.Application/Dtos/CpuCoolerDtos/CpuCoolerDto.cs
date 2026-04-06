@@ -1,5 +1,6 @@
 using Components.Application.Dtos;
-﻿
+using Components.Domain.ValueObjects;
+
 namespace Components.Application.Dtos.CpuCoolerDtos
 {
     public class CpuCoolerDto : IComponentDetailDto
@@ -7,12 +8,11 @@ namespace Components.Application.Dtos.CpuCoolerDtos
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? PhotoUrl { get; set; }
-        public string? Description { get; set; }
         public string Brand { get; set; } = string.Empty;
         public string Type { get; set; } = string.Empty;
         public int? FanCount { get; set; }
         public double? FanSize { get; set; }
-        public string? RadiatorMaterial { get; set; }
+        public LocalizedString? RadiatorMaterial { get; set; }
         public string? SpeedControl { get; set; }
         public string? PowerConnector { get; set; }
         public int? MaxPowerDissipation { get; set; }

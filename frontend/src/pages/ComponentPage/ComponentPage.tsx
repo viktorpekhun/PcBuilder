@@ -30,7 +30,6 @@ function ComponentPage() {
     const [component, setComponent] = useState<IComponentBase | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
     useEffect(() => {
         const fetchComponentData = async () => {
@@ -49,10 +48,6 @@ function ComponentPage() {
 
         fetchComponentData();
     }, [type, id]);
-
-    const toggleDescription = () => {
-        setIsDescriptionExpanded(!isDescriptionExpanded);
-    };
 
     const handleAddToBuild = (offer: IProductOffer) => {
         try {
@@ -208,7 +203,6 @@ function ComponentPage() {
         return <div className={styles['error']}>Component not found</div>;
     }
 
-    const description = component.description as string | undefined;
     const factoryLink = component.factoryLink as string | undefined;
     const productOffers = component.productOffers as IProductOffer[] | undefined;
 
@@ -255,60 +249,25 @@ function ComponentPage() {
                                 <div className={styles['no-image']}>No image available</div>
                             )}
                         </div>
-                        {!description && (
-                            <div className={styles['component-price']}>
-                                <h2>Середня ціна: <span className={styles['price']}>{component.averagePrice} грн</span></h2>
-                            </div>
-                        )}
                     </div>
-
+                        
                     <div className={styles['component-info']}>
-                        {description && (
-                            <div className={styles['component-price']}>
-                                <h2>Середня ціна: <span className={styles['price']}>{component.averagePrice} грн</span></h2>
-                            </div>
-                        )}
-                        {description ? (
-                            <div className={styles['component-description']}>
-                                <h3>Опис</h3>
-                                <div className={`${styles['description-content']} ${
-                                    !isDescriptionExpanded && description.length > 500
-                                        ? styles['collapsed']
-                                        : ''
-                                }`}>
-                                    <p>{description}</p>
-                                </div>
-                                {description.length > 500 && (
-                                    <button
-                                        className={styles['description-toggle']}
-                                        onClick={toggleDescription}
-                                    >
-                                        {isDescriptionExpanded ? 'Приховати ↑' : 'Розгорнути ↓'}
-                                    </button>
-                                )}
-                            </div>
-                        ) : (
-                            <div className={styles['component-specs']}>
-                                <h3>Характеристики</h3>
-                                <table className={styles['specs-table']}>
-                                    <tbody>
+                        <div className={styles['component-price']}>
+                            <h2>
+                                Середня ціна: <span className={styles['price']}>{component.averagePrice} грн</span>
+                            </h2>
+                        </div>
+                        
+                        <div className={styles['component-specs']}>
+                            <h3>Характеристики</h3>
+                            <table className={styles['specs-table']}>
+                                <tbody>
                                     {renderSpecsFromConfig()}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-                {description && (
-                    <div className={styles['component-specs']}>
-                        <h3>Характеристики</h3>
-                        <table className={styles['specs-table']}>
-                            <tbody>
-                            {renderSpecsFromConfig()}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
 
                 {productOffers && productOffers.length > 0 && (
                     <div className={styles['offers-section']}>

@@ -8,7 +8,6 @@ namespace Components.Application.Dtos.GpuDtos
 
         public string Name { get; set; } = string.Empty;
         public string? PhotoUrl { get; set; }
-        public string? Description { get; set; }
         public string Brand { get; set; } = string.Empty;
         public string GpuManufacturer { get; set; } = string.Empty;
         public string GpuModel { get; set; } = string.Empty;
