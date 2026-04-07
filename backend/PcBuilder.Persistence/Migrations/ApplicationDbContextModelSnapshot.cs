@@ -40,7 +40,7 @@ namespace PcBuilder.Persistence.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Roles", (string)null);
+                    b.ToTable("Roles");
 
                     b.HasData(
                         new
@@ -60,6 +60,14 @@ namespace PcBuilder.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AvatarUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Bio")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime>("CommentBanUntil")
                         .HasColumnType("datetime2");
@@ -91,6 +99,13 @@ namespace PcBuilder.Persistence.Migrations
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("PasswordResetToken")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("PasswordResetTokenExpiry")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("PostBanUntil")
                         .HasColumnType("datetime2");
 
@@ -115,7 +130,7 @@ namespace PcBuilder.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("[GoogleId] IS NOT NULL");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Cpu", b =>
@@ -187,7 +202,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Cpus", (string)null);
+                    b.ToTable("Cpus");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.CpuCooler", b =>
@@ -276,7 +291,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("CpuCoolers", null, t =>
+                    b.ToTable("CpuCoolers", t =>
                         {
                             t.HasCheckConstraint("CHK_CpuCooler_Type", "Type IN ('Air', 'Water')");
                         });
@@ -300,7 +315,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("CpuCoolerId");
 
-                    b.ToTable("CpuCoolerSockets", (string)null);
+                    b.ToTable("CpuCoolerSockets");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.CpuPowerConnector", b =>
@@ -322,7 +337,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("MotherboardId");
 
-                    b.ToTable("CpuPowerConnectors", (string)null);
+                    b.ToTable("CpuPowerConnectors");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Fan", b =>
@@ -397,7 +412,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Fans", (string)null);
+                    b.ToTable("Fans");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Gpu", b =>
@@ -481,7 +496,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Gpus", (string)null);
+                    b.ToTable("Gpus");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.GpuPowerConnector", b =>
@@ -503,7 +518,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("GpuId");
 
-                    b.ToTable("GpuPowerConnectors", (string)null);
+                    b.ToTable("GpuPowerConnectors");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Hdd", b =>
@@ -566,7 +581,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Hdds", (string)null);
+                    b.ToTable("Hdds");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.InnerPort", b =>
@@ -592,7 +607,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("MotherboardId");
 
-                    b.ToTable("InnerPorts", (string)null);
+                    b.ToTable("InnerPorts");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.M2Slot", b =>
@@ -617,7 +632,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("MotherboardId");
 
-                    b.ToTable("M2Slots", (string)null);
+                    b.ToTable("M2Slots");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Motherboard", b =>
@@ -717,7 +732,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Motherboards", (string)null);
+                    b.ToTable("Motherboards");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.PcCase", b =>
@@ -796,7 +811,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PcCases", (string)null);
+                    b.ToTable("PcCases");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.PcCaseFanLocation", b =>
@@ -818,7 +833,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("PcCaseId");
 
-                    b.ToTable("PcCaseFanLocations", (string)null);
+                    b.ToTable("PcCaseFanLocations");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.PcCaseFormFactor", b =>
@@ -839,7 +854,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("PcCaseId");
 
-                    b.ToTable("PcCaseFormFactors", (string)null);
+                    b.ToTable("PcCaseFormFactors");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.PcleSlot", b =>
@@ -864,7 +879,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("MotherboardId");
 
-                    b.ToTable("PcleSlots", (string)null);
+                    b.ToTable("PcleSlots");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.PowerSupply", b =>
@@ -938,7 +953,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PowerSupplies", (string)null);
+                    b.ToTable("PowerSupplies");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.PowerSupplyPowerConnector", b =>
@@ -968,7 +983,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("PowerSupplyId");
 
-                    b.ToTable("PowerSupplyPowerConnectors", (string)null);
+                    b.ToTable("PowerSupplyPowerConnectors");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.ProductOffer", b =>
@@ -1000,7 +1015,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("ComponentId", "ComponentType");
 
-                    b.ToTable("ProductOffers", (string)null);
+                    b.ToTable("ProductOffers");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Ram", b =>
@@ -1071,7 +1086,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Rams", (string)null);
+                    b.ToTable("Rams");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.RearPort", b =>
@@ -1095,7 +1110,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("MotherboardId");
 
-                    b.ToTable("RearPorts", (string)null);
+                    b.ToTable("RearPorts");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Ssd", b =>
@@ -1175,7 +1190,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Ssds", (string)null);
+                    b.ToTable("Ssds");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Store", b =>
@@ -1199,7 +1214,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Stores", (string)null);
+                    b.ToTable("Stores");
                 });
 
             modelBuilder.Entity("PcBuilds.Domain.Entities.PcBuild", b =>
@@ -1301,7 +1316,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PcBuilds", (string)null);
+                    b.ToTable("PcBuilds");
                 });
 
             modelBuilder.Entity("PcBuilds.Domain.Entities.PcBuild_Fan", b =>
@@ -1452,7 +1467,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Reviews", (string)null);
+                    b.ToTable("Reviews");
                 });
 
             modelBuilder.Entity("UserRoles", b =>
@@ -1467,7 +1482,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("UsersId");
 
-                    b.ToTable("UserRoles", (string)null);
+                    b.ToTable("UserRoles");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.CpuCooler", b =>
@@ -1490,7 +1505,7 @@ namespace PcBuilder.Persistence.Migrations
 
                             b1.HasKey("CpuCoolerId");
 
-                            b1.ToTable("CpuCoolers", (string)null);
+                            b1.ToTable("CpuCoolers");
 
                             b1.WithOwner()
                                 .HasForeignKey("CpuCoolerId");
@@ -1541,7 +1556,7 @@ namespace PcBuilder.Persistence.Migrations
 
                             b1.HasKey("FanId");
 
-                            b1.ToTable("Fans", (string)null);
+                            b1.ToTable("Fans");
 
                             b1.WithOwner()
                                 .HasForeignKey("FanId");
@@ -1565,7 +1580,7 @@ namespace PcBuilder.Persistence.Migrations
 
                             b1.HasKey("FanId");
 
-                            b1.ToTable("Fans", (string)null);
+                            b1.ToTable("Fans");
 
                             b1.WithOwner()
                                 .HasForeignKey("FanId");
@@ -1629,7 +1644,7 @@ namespace PcBuilder.Persistence.Migrations
 
                             b1.HasKey("PcCaseId");
 
-                            b1.ToTable("PcCases", (string)null);
+                            b1.ToTable("PcCases");
 
                             b1.WithOwner()
                                 .HasForeignKey("PcCaseId");
@@ -1653,7 +1668,7 @@ namespace PcBuilder.Persistence.Migrations
 
                             b1.HasKey("PcCaseId");
 
-                            b1.ToTable("PcCases", (string)null);
+                            b1.ToTable("PcCases");
 
                             b1.WithOwner()
                                 .HasForeignKey("PcCaseId");
@@ -1677,7 +1692,7 @@ namespace PcBuilder.Persistence.Migrations
 
                             b1.HasKey("PcCaseId");
 
-                            b1.ToTable("PcCases", (string)null);
+                            b1.ToTable("PcCases");
 
                             b1.WithOwner()
                                 .HasForeignKey("PcCaseId");
@@ -1716,7 +1731,7 @@ namespace PcBuilder.Persistence.Migrations
 
                             b1.HasKey("PcCaseFanLocationId");
 
-                            b1.ToTable("PcCaseFanLocations", (string)null);
+                            b1.ToTable("PcCaseFanLocations");
 
                             b1.WithOwner()
                                 .HasForeignKey("PcCaseFanLocationId");
@@ -1770,7 +1785,7 @@ namespace PcBuilder.Persistence.Migrations
 
                             b1.HasKey("PowerSupplyId");
 
-                            b1.ToTable("PowerSupplies", (string)null);
+                            b1.ToTable("PowerSupplies");
 
                             b1.WithOwner()
                                 .HasForeignKey("PowerSupplyId");
@@ -1821,7 +1836,7 @@ namespace PcBuilder.Persistence.Migrations
 
                             b1.HasKey("RamId");
 
-                            b1.ToTable("Rams", (string)null);
+                            b1.ToTable("Rams");
 
                             b1.WithOwner()
                                 .HasForeignKey("RamId");

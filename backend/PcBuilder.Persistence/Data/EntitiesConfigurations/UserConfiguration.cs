@@ -39,6 +39,15 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.EmailVerificationToken)
             .HasMaxLength(500);
 
+        builder.Property(u => u.PasswordResetToken)
+            .HasMaxLength(500);
+
+        builder.Property(u => u.AvatarUrl)
+            .HasMaxLength(500);
+
+        builder.Property(u => u.Bio)
+            .HasMaxLength(200);
+
         builder.HasMany(u => u.Roles)
             .WithMany(r => r.Users)
             .UsingEntity("UserRoles");

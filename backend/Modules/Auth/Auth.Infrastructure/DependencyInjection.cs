@@ -17,6 +17,7 @@ namespace Auth.Infrastructure
             services.AddSingleton<ITokenProviderService, TokenProviderService>();
             services.AddSingleton<IGoogleAuthService, GoogleAuthService>();
             services.AddScoped<IEmailService, EmailService>();
+            services.AddSingleton<IFileStorageService, LocalFileStorageService>();
 
             return services;
         }

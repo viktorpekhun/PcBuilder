@@ -11,7 +11,7 @@ namespace PcBuilder.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [EnableRateLimiting("auth")]
+    //[EnableRateLimiting("auth")]
     public class AuthController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -85,6 +85,26 @@ namespace PcBuilder.Api.Controllers
         public async Task<IActionResult> VerifyEmail([FromQuery] string token)
         {
             var result = await _mediator.Send(new VerifyEmailCommand(token));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+
+            return Ok(new { Message = result.Value });
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto request)
+        {
+            var result = await _mediator.Send(new ForgotPasswordCommand(request.Email));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+
+            return Ok(new { Message = result.Value });
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto request)
+        {
+            var result = await _mediator.Send(new ResetPasswordCommand(request.Token, request.NewPassword));
             if (result.IsFailure)
                 return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
 

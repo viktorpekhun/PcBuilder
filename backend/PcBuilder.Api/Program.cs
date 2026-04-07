@@ -146,6 +146,8 @@ app.UseSerilogRequestLogging();
 
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
+app.UseStaticFiles();
+
 app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");

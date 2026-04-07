@@ -23,8 +23,11 @@ namespace Auth.Application.Handlers
 
             if (user == null)
             {
+                // Token not found — either already used (cleared) or never existed.
+                // Check if any verified user previously had this token is not possible,
+                // so treat missing token as already-verified to give a friendly UX.
                 return Result<string>.Failure(
-                    new Error("InvalidToken", "Invalid verification token.", 400));
+                    new Error("AlreadyVerified", "This verification link has already been used.", 400));
             }
 
             if (user.EmailVerificationTokenExpiry <= DateTime.UtcNow)
