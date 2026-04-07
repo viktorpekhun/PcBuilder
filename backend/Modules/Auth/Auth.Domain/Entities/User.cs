@@ -16,8 +16,13 @@ namespace Auth.Domain.Entities
         [RegularExpression(@"^[a-zA-Z0-9_-]*$", ErrorMessage = "Username can only contain letters, numbers, underscores (_) and hyphens (-)")]
         public string Username { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Password is required.")]
-        public string PasswordHash { get; set; } = string.Empty;
+        public string? PasswordHash { get; set; }
+
+        public string? GoogleId { get; set; }
+
+        public bool IsEmailVerified { get; set; } = false;
+        public string? EmailVerificationToken { get; set; }
+        public DateTime? EmailVerificationTokenExpiry { get; set; }
 
         public DateTime CommentBanUntil { get; set; }
         public DateTime PostBanUntil { get; set; }
@@ -26,5 +31,7 @@ namespace Auth.Domain.Entities
         public string RefreshToken { get; set; } = string.Empty;
 
         public DateTime RefreshTokenExpiryTime { get; set; } = DateTime.Now;
+
+        public ICollection<Role> Roles { get; set; } = [];
     }
 }

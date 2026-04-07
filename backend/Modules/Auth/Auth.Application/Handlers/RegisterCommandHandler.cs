@@ -16,15 +16,18 @@ namespace Auth.Application.Handlers
         private readonly IApplicationDbContext _context;
         private readonly ITokenProviderService _tokenProviderService;
         private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
 
         public RegisterCommandHandler(
             IApplicationDbContext context,
             ITokenProviderService tokenProviderService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IEmailService emailService)
         {
             _context = context;
             _tokenProviderService = tokenProviderService;
             _configuration = configuration;
+            _emailService = emailService;
         }
 
         public async Task<Result<AuthResultDto>> Handle(RegisterCommand request, CancellationToken cancellationToken)
@@ -39,16 +42,23 @@ namespace Auth.Application.Handlers
 
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
+            var userRole = await _context.Set<Role>()
+                .FirstAsync(r => r.Name == "User", cancellationToken);
+
             var user = new User
             {
                 Username = request.Username,
                 Email = request.Email,
                 PasswordHash = passwordHash,
                 CommentBanUntil = DateTime.MinValue,
-                PostBanUntil = DateTime.MinValue
+                PostBanUntil = DateTime.MinValue,
+                IsEmailVerified = false,
+                EmailVerificationToken = Guid.NewGuid().ToString("N"),
+                EmailVerificationTokenExpiry = DateTime.UtcNow.AddHours(24)
             };
 
-            var accessToken = _tokenProviderService.CreateAccessToken(user);
+            user.Roles.Add(userRole);
+
             var refreshToken = _tokenProviderService.CreateRefreshToken();
             user.RefreshToken = refreshToken;
 
@@ -57,6 +67,11 @@ namespace Auth.Application.Handlers
 
             await _context.Set<User>().AddAsync(user, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
+
+            // Generate access token after save so user.Id is assigned by EF
+            var accessToken = _tokenProviderService.CreateAccessToken(user);
+
+            await _emailService.SendVerificationEmailAsync(user.Email, user.EmailVerificationToken, cancellationToken);
 
             return Result<AuthResultDto>.Success(new AuthResultDto
             {

@@ -1,0 +1,8 @@
+using Auth.Application.Dtos;
+using MediatR;
+using PcBuilder.SharedKernel;
+
+namespace Auth.Application.Commands
+{
+    public record GoogleLoginCommand(string IdToken) : IRequest<Result<AuthResultDto>>;
+}

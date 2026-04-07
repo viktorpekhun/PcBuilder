@@ -36,6 +36,7 @@ namespace PcBuilder.Persistence.Data
 
         // Auth
         public DbSet<User> Users { get; set; }
+        public DbSet<Role> Roles { get; set; }
 
         // PcBuilds
         public DbSet<PcBuild> PcBuilds { get; set; }

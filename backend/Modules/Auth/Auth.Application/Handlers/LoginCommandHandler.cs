@@ -29,9 +29,10 @@ namespace Auth.Application.Handlers
         public async Task<Result<AuthResultDto>> Handle(LoginCommand request, CancellationToken cancellationToken)
         {
             var user = await _context.Set<User>()
+                .Include(u => u.Roles)
                 .FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
 
-            if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            if (user == null || string.IsNullOrEmpty(user.PasswordHash) || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             {
                 return Result<AuthResultDto>.Failure(
                     new Error("InvalidCredentials", "Invalid email or password.", 401));
