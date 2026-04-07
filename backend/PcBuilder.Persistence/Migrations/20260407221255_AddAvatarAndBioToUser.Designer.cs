@@ -12,7 +12,7 @@ using PcBuilder.Persistence.Data;
 namespace PcBuilder.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260407214611_AddAvatarAndBioToUser")]
+    [Migration("20260407221255_AddAvatarAndBioToUser")]
     partial class AddAvatarAndBioToUser
     {
         /// <inheritdoc />
