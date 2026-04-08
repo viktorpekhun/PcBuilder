@@ -32,6 +32,7 @@ namespace PcBuilds.Application.Handlers
                     .Include(b => b.PcBuild_Ssds)
                     .Include(b => b.PcBuild_Hdds)
                     .Include(b => b.PcBuild_Fans)
+                    .Include(b => b.User)
                     .FirstOrDefaultAsync(b => b.Id == request.PcBuildId, cancellationToken);
 
                 if (build == null)
@@ -50,10 +51,13 @@ namespace PcBuilds.Application.Handlers
                     Name = build.Name,
                     Description = build.Description,
                     IsPublished = build.IsPublished,
+                    PublishedAt = build.PublishedAt,
                     Price = build.Price,
                     CreatedAt = build.CreatedAt,
                     UpdatedAt = build.UpdatedAt,
                     UserId = build.UserId,
+                    Username = build.User.Username,
+                    AvatarUrl = build.User.AvatarUrl,
 
                     Cpu = (build.Cpu != null && build.CpuOfferId != null) ? new ComponentPreviewDto
                     {

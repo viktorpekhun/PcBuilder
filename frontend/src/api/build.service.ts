@@ -16,5 +16,8 @@ export const buildService = {
     updateBuild: (id: string, data: IPcBuildInput) => axiosPrivate.put<IApiResponse>(`${PATH}/update/${id}`, data),
     getUserBuilds: () => axiosPrivate.get<IPcBuildList[]>(`${PATH}/user-builds`),
     getBuildById: (id: string) => axiosPrivate.get<IPcBuildRequest>(`${PATH}/${id}`),
-    deleteBuild: (id: string) => axiosPrivate.delete<IApiResponse>(`${PATH}/${id}`)
+    deleteBuild: (id: string) => axiosPrivate.delete<IApiResponse>(`${PATH}/${id}`),
+    publishBuild: (id: string, isPublished: boolean) => axiosPrivate.put<IApiResponse>(`${PATH}/${id}/publish`, { isPublished }),
+    getPublicBuildById: (id: string) => axios.get<IPcBuildRequest>(`${PATH}/${id}`),
+    cloneBuild: (id: string) => axiosPrivate.post<{ success: boolean; buildId: string }>(`${PATH}/${id}/clone`),
 }

@@ -22,6 +22,7 @@ namespace PcBuilds.Domain.Entities
         public decimal AverageRating { get; set; } = 0;
 
         public bool IsPublished { get; set; } = false;
+        public DateTime? PublishedAt { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
@@ -70,5 +71,6 @@ namespace PcBuilds.Domain.Entities
         public List<PcBuild_Ram> PcBuild_Rams { get; set; } = new();
         public List<PcBuild_Fan> PcBuild_Fans { get; set; } = new();
         public List<Review> Reviews { get; set; } = new();
+        public List<Comment> Comments { get; set; } = new();
     }
 }

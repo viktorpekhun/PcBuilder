@@ -45,6 +45,7 @@ namespace PcBuilder.Persistence.Data
         public DbSet<PcBuild_Ram> PcBuild_Rams { get; set; }
         public DbSet<PcBuild_Fan> PcBuild_Fans { get; set; }
         public DbSet<Review> Reviews { get; set; }
+        public DbSet<Comment> Comments { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

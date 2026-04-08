@@ -5,14 +5,14 @@ namespace PcBuilds.Application.Validators
 {
     public class UpdateBuildCommandValidator : AbstractValidator<UpdateBuildCommand>
     {
-        public UpdateBuildCommandValidator()
+        public UpdateBuildCommandValidator(PcBuildInputDtoValidator buildDtoValidator)
         {
             RuleFor(x => x.PcBuildId)
                 .NotEmpty().WithMessage("Build ID is required.");
 
             RuleFor(x => x.BuildDto)
                 .NotNull().WithMessage("Build data is required.")
-                .SetValidator(new PcBuildInputDtoValidator());
+                .SetValidator(buildDtoValidator);
         }
     }
 }

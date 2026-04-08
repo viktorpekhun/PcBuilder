@@ -13,6 +13,8 @@ import VerifyEmailPage from "./pages/VerifyEmailPage/VerifyEmailPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage/ResetPasswordPage";
 import ProfilePage from "./pages/ProfilePage/ProfilePage";
+import GalleryPage from "./pages/GalleryPage/GalleryPage";
+import BuildDetailPage from "./pages/BuildDetailPage/BuildDetailPage";
 
 function App() {
 
@@ -25,6 +27,8 @@ function App() {
                     <Route path="login" element={<LoginPage />} />
                     <Route path="register" element={<RegisterPage />} />
 
+                    <Route path="gallery" element={<GalleryPage />} />
+                    <Route path="builds/:id" element={<BuildDetailPage />} />
                     <Route path="components/:type" element={<ComponentsPage />} />
                     <Route path="components/:type/:id" element={<ComponentPage />} />
                     <Route path="verify-email" element={<VerifyEmailPage />} />
