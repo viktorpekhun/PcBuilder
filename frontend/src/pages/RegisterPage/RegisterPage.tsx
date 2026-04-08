@@ -8,6 +8,7 @@ import styles from './RegisterPage.module.css';
 import { Button } from "../../components/Button/Button";
 import { AxiosError } from "axios";
 import { decodeToken } from "../../utils/decodeToken";
+import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,50}$/;
 const USER_REGEX = /^[a-zA-Z][a-zA-Z0-9-_]{3,30}$/;
@@ -59,6 +60,21 @@ const RegisterPage = () => {
     useEffect(() => {
         setErrMsg('');
     }, [email, user, pwd, matchPwd]);
+
+    const handleGoogleLogin = async (credentialResponse: CredentialResponse) => {
+        try {
+            const response = await authService.googleLogin({
+                idToken: credentialResponse.credential!
+            });
+            const accessToken = response.data.accessToken;
+            const userData = decodeToken(accessToken);
+            setAuth({ ...userData, accessToken });
+            navigate("/");
+        } catch {
+            setErrMsg('Не вдалося зареєструватись через Google');
+            errRef.current?.focus();
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -276,6 +292,17 @@ const RegisterPage = () => {
                         Зареєструватись
                     </Button>
                 </form>
+
+                <div className={styles['divider']}>
+                    <span>або</span>
+                </div>
+                <div className={styles['google-login']}>
+                    <GoogleLogin
+                        onSuccess={handleGoogleLogin}
+                        onError={() => setErrMsg('Помилка реєстрації через Google')}
+                        text="signup_with"
+                    />
+                </div>
 
                 <p className={styles['login-link']}>
                     Вже маєте акаунт?

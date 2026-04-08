@@ -1,14 +1,17 @@
 using Auth.Application.Commands;
 using Auth.Application.Dtos;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace PcBuilder.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [EnableRateLimiting("auth")]
+    //[EnableRateLimiting("auth")]
     public class AuthController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -33,6 +36,17 @@ namespace PcBuilder.Api.Controllers
         public async Task<IActionResult> Login([FromBody] UserLoginDto request)
         {
             var result = await _mediator.Send(new LoginCommand(request.Email, request.Password));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+
+            SetRefreshTokenCookie(result.Value!.RefreshToken, result.Value.RefreshTokenExpirationDays);
+            return Ok(new TokenResponseDto { AccessToken = result.Value.AccessToken });
+        }
+
+        [HttpPost("google-login")]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginDto request)
+        {
+            var result = await _mediator.Send(new GoogleLoginCommand(request.IdToken));
             if (result.IsFailure)
                 return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
 
@@ -65,6 +79,60 @@ namespace PcBuilder.Api.Controllers
 
             SetRefreshTokenCookie(result.Value!.RefreshToken, result.Value.RefreshTokenExpirationDays);
             return Ok(new TokenResponseDto { AccessToken = result.Value.AccessToken });
+        }
+
+        [HttpGet("verify-email")]
+        public async Task<IActionResult> VerifyEmail([FromQuery] string token)
+        {
+            var result = await _mediator.Send(new VerifyEmailCommand(token));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+
+            return Ok(new { Message = result.Value });
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto request)
+        {
+            var result = await _mediator.Send(new ForgotPasswordCommand(request.Email));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+
+            return Ok(new { Message = result.Value });
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto request)
+        {
+            var result = await _mediator.Send(new ResetPasswordCommand(request.Token, request.NewPassword));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+
+            return Ok(new { Message = result.Value });
+        }
+
+        [Authorize]
+        [HttpPost("resend-verification")]
+        public async Task<IActionResult> ResendVerificationEmail()
+        {
+            var userId = GetUserId();
+            var result = await _mediator.Send(new ResendVerificationEmailCommand(userId));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+
+            return Ok(new { Message = result.Value });
+        }
+
+        private Guid GetUserId()
+        {
+            var idStr = User.FindFirst("sub")?.Value
+                        ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+                        ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!Guid.TryParse(idStr, out var guid))
+                throw new UnauthorizedAccessException("User ID not found in token.");
+
+            return guid;
         }
 
         private void SetRefreshTokenCookie(string refreshToken, int expirationDays)

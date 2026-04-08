@@ -6,8 +6,11 @@ namespace PcBuilds.Application.Dtos
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; } = string.Empty;
         public bool IsPublished { get; set; }
+        public DateTime? PublishedAt { get; set; }
         public decimal Price { get; set; }
         public Guid UserId { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public string? AvatarUrl { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 

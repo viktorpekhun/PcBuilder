@@ -84,6 +84,7 @@ function UserBuildsPage() {
     const [error, setError] = useState<string | null>(null);
     const [deleteStatus, setDeleteStatus] = useState<DeleteStatus>({ loading: false, error: null });
     const [deleteModal, setDeleteModal] = useState<DeleteModalState>({ isOpen: false, buildId: null, buildName: '' });
+    const [publishLoading, setPublishLoading] = useState(false);
 
     const navigate = useNavigate();
     const { auth } = useAuth();
@@ -214,6 +215,20 @@ function UserBuildsPage() {
         localStorage.removeItem('selectedComponents');
         localStorage.removeItem('editingBuild');
         navigate('/');
+    };
+
+    const handleTogglePublish = async () => {
+        if (!selectedBuild || publishLoading) return;
+        try {
+            setPublishLoading(true);
+            const newState = !selectedBuild.isPublished;
+            await buildService.publishBuild(selectedBuild.id, newState);
+            setSelectedBuild(prev => prev ? { ...prev, isPublished: newState, publishedAt: newState ? new Date().toISOString() : undefined } : null);
+        } catch (err) {
+            console.error('Failed to toggle publish:', err);
+        } finally {
+            setPublishLoading(false);
+        }
     };
 
     // --- Render helpers ---
@@ -369,6 +384,14 @@ function UserBuildsPage() {
                                     <h2>{selectedBuild.name}</h2>
                                 </div>
                                 <div className={styles['build-actions']}>
+                                    <Button
+                                        variant={selectedBuild.isPublished ? 'outline-primary' : 'primary'}
+                                        size='sm'
+                                        onClick={handleTogglePublish}
+                                        disabled={publishLoading}
+                                    >
+                                        {publishLoading ? '...' : selectedBuild.isPublished ? 'Зняти з публікації' : 'Опублікувати'}
+                                    </Button>
                                     <Button variant='outline-secondary' size='sm' onClick={handleEditBuild}>
                                         <PencilIcon />
                                     </Button>

@@ -7,6 +7,7 @@ import { authService } from '../../api/auth.service';
 import { Button } from '../../components/Button/Button';
 import { AxiosError } from 'axios';
 import { decodeToken } from '../../utils/decodeToken';
+import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 
 const LoginPage = () => {
     const { setAuth, persist, setPersist } = useAuth();
@@ -53,6 +54,21 @@ const LoginPage = () => {
             } else {
                 setErrMsg('Не вдалося виконати вхід в акаунт');
             }
+            errRef.current?.focus();
+        }
+    };
+
+    const handleGoogleLogin = async (credentialResponse: CredentialResponse) => {
+        try {
+            const response = await authService.googleLogin({
+                idToken: credentialResponse.credential!
+            });
+            const accessToken = response.data.accessToken;
+            const userData = decodeToken(accessToken);
+            setAuth({ ...userData, accessToken });
+            navigate(from, { replace: true });
+        } catch {
+            setErrMsg('Не вдалося увійти через Google');
             errRef.current?.focus();
         }
     };
@@ -142,7 +158,20 @@ const LoginPage = () => {
                     <Button type='submit' variant='primary' size='md'>
                         Увійти
                     </Button>
+                    <Link to="/forgot-password" className={styles['forgot-link']}>Забули пароль?</Link>
                 </form>
+
+                <div className={styles['divider']}>
+                    <span>або</span>
+                </div>
+                <div className={styles['google-login']}>
+                    <GoogleLogin
+                        onSuccess={handleGoogleLogin}
+                        onError={() => setErrMsg('Помилка входу через Google')}
+                        text="signin_with"
+                    />
+                </div>
+
                 <p className={styles['register-link']}>
                     Немає акаунту?
                     <span className={styles['line']}>

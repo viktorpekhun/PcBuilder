@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
@@ -12,6 +13,7 @@ using Scraping.Infrastructure;
 using MediatR;
 using PcBuilder.SharedKernel.Behaviors;
 using PcBuilder.SharedKernel.Caching;
+using PcBuilder.SharedKernel.Services;
 using RabbitMQ.Client;
 using Serilog;
 using Swashbuckle.AspNetCore.Filters;
@@ -32,6 +34,7 @@ builder.Services.AddAuthModule();
 builder.Services.AddPcBuildsModule();
 builder.Services.AddScrapingModule(builder.Configuration);
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+builder.Services.AddSingleton<IProfanityFilterService, ProfanityFilterService>();
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<CacheService>();
 builder.Services.AddSingleton<ICacheInvalidator>(sp => sp.GetRequiredService<CacheService>());
@@ -117,11 +120,18 @@ builder.Services.AddAuthentication("Bearer").AddJwtBearer(options =>
             builder.Configuration.GetSection("Jwt:Secret").Value!)),
         ValidateAudience = false,
         ValidateIssuer = false,
-        ClockSkew = TimeSpan.Zero
+        ClockSkew = TimeSpan.Zero,
+        RoleClaimType = ClaimTypes.Role,
+        NameClaimType = JwtRegisteredClaimNames.Sub
     };
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    await AdminSeeder.SeedAsync(scope.ServiceProvider, app.Configuration);
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -137,6 +147,8 @@ if (app.Environment.IsDevelopment())
 app.UseSerilogRequestLogging();
 
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+
+app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 

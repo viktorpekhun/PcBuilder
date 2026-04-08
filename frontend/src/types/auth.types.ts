@@ -29,7 +29,23 @@ export interface AuthUser {
     userId?: string;
     username?: string;
     email?: string;
+    roles?: string[];
+    emailVerified?: boolean;
+    avatarUrl?: string;
     accessToken?: string;
+}
+
+export interface IGoogleLoginRequest {
+    idToken: string;
+}
+
+export interface IForgotPasswordRequest {
+    email: string;
+}
+
+export interface IResetPasswordRequest {
+    token: string;
+    newPassword: string;
 }
 
 export interface IAuthContextType {

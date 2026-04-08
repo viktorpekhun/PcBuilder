@@ -92,8 +92,11 @@ export interface IPcBuildRequest {
     name: string;
     description?: string;
     isPublished: boolean;
+    publishedAt?: string;
     price: number;
     userId: string;
+    username?: string;
+    avatarUrl?: string;
     createdAt: string;
     updatedAt?: string;
     cpu?: IComponentPreview;

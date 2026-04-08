@@ -35,6 +35,7 @@ namespace Auth.Application.Handlers
             }
 
             var user = await _context.Set<User>()
+                .Include(u => u.Roles)
                 .FirstOrDefaultAsync(u => u.RefreshToken == request.RefreshToken, cancellationToken);
 
             if (user == null)

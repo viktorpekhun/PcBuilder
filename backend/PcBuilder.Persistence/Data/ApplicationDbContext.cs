@@ -36,6 +36,7 @@ namespace PcBuilder.Persistence.Data
 
         // Auth
         public DbSet<User> Users { get; set; }
+        public DbSet<Role> Roles { get; set; }
 
         // PcBuilds
         public DbSet<PcBuild> PcBuilds { get; set; }
@@ -44,6 +45,7 @@ namespace PcBuilder.Persistence.Data
         public DbSet<PcBuild_Ram> PcBuild_Rams { get; set; }
         public DbSet<PcBuild_Fan> PcBuild_Fans { get; set; }
         public DbSet<Review> Reviews { get; set; }
+        public DbSet<Comment> Comments { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

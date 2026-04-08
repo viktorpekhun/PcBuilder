@@ -31,6 +31,7 @@ namespace PcBuilds.Application.Handlers
                 pcBuild.Name = buildDto.Name;
                 pcBuild.Description = buildDto.Description;
                 pcBuild.IsPublished = buildDto.IsPublished;
+                pcBuild.PublishedAt = buildDto.IsPublished ? DateTime.UtcNow : null;
                 pcBuild.UpdatedAt = DateTime.UtcNow;
 
                 pcBuild.CpuId = buildDto.CpuId;

@@ -1,8 +1,10 @@
+using System.Text.Json;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PcBuilder.SharedKernel.Enums;
 using PcBuilder.SharedKernel.Exceptions;
+using PcBuilder.SharedKernel.Filtering;
 using PcBuilds.Application.Commands;
 using PcBuilds.Application.Dtos;
 using PcBuilds.Application.Queries;
@@ -78,8 +80,56 @@ namespace PcBuilder.Api.Controllers
             return Ok(builds);
         }
 
-        [Authorize]
-        [HttpGet("{id}")]
+        [HttpGet("gallery")]
+        public async Task<IActionResult> GetGallery([FromQuery] ResourceParameters parameters)
+        {
+            foreach (var key in Request.Query.Keys)
+            {
+                if (key.Equals("pageNumber", StringComparison.OrdinalIgnoreCase) ||
+                    key.Equals("pageSize", StringComparison.OrdinalIgnoreCase) ||
+                    key.Equals("orderBy", StringComparison.OrdinalIgnoreCase) ||
+                    key.Equals("ascending", StringComparison.OrdinalIgnoreCase) ||
+                    key.Equals("searchQuery", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var value = Request.Query[key].ToString();
+
+                if (value.StartsWith("[") && value.EndsWith("]"))
+                {
+                    try
+                    {
+                        var parsedValues = JsonSerializer.Deserialize<string[]>(value);
+                        if (parsedValues != null && parsedValues.Length > 0)
+                            parameters.Filters[key] = parsedValues;
+                    }
+                    catch
+                    {
+                        parameters.Filters[key] = new[] { value };
+                    }
+                }
+                else
+                {
+                    parameters.Filters[key] = new[] { value };
+                }
+            }
+
+            var result = await _mediator.Send(new GetPublicBuildsQuery(parameters));
+            var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
+            Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(new
+            {
+                result.TotalCount,
+                result.PageSize,
+                result.PageNumber,
+                result.TotalPages,
+                result.HasNext,
+                result.HasPrevious
+            }, jsonOptions));
+
+            return Ok(result.Items);
+        }
+
+        [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetBuildById(Guid id)
         {
             var build = await _mediator.Send(new GetBuildByIdQuery(id));
@@ -103,7 +153,21 @@ namespace PcBuilder.Api.Controllers
         }
 
         [Authorize]
-        [HttpDelete("{id}")]
+        [HttpPut("{id:guid}/publish")]
+        public async Task<IActionResult> PublishBuild(Guid id, [FromBody] PublishBuildRequest request)
+        {
+            var userId = GetUserId();
+            var result = await _mediator.Send(new PublishPcBuildCommand(id, userId, request.IsPublished));
+
+            return Ok(new
+            {
+                Success = true,
+                Message = result ? "Build published successfully" : "Build unpublished successfully"
+            });
+        }
+
+        [Authorize]
+        [HttpDelete("{id:guid}")]
         public async Task<IActionResult> DeleteBuild(Guid id)
         {
             var userId = GetUserId();
@@ -114,5 +178,53 @@ namespace PcBuilder.Api.Controllers
 
             return Ok(new { Success = true, Message = "Build deleted successfully" });
         }
+
+        [HttpGet("{id:guid}/comments")]
+        public async Task<IActionResult> GetBuildComments(Guid id, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        {
+            var result = await _mediator.Send(new GetBuildCommentsQuery(id, pageNumber, pageSize));
+            var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
+            Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(new
+            {
+                result.TotalCount,
+                result.PageSize,
+                result.PageNumber,
+                result.TotalPages,
+                result.HasNext,
+                result.HasPrevious
+            }, jsonOptions));
+
+            return Ok(result.Items);
+        }
+
+        [Authorize]
+        [HttpPost("{id:guid}/comments")]
+        public async Task<IActionResult> AddComment(Guid id, [FromBody] AddCommentDto dto)
+        {
+            var userId = GetUserId();
+            var commentId = await _mediator.Send(new AddCommentCommand(id, userId, dto.Text));
+            return Ok(new { Success = true, CommentId = commentId });
+        }
+
+        [Authorize]
+        [HttpDelete("comments/{commentId}")]
+        public async Task<IActionResult> DeleteComment(Guid commentId)
+        {
+            var userId = GetUserId();
+            await _mediator.Send(new DeleteCommentCommand(commentId, userId));
+            return Ok(new { Success = true, Message = "Comment deleted" });
+        }
+
+        [Authorize]
+        [HttpPost("{id:guid}/clone")]
+        public async Task<IActionResult> CloneBuild(Guid id)
+        {
+            var userId = GetUserId();
+            var newBuildId = await _mediator.Send(new CloneBuildCommand(id, userId));
+            return Ok(new { Success = true, BuildId = newBuildId });
+        }
     }
+
+    public record PublishBuildRequest(bool IsPublished);
 }

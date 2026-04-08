@@ -22,11 +22,52 @@ namespace PcBuilder.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Auth.Domain.Entities.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Roles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "User"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Admin"
+                        });
+                });
+
             modelBuilder.Entity("Auth.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AvatarUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Bio")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime>("CommentBanUntil")
                         .HasColumnType("datetime2");
@@ -39,9 +80,31 @@ namespace PcBuilder.Persistence.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("EmailVerificationToken")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("EmailVerificationTokenExpiry")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("GoogleId")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<bool>("IsEmailVerified")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("PasswordHash")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PasswordResetToken")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("PasswordResetTokenExpiry")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("PostBanUntil")
                         .HasColumnType("datetime2");
@@ -60,7 +123,14 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("GoogleId")
+                        .IsUnique()
+                        .HasFilter("[GoogleId] IS NOT NULL");
+
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Cpu", b =>
@@ -132,7 +202,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Cpus", (string)null);
+                    b.ToTable("Cpus");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.CpuCooler", b =>
@@ -221,7 +291,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("CpuCoolers", null, t =>
+                    b.ToTable("CpuCoolers", t =>
                         {
                             t.HasCheckConstraint("CHK_CpuCooler_Type", "Type IN ('Air', 'Water')");
                         });
@@ -245,7 +315,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("CpuCoolerId");
 
-                    b.ToTable("CpuCoolerSockets", (string)null);
+                    b.ToTable("CpuCoolerSockets");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.CpuPowerConnector", b =>
@@ -267,7 +337,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("MotherboardId");
 
-                    b.ToTable("CpuPowerConnectors", (string)null);
+                    b.ToTable("CpuPowerConnectors");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Fan", b =>
@@ -342,7 +412,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Fans", (string)null);
+                    b.ToTable("Fans");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Gpu", b =>
@@ -426,7 +496,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Gpus", (string)null);
+                    b.ToTable("Gpus");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.GpuPowerConnector", b =>
@@ -448,7 +518,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("GpuId");
 
-                    b.ToTable("GpuPowerConnectors", (string)null);
+                    b.ToTable("GpuPowerConnectors");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Hdd", b =>
@@ -511,7 +581,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Hdds", (string)null);
+                    b.ToTable("Hdds");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.InnerPort", b =>
@@ -537,7 +607,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("MotherboardId");
 
-                    b.ToTable("InnerPorts", (string)null);
+                    b.ToTable("InnerPorts");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.M2Slot", b =>
@@ -562,7 +632,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("MotherboardId");
 
-                    b.ToTable("M2Slots", (string)null);
+                    b.ToTable("M2Slots");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Motherboard", b =>
@@ -662,7 +732,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Motherboards", (string)null);
+                    b.ToTable("Motherboards");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.PcCase", b =>
@@ -741,7 +811,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PcCases", (string)null);
+                    b.ToTable("PcCases");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.PcCaseFanLocation", b =>
@@ -763,7 +833,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("PcCaseId");
 
-                    b.ToTable("PcCaseFanLocations", (string)null);
+                    b.ToTable("PcCaseFanLocations");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.PcCaseFormFactor", b =>
@@ -784,7 +854,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("PcCaseId");
 
-                    b.ToTable("PcCaseFormFactors", (string)null);
+                    b.ToTable("PcCaseFormFactors");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.PcleSlot", b =>
@@ -809,7 +879,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("MotherboardId");
 
-                    b.ToTable("PcleSlots", (string)null);
+                    b.ToTable("PcleSlots");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.PowerSupply", b =>
@@ -883,7 +953,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PowerSupplies", (string)null);
+                    b.ToTable("PowerSupplies");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.PowerSupplyPowerConnector", b =>
@@ -913,7 +983,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("PowerSupplyId");
 
-                    b.ToTable("PowerSupplyPowerConnectors", (string)null);
+                    b.ToTable("PowerSupplyPowerConnectors");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.ProductOffer", b =>
@@ -945,7 +1015,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("ComponentId", "ComponentType");
 
-                    b.ToTable("ProductOffers", (string)null);
+                    b.ToTable("ProductOffers");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Ram", b =>
@@ -1016,7 +1086,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Rams", (string)null);
+                    b.ToTable("Rams");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.RearPort", b =>
@@ -1040,7 +1110,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("MotherboardId");
 
-                    b.ToTable("RearPorts", (string)null);
+                    b.ToTable("RearPorts");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Ssd", b =>
@@ -1120,7 +1190,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Ssds", (string)null);
+                    b.ToTable("Ssds");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Store", b =>
@@ -1144,7 +1214,39 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Stores", (string)null);
+                    b.ToTable("Stores");
+                });
+
+            modelBuilder.Entity("PcBuilds.Domain.Entities.Comment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PcBuildId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PcBuildId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Comments");
                 });
 
             modelBuilder.Entity("PcBuilds.Domain.Entities.PcBuild", b =>
@@ -1212,6 +1314,9 @@ namespace PcBuilder.Persistence.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -1246,7 +1351,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PcBuilds", (string)null);
+                    b.ToTable("PcBuilds");
                 });
 
             modelBuilder.Entity("PcBuilds.Domain.Entities.PcBuild_Fan", b =>
@@ -1397,7 +1502,22 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Reviews", (string)null);
+                    b.ToTable("Reviews");
+                });
+
+            modelBuilder.Entity("UserRoles", b =>
+                {
+                    b.Property<int>("RolesId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UsersId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("RolesId", "UsersId");
+
+                    b.HasIndex("UsersId");
+
+                    b.ToTable("UserRoles");
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.CpuCooler", b =>
@@ -1413,13 +1533,14 @@ namespace PcBuilder.Persistence.Migrations
                                 .HasColumnName("RadiatorMaterial_En");
 
                             b1.Property<string>("Uk")
+                                .IsRequired()
                                 .HasMaxLength(100)
                                 .HasColumnType("nvarchar(100)")
                                 .HasColumnName("RadiatorMaterial_Uk");
 
                             b1.HasKey("CpuCoolerId");
 
-                            b1.ToTable("CpuCoolers", (string)null);
+                            b1.ToTable("CpuCoolers");
 
                             b1.WithOwner()
                                 .HasForeignKey("CpuCoolerId");
@@ -1463,13 +1584,14 @@ namespace PcBuilder.Persistence.Migrations
                                 .HasColumnName("BearingType_En");
 
                             b1.Property<string>("Uk")
+                                .IsRequired()
                                 .HasMaxLength(100)
                                 .HasColumnType("nvarchar(100)")
                                 .HasColumnName("BearingType_Uk");
 
                             b1.HasKey("FanId");
 
-                            b1.ToTable("Fans", (string)null);
+                            b1.ToTable("Fans");
 
                             b1.WithOwner()
                                 .HasForeignKey("FanId");
@@ -1486,13 +1608,14 @@ namespace PcBuilder.Persistence.Migrations
                                 .HasColumnName("Color_En");
 
                             b1.Property<string>("Uk")
+                                .IsRequired()
                                 .HasMaxLength(100)
                                 .HasColumnType("nvarchar(100)")
                                 .HasColumnName("Color_Uk");
 
                             b1.HasKey("FanId");
 
-                            b1.ToTable("Fans", (string)null);
+                            b1.ToTable("Fans");
 
                             b1.WithOwner()
                                 .HasForeignKey("FanId");
@@ -1549,13 +1672,14 @@ namespace PcBuilder.Persistence.Migrations
                                 .HasColumnName("AdditionalFanPlaces_En");
 
                             b1.Property<string>("Uk")
+                                .IsRequired()
                                 .HasMaxLength(200)
                                 .HasColumnType("nvarchar(200)")
                                 .HasColumnName("AdditionalFanPlaces_Uk");
 
                             b1.HasKey("PcCaseId");
 
-                            b1.ToTable("PcCases", (string)null);
+                            b1.ToTable("PcCases");
 
                             b1.WithOwner()
                                 .HasForeignKey("PcCaseId");
@@ -1572,13 +1696,14 @@ namespace PcBuilder.Persistence.Migrations
                                 .HasColumnName("BuiltInFans_En");
 
                             b1.Property<string>("Uk")
+                                .IsRequired()
                                 .HasMaxLength(200)
                                 .HasColumnType("nvarchar(200)")
                                 .HasColumnName("BuiltInFans_Uk");
 
                             b1.HasKey("PcCaseId");
 
-                            b1.ToTable("PcCases", (string)null);
+                            b1.ToTable("PcCases");
 
                             b1.WithOwner()
                                 .HasForeignKey("PcCaseId");
@@ -1595,13 +1720,14 @@ namespace PcBuilder.Persistence.Migrations
                                 .HasColumnName("PsuLocation_En");
 
                             b1.Property<string>("Uk")
+                                .IsRequired()
                                 .HasMaxLength(100)
                                 .HasColumnType("nvarchar(100)")
                                 .HasColumnName("PsuLocation_Uk");
 
                             b1.HasKey("PcCaseId");
 
-                            b1.ToTable("PcCases", (string)null);
+                            b1.ToTable("PcCases");
 
                             b1.WithOwner()
                                 .HasForeignKey("PcCaseId");
@@ -1640,7 +1766,7 @@ namespace PcBuilder.Persistence.Migrations
 
                             b1.HasKey("PcCaseFanLocationId");
 
-                            b1.ToTable("PcCaseFanLocations", (string)null);
+                            b1.ToTable("PcCaseFanLocations");
 
                             b1.WithOwner()
                                 .HasForeignKey("PcCaseFanLocationId");
@@ -1687,13 +1813,14 @@ namespace PcBuilder.Persistence.Migrations
                                 .HasColumnName("Modularity_En");
 
                             b1.Property<string>("Uk")
+                                .IsRequired()
                                 .HasMaxLength(100)
                                 .HasColumnType("nvarchar(100)")
                                 .HasColumnName("Modularity_Uk");
 
                             b1.HasKey("PowerSupplyId");
 
-                            b1.ToTable("PowerSupplies", (string)null);
+                            b1.ToTable("PowerSupplies");
 
                             b1.WithOwner()
                                 .HasForeignKey("PowerSupplyId");
@@ -1737,13 +1864,14 @@ namespace PcBuilder.Persistence.Migrations
                                 .HasColumnName("Color_En");
 
                             b1.Property<string>("Uk")
+                                .IsRequired()
                                 .HasMaxLength(100)
                                 .HasColumnType("nvarchar(100)")
                                 .HasColumnName("Color_Uk");
 
                             b1.HasKey("RamId");
 
-                            b1.ToTable("Rams", (string)null);
+                            b1.ToTable("Rams");
 
                             b1.WithOwner()
                                 .HasForeignKey("RamId");
@@ -1761,6 +1889,25 @@ namespace PcBuilder.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Motherboard");
+                });
+
+            modelBuilder.Entity("PcBuilds.Domain.Entities.Comment", b =>
+                {
+                    b.HasOne("PcBuilds.Domain.Entities.PcBuild", "PcBuild")
+                        .WithMany("Comments")
+                        .HasForeignKey("PcBuildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Auth.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PcBuild");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("PcBuilds.Domain.Entities.PcBuild", b =>
@@ -1965,6 +2112,21 @@ namespace PcBuilder.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("UserRoles", b =>
+                {
+                    b.HasOne("Auth.Domain.Entities.Role", null)
+                        .WithMany()
+                        .HasForeignKey("RolesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Auth.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UsersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Components.Domain.Entities.CpuCooler", b =>
                 {
                     b.Navigation("CpuCoolerSockets");
@@ -2007,6 +2169,8 @@ namespace PcBuilder.Persistence.Migrations
 
             modelBuilder.Entity("PcBuilds.Domain.Entities.PcBuild", b =>
                 {
+                    b.Navigation("Comments");
+
                     b.Navigation("PcBuild_Fans");
 
                     b.Navigation("PcBuild_Hdds");

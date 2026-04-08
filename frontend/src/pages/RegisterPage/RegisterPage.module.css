@@ -209,3 +209,30 @@ input:focus {
     border: 1px solid #dc3545 !important;
     background-color: #fff8f8;
 }
+
+.divider {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin: 1rem 0;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #CECECE;
+}
+
+.divider span {
+    padding: 0 0.75rem;
+    color: #838383;
+    font-size: 0.875rem;
+}
+
+.google-login {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
