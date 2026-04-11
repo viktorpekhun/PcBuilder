@@ -153,6 +153,14 @@ function BuildDetailPage() {
             <div className={styles['build-header']}>
                 <div className={styles['header-left']}>
                     <h1>{build.name}</h1>
+                    {(build.averageRating ?? 0) > 0 && (
+                        <div className={styles['rating-row']}>
+                            {[1, 2, 3, 4, 5].map(star => (
+                                <span key={star} className={star <= Math.round(build.averageRating!) ? styles['star-filled'] : styles['star-empty']}>★</span>
+                            ))}
+                            <span className={styles['rating-value']}>{build.averageRating!.toFixed(1)}</span>
+                        </div>
+                    )}
                     <div className={styles['header-meta']}>
                         <div className={styles['author-info']}>
                             {build.avatarUrl ? (
@@ -224,7 +232,7 @@ function BuildDetailPage() {
             </div>
 
             {id && (
-                <CommentSection buildId={id} currentUserId={auth?.userId} />
+                <CommentSection buildId={id} {...(auth?.userId ? { currentUserId: auth.userId } : {})} />
             )}
         </div>
     );

@@ -37,19 +37,28 @@ namespace PcBuilds.Application.Handlers
             if (user.CommentBanUntil > DateTime.UtcNow)
                 throw new ForbiddenException("You are temporarily banned from commenting.");
 
-            var comment = new Comment
+            var review = new Review
             {
                 Text = request.Text,
+                Rating = request.Rating,
                 UserId = request.UserId,
                 PcBuildId = request.PcBuildId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
 
-            await _context.Set<Comment>().AddAsync(comment, cancellationToken);
+            await _context.Set<Review>().AddAsync(review, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
 
-            return comment.Id;
+            // Recalculate average rating
+            var avgRating = await _context.Set<Review>()
+                .Where(r => r.PcBuildId == request.PcBuildId)
+                .AverageAsync(r => r.Rating, cancellationToken);
+
+            build.AverageRating = Math.Round(avgRating, 2);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return review.Id;
         }
     }
 }

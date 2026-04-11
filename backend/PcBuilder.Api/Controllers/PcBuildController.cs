@@ -203,7 +203,7 @@ namespace PcBuilder.Api.Controllers
         public async Task<IActionResult> AddComment(Guid id, [FromBody] AddCommentDto dto)
         {
             var userId = GetUserId();
-            var commentId = await _mediator.Send(new AddCommentCommand(id, userId, dto.Text));
+            var commentId = await _mediator.Send(new AddCommentCommand(id, userId, dto.Text, dto.Rating));
             return Ok(new { Success = true, CommentId = commentId });
         }
 

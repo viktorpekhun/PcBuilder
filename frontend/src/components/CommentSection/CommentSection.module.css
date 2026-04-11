@@ -11,6 +11,55 @@
     color: #1f2937;
 }
 
+/* Star rating picker */
+.rating-picker {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 0.75rem;
+    align-items: center;
+}
+
+.rating-label {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin-right: 0.5rem;
+}
+
+.star-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.5rem;
+    padding: 0;
+    line-height: 1;
+    color: #d1d5db;
+    transition: color 0.15s, transform 0.1s;
+}
+
+.star-btn:hover,
+.star-btn.active {
+    color: #f59e0b;
+}
+
+.star-btn:hover {
+    transform: scale(1.15);
+}
+
+.comment-rating {
+    display: flex;
+    gap: 2px;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+.star-filled {
+    color: #f59e0b;
+}
+
+.star-empty {
+    color: #d1d5db;
+}
+
 /* Form */
 .comment-form {
     margin-bottom: 1.5rem;

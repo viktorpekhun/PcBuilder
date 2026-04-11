@@ -18,17 +18,36 @@ namespace PcBuilds.Application.Handlers
 
         public async Task<bool> Handle(DeleteCommentCommand request, CancellationToken cancellationToken)
         {
-            var comment = await _context.Set<Comment>()
-                .FirstOrDefaultAsync(c => c.Id == request.CommentId, cancellationToken);
+            var review = await _context.Set<Review>()
+                .FirstOrDefaultAsync(r => r.Id == request.CommentId, cancellationToken);
 
-            if (comment == null)
-                throw new NotFoundException("Comment not found.");
+            if (review == null)
+                throw new NotFoundException("Review not found.");
 
-            if (comment.UserId != request.UserId)
-                throw new ForbiddenException("You can only delete your own comments.");
+            if (review.UserId != request.UserId)
+                throw new ForbiddenException("You can only delete your own reviews.");
 
-            _context.Remove(comment);
+            var buildId = review.PcBuildId;
+
+            _context.Remove(review);
             await _context.SaveChangesAsync(cancellationToken);
+
+            // Recalculate average rating
+            var build = await _context.Set<PcBuild>()
+                .FirstOrDefaultAsync(b => b.Id == buildId, cancellationToken);
+
+            if (build != null)
+            {
+                var reviews = await _context.Set<Review>()
+                    .Where(r => r.PcBuildId == buildId)
+                    .ToListAsync(cancellationToken);
+
+                build.AverageRating = reviews.Count > 0
+                    ? Math.Round(reviews.Average(r => r.Rating), 2)
+                    : 0;
+
+                await _context.SaveChangesAsync(cancellationToken);
+            }
 
             return true;
         }

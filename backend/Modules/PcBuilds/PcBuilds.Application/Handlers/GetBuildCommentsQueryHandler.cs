@@ -20,9 +20,9 @@ namespace PcBuilds.Application.Handlers
 
         public async Task<PagedResponse<CommentDto>> Handle(GetBuildCommentsQuery request, CancellationToken cancellationToken)
         {
-            var query = _context.Set<Comment>()
-                .Where(c => c.PcBuildId == request.PcBuildId)
-                .OrderByDescending(c => c.CreatedAt);
+            var query = _context.Set<Review>()
+                .Where(r => r.PcBuildId == request.PcBuildId)
+                .OrderByDescending(r => r.CreatedAt);
 
             var totalCount = await query.CountAsync(cancellationToken);
 
@@ -31,14 +31,15 @@ namespace PcBuilds.Application.Handlers
                 .Take(request.PageSize)
                 .Join(
                     _context.Set<User>(),
-                    c => c.UserId,
+                    r => r.UserId,
                     u => u.Id,
-                    (c, u) => new CommentDto
+                    (r, u) => new CommentDto
                     {
-                        Id = c.Id,
-                        Text = c.Text,
-                        CreatedAt = c.CreatedAt,
-                        UserId = c.UserId,
+                        Id = r.Id,
+                        Text = r.Text ?? string.Empty,
+                        Rating = r.Rating,
+                        CreatedAt = r.CreatedAt,
+                        UserId = r.UserId,
                         Username = u.Username,
                         AvatarUrl = u.AvatarUrl
                     })

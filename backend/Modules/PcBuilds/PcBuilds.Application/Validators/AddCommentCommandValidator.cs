@@ -10,6 +10,8 @@ namespace PcBuilds.Application.Validators
         {
             RuleFor(x => x.PcBuildId).NotEmpty().WithMessage("Build ID is required.");
             RuleFor(x => x.UserId).NotEmpty().WithMessage("User ID is required.");
+            RuleFor(x => x.Rating)
+                .InclusiveBetween(0, 5).WithMessage("Rating must be between 0 and 5.");
             RuleFor(x => x.Text)
                 .NotEmpty().WithMessage("Comment text is required.")
                 .MaximumLength(500).WithMessage("Comment can't exceed 500 characters.")

@@ -85,7 +85,7 @@ namespace PcBuilds.Application.Handlers
                         b.PcBuild_Ssds.Count +
                         b.PcBuild_Hdds.Count +
                         b.PcBuild_Fans.Count,
-                    CommentCount = b.Comments.Count
+                    CommentCount = b.Reviews.Count
                 })
                 .ToListAsync(cancellationToken);
 

@@ -18,6 +18,33 @@ interface CommentSectionProps {
 
 const DEFAULT_PAGE_SIZE = 10;
 
+function StarRating({ rating, interactive, onRate }: { rating: number; interactive?: boolean; onRate?: (r: number) => void }) {
+    const [hovered, setHovered] = useState(0);
+    const display = interactive ? (hovered || rating) : rating;
+
+    return (
+        <div className={styles['comment-rating']}>
+            {[1, 2, 3, 4, 5].map(star => (
+                interactive ? (
+                    <button
+                        key={star}
+                        type="button"
+                        className={`${styles['star-btn']} ${star <= display ? styles['active'] : ''}`}
+                        onMouseEnter={() => setHovered(star)}
+                        onMouseLeave={() => setHovered(0)}
+                        onClick={() => onRate?.(star)}
+                        title={`${star} зірок`}
+                    >
+                        ★
+                    </button>
+                ) : (
+                    <span key={star} className={star <= rating ? styles['star-filled'] : styles['star-empty']}>★</span>
+                )
+            ))}
+        </div>
+    );
+}
+
 function CommentSection({ buildId, currentUserId }: CommentSectionProps) {
     const [comments, setComments] = useState<IComment[]>([]);
     const [pagination, setPagination] = useState<PaginationMeta>({
@@ -25,6 +52,7 @@ function CommentSection({ buildId, currentUserId }: CommentSectionProps) {
     });
     const [loading, setLoading] = useState(true);
     const [newComment, setNewComment] = useState('');
+    const [newRating, setNewRating] = useState(0);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -51,15 +79,16 @@ function CommentSection({ buildId, currentUserId }: CommentSectionProps) {
         fetchComments(1);
     }, [fetchComments]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!newComment.trim() || submitting) return;
+        if (!newComment.trim() || newRating === 0 || submitting) return;
 
         try {
             setSubmitting(true);
             setError(null);
-            await commentService.addComment(buildId, { text: newComment.trim() });
+            await commentService.addComment(buildId, { text: newComment.trim(), rating: newRating });
             setNewComment('');
+            setNewRating(0);
             await fetchComments(1);
         } catch (err) {
             const msg = (err as { response?: { data?: { message?: string } } })
@@ -90,16 +119,20 @@ function CommentSection({ buildId, currentUserId }: CommentSectionProps) {
     return (
         <div className={styles['comment-section']}>
             <h3 className={styles['section-title']}>
-                Коментарі {pagination.totalCount > 0 && `(${pagination.totalCount})`}
+                Відгуки {pagination.totalCount > 0 && `(${pagination.totalCount})`}
             </h3>
 
             {currentUserId && (
                 <form className={styles['comment-form']} onSubmit={handleSubmit}>
+                    <div className={styles['rating-picker']}>
+                        <span className={styles['rating-label']}>Ваша оцінка:</span>
+                        <StarRating rating={newRating} interactive onRate={setNewRating} />
+                    </div>
                     <textarea
                         className={styles['comment-input']}
                         value={newComment}
                         onChange={e => setNewComment(e.target.value)}
-                        placeholder="Напишіть коментар..."
+                        placeholder="Напишіть відгук..."
                         maxLength={500}
                         rows={3}
                     />
@@ -108,7 +141,7 @@ function CommentSection({ buildId, currentUserId }: CommentSectionProps) {
                         <button
                             type="submit"
                             className={styles['submit-btn']}
-                            disabled={!newComment.trim() || submitting}
+                            disabled={!newComment.trim() || newRating === 0 || submitting}
                         >
                             {submitting ? 'Надсилання...' : 'Надіслати'}
                         </button>
@@ -119,9 +152,9 @@ function CommentSection({ buildId, currentUserId }: CommentSectionProps) {
             {error && <div className={styles['error']}>{error}</div>}
 
             {loading ? (
-                <div className={styles['loading']}>Завантаження коментарів...</div>
+                <div className={styles['loading']}>Завантаження відгуків...</div>
             ) : comments.length === 0 ? (
-                <div className={styles['no-comments']}>Поки немає коментарів.</div>
+                <div className={styles['no-comments']}>Поки немає відгуків.</div>
             ) : (
                 <>
                     <div className={styles['comments-list']}>
@@ -148,13 +181,14 @@ function CommentSection({ buildId, currentUserId }: CommentSectionProps) {
                                             <button
                                                 className={styles['delete-btn']}
                                                 onClick={() => handleDelete(comment.id)}
-                                                title="Видалити коментар"
+                                                title="Видалити відгук"
                                             >
                                                 &times;
                                             </button>
                                         )}
                                     </div>
                                 </div>
+                                <StarRating rating={comment.rating} />
                                 <p className={styles['comment-text']}>{comment.text}</p>
                             </div>
                         ))}

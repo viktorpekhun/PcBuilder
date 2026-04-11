@@ -94,6 +94,7 @@ export interface IPcBuildRequest {
     isPublished: boolean;
     publishedAt?: string;
     price: number;
+    averageRating?: number;
     userId: string;
     username?: string;
     avatarUrl?: string;

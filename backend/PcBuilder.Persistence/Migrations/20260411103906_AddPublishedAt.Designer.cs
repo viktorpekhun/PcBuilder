@@ -12,8 +12,8 @@ using PcBuilder.Persistence.Data;
 namespace PcBuilder.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260408105833_AddPublishedAtAndComments")]
-    partial class AddPublishedAtAndComments
+    [Migration("20260411103906_AddPublishedAt")]
+    partial class AddPublishedAt
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1220,38 +1220,6 @@ namespace PcBuilder.Persistence.Migrations
                     b.ToTable("Stores");
                 });
 
-            modelBuilder.Entity("PcBuilds.Domain.Entities.Comment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("PcBuildId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PcBuildId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Comments");
-                });
-
             modelBuilder.Entity("PcBuilds.Domain.Entities.PcBuild", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1894,25 +1862,6 @@ namespace PcBuilder.Persistence.Migrations
                     b.Navigation("Motherboard");
                 });
 
-            modelBuilder.Entity("PcBuilds.Domain.Entities.Comment", b =>
-                {
-                    b.HasOne("PcBuilds.Domain.Entities.PcBuild", "PcBuild")
-                        .WithMany("Comments")
-                        .HasForeignKey("PcBuildId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Auth.Domain.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("PcBuild");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("PcBuilds.Domain.Entities.PcBuild", b =>
                 {
                     b.HasOne("Components.Domain.Entities.CpuCooler", "CpuCooler")
@@ -2172,8 +2121,6 @@ namespace PcBuilder.Persistence.Migrations
 
             modelBuilder.Entity("PcBuilds.Domain.Entities.PcBuild", b =>
                 {
-                    b.Navigation("Comments");
-
                     b.Navigation("PcBuild_Fans");
 
                     b.Navigation("PcBuild_Hdds");

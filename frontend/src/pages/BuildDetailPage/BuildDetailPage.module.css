@@ -63,6 +63,30 @@
     color: #374151;
 }
 
+.rating-row {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-bottom: 8px;
+}
+
+.star-filled {
+    color: #f59e0b;
+    font-size: 18px;
+}
+
+.star-empty {
+    color: #d1d5db;
+    font-size: 18px;
+}
+
+.rating-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #6b7280;
+    margin-left: 6px;
+}
+
 .published-date {
     color: #9ca3af;
     font-size: 13px;

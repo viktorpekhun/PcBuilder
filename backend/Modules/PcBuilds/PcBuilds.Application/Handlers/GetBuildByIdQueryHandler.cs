@@ -53,6 +53,7 @@ namespace PcBuilds.Application.Handlers
                     IsPublished = build.IsPublished,
                     PublishedAt = build.PublishedAt,
                     Price = build.Price,
+                    AverageRating = build.AverageRating,
                     CreatedAt = build.CreatedAt,
                     UpdatedAt = build.UpdatedAt,
                     UserId = build.UserId,
