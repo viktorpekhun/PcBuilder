@@ -25,3 +25,18 @@ export interface IChangePasswordRequest {
 export interface ISetPasswordRequest {
     newPassword: string;
 }
+
+export interface IWarningDto {
+    id: string;
+    banType: 'Comment' | 'Post';
+    reason: string;
+    issuedAt: string;
+}
+
+export interface IUserBanStatus {
+    commentBanUntil: string | null;
+    postBanUntil: string | null;
+    isCommentBanned: boolean;
+    isPostBanned: boolean;
+    recentWarnings: IWarningDto[];
+}

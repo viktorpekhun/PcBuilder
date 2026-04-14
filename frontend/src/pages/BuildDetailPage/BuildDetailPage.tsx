@@ -4,6 +4,7 @@ import styles from './BuildDetailPage.module.css';
 import useAuth from '../../hooks/useAuth';
 import { buildService } from '../../api/build.service';
 import CommentSection from '../../components/CommentSection/CommentSection';
+import ReportModal from '../../components/ReportModal/ReportModal';
 import { Button } from '../../components/Button/Button';
 import type { IPcBuildRequest, IComponentPreview, IMultiComponentPreview } from '../../types/build.types';
 
@@ -42,6 +43,7 @@ function BuildDetailPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [cloning, setCloning] = useState(false);
+    const [reportOpen, setReportOpen] = useState(false);
 
     useEffect(() => {
         if (!id) return;
@@ -184,14 +186,25 @@ function BuildDetailPage() {
                         {build.price} грн
                     </div>
                     {auth?.accessToken && (
-                        <Button
-                            variant='outline-secondary'
-                            size='sm'
-                            onClick={handleClone}
-                            disabled={cloning}
-                        >
-                            {cloning ? 'Клонування...' : 'Клонувати збірку'}
-                        </Button>
+                        <div className={styles['header-actions']}>
+                            <Button
+                                variant='outline-secondary'
+                                size='sm'
+                                onClick={handleClone}
+                                disabled={cloning}
+                            >
+                                {cloning ? 'Клонування...' : 'Клонувати збірку'}
+                            </Button>
+                            {auth.userId !== build.userId && (
+                                <button
+                                    className={styles['report-build-btn']}
+                                    onClick={() => setReportOpen(true)}
+                                    title="Поскаржитись на збірку"
+                                >
+                                    ⚑ Скарга
+                                </button>
+                            )}
+                        </div>
                     )}
                 </div>
             </div>
@@ -233,6 +246,15 @@ function BuildDetailPage() {
 
             {id && (
                 <CommentSection buildId={id} {...(auth?.userId ? { currentUserId: auth.userId } : {})} />
+            )}
+
+            {id && (
+                <ReportModal
+                    isOpen={reportOpen}
+                    targetType="build"
+                    targetId={id}
+                    onClose={() => setReportOpen(false)}
+                />
             )}
         </div>
     );

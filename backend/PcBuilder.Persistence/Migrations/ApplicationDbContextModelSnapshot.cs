@@ -1217,6 +1217,178 @@ namespace PcBuilder.Persistence.Migrations
                     b.ToTable("Stores");
                 });
 
+            modelBuilder.Entity("Moderation.Domain.Entities.Report", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AdminResolutionNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ReportType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("ReportedEntityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ReportedUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ReporterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ResolvedByAdminId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReportedUserId");
+
+                    b.HasIndex("ResolvedByAdminId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("ReporterId", "ReportType", "ReportedEntityId");
+
+                    b.ToTable("Reports");
+                });
+
+            modelBuilder.Entity("Moderation.Domain.Entities.Warning", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BanType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("IssuedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("IssuedByAdminId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IssuedByAdminId");
+
+                    b.HasIndex("UserId", "IssuedAt");
+
+                    b.ToTable("Warnings");
+                });
+
+            modelBuilder.Entity("Notifications.Domain.Entities.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.HasIndex("UserId", "IsRead");
+
+                    b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("PcBuilder.Persistence.Data.Entities.ScrapeJob", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ComponentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("ItemsScraped")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime>("QueuedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int?>("TotalItems")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QueuedAt");
+
+                    b.HasIndex("ComponentType", "State");
+
+                    b.ToTable("ScrapeJobs");
+                });
+
             modelBuilder.Entity("PcBuilds.Domain.Entities.PcBuild", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1857,6 +2029,59 @@ namespace PcBuilder.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Motherboard");
+                });
+
+            modelBuilder.Entity("Moderation.Domain.Entities.Report", b =>
+                {
+                    b.HasOne("Auth.Domain.Entities.User", "ReportedUser")
+                        .WithMany()
+                        .HasForeignKey("ReportedUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Auth.Domain.Entities.User", "Reporter")
+                        .WithMany()
+                        .HasForeignKey("ReporterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Auth.Domain.Entities.User", "ResolvedByAdmin")
+                        .WithMany()
+                        .HasForeignKey("ResolvedByAdminId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ReportedUser");
+
+                    b.Navigation("Reporter");
+
+                    b.Navigation("ResolvedByAdmin");
+                });
+
+            modelBuilder.Entity("Moderation.Domain.Entities.Warning", b =>
+                {
+                    b.HasOne("Auth.Domain.Entities.User", "IssuedByAdmin")
+                        .WithMany()
+                        .HasForeignKey("IssuedByAdminId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Auth.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("IssuedByAdmin");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Notifications.Domain.Entities.Notification", b =>
+                {
+                    b.HasOne("Auth.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("PcBuilds.Domain.Entities.PcBuild", b =>

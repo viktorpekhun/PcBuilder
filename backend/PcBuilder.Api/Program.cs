@@ -10,6 +10,8 @@ using Components.Infrastructure;
 using Auth.Infrastructure;
 using PcBuilds.Infrastructure;
 using Scraping.Infrastructure;
+using Moderation.Infrastructure;
+using Notifications.Infrastructure;
 using MediatR;
 using PcBuilder.SharedKernel.Behaviors;
 using PcBuilder.SharedKernel.Caching;
@@ -27,12 +29,15 @@ builder.Host.UseSerilog((context, configuration) =>
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase);
 builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddComponentsModule();
 builder.Services.AddAuthModule();
 builder.Services.AddPcBuildsModule();
 builder.Services.AddScrapingModule(builder.Configuration);
+builder.Services.AddModerationModule();
+builder.Services.AddNotificationsModule();
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 builder.Services.AddSingleton<IProfanityFilterService, ProfanityFilterService>();
 builder.Services.AddMemoryCache();
@@ -52,7 +57,7 @@ builder.Services.AddSingleton<IConnection>(_ =>
     return factory.CreateConnectionAsync().GetAwaiter().GetResult();
 });
 builder.Services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
-builder.Services.AddSingleton<IScrapeJobTracker, ScrapeJobTracker>();
+builder.Services.AddSingleton<IScrapeJobTracker, DbScrapeJobTracker>();
 builder.Services.AddHostedService<ScrapeResultConsumer>();
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));
 builder.Services.AddHealthChecks()

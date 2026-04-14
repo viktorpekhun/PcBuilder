@@ -1,4 +1,6 @@
+using Microsoft.EntityFrameworkCore;
 using PcBuilder.Contracts.Messages;
+using PcBuilder.Persistence.Data;
 using PcBuilder.SharedKernel.Caching;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -12,22 +14,27 @@ namespace PcBuilder.Api.Services
         private readonly IConnection _connection;
         private readonly IScrapeJobTracker _tracker;
         private readonly ICacheInvalidator _cacheInvalidator;
+        private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<ScrapeResultConsumer> _logger;
 
         public ScrapeResultConsumer(
             IConnection connection,
             IScrapeJobTracker tracker,
             ICacheInvalidator cacheInvalidator,
+            IServiceScopeFactory scopeFactory,
             ILogger<ScrapeResultConsumer> logger)
         {
             _connection = connection;
             _tracker = tracker;
             _cacheInvalidator = cacheInvalidator;
+            _scopeFactory = scopeFactory;
             _logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            await CleanupOrphanedJobsAsync(stoppingToken);
+
             await using var channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
             await channel.QueueDeclareAsync("scrape-results", durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
 
@@ -67,6 +74,36 @@ namespace PcBuilder.Api.Services
             await channel.BasicConsumeAsync("scrape-results", autoAck: false, consumer: consumer, cancellationToken: stoppingToken);
 
             await Task.Delay(Timeout.Infinite, stoppingToken).ContinueWith(_ => { }, CancellationToken.None);
+        }
+
+        private async Task CleanupOrphanedJobsAsync(CancellationToken ct)
+        {
+            try
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+                var orphaned = await db.ScrapeJobs
+                    .Where(j => j.State == "Running" || j.State == "Queued" || j.State == "Cancelling")
+                    .ToListAsync(ct);
+
+                if (orphaned.Count == 0) return;
+
+                var now = DateTime.UtcNow;
+                foreach (var job in orphaned)
+                {
+                    job.State = "Failed";
+                    job.CompletedAt = now;
+                    job.ErrorMessage = "Job was interrupted by API restart.";
+                }
+
+                await db.SaveChangesAsync(ct);
+                _logger.LogWarning("Marked {Count} orphaned scrape jobs as Failed on startup.", orphaned.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to clean up orphaned scrape jobs on startup.");
+            }
         }
     }
 }

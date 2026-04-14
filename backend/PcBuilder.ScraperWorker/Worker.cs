@@ -1,4 +1,5 @@
 using Components.Domain.Entities;
+using Components.Domain.ValueObjects;
 using PcBuilder.Contracts.Messages;
 using PcBuilder.SharedKernel.Enums;
 using RabbitMQ.Client;

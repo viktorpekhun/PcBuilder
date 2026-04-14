@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import useLogout from '../../hooks/useLogout';
 import { Button } from '../Button/Button';
+import NotificationCenter from '../NotificationCenter/NotificationCenter';
 import styles from './Navbar.module.css';
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
@@ -94,6 +95,7 @@ export default function Navbar() {
                 </ul>
 
                 <div className={styles['login-items']}>
+                    {auth?.username && <NotificationCenter />}
                     {auth?.username ? (
                         <div className={styles['user-menu']} ref={menuRef}>
                             <button

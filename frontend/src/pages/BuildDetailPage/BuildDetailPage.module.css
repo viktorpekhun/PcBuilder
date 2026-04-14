@@ -99,6 +99,28 @@
     gap: 12px;
 }
 
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.report-build-btn {
+    background: none;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    color: #6b7280;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 6px 12px;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.report-build-btn:hover {
+    color: #ef4444;
+    border-color: #ef4444;
+}
+
 .header-price {
     font-size: 24px;
     font-weight: 700;

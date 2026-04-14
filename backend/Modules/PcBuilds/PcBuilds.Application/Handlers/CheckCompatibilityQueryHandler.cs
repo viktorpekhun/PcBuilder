@@ -1,6 +1,7 @@
 using Components.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using PcBuilder.SharedKernel;
 using PcBuilder.SharedKernel.Enums;
 using PcBuilder.SharedKernel.Persistence;
 using PcBuilds.Application.Compatibility;
@@ -9,7 +10,7 @@ using PcBuilds.Domain.Entities;
 
 namespace PcBuilds.Application.Handlers
 {
-    public class CheckCompatibilityQueryHandler : IRequestHandler<CheckCompatibilityQuery, List<CompatibilityResult>>
+    public class CheckCompatibilityQueryHandler : IRequestHandler<CheckCompatibilityQuery, Result<List<CompatibilityResult>>>
     {
         private readonly IApplicationDbContext _context;
         private readonly CompatibilityChecker _compatibilityChecker;
@@ -20,7 +21,7 @@ namespace PcBuilds.Application.Handlers
             _compatibilityChecker = compatibilityChecker;
         }
 
-        public async Task<List<CompatibilityResult>> Handle(CheckCompatibilityQuery request, CancellationToken cancellationToken)
+        public async Task<Result<List<CompatibilityResult>>> Handle(CheckCompatibilityQuery request, CancellationToken cancellationToken)
         {
             var dto = request.Dto;
             var tempBuild = new PcBuild();
@@ -115,12 +116,12 @@ namespace PcBuilds.Application.Handlers
 
             var results = _compatibilityChecker.CheckAll(tempBuild);
 
-            return results.OrderBy(r =>
+            return Result.Success(results.OrderBy(r =>
             {
                 if (r.Messages.Any(m => m.Type == CompatibilityMessageType.Problem)) return 0;
                 if (r.Messages.Any(m => m.Type == CompatibilityMessageType.Warning)) return 1;
                 return 2;
-            }).ToList();
+            }).ToList());
         }
     }
 }

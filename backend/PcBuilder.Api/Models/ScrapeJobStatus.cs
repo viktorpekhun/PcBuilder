@@ -9,5 +9,7 @@ namespace PcBuilder.Api.Models
         public DateTime? StartedAt { get; set; }
         public DateTime? CompletedAt { get; set; }
         public string? ErrorMessage { get; set; }
+        public int ItemsScraped { get; set; }
+        public int? TotalItems { get; set; }
     }
 }

@@ -3,7 +3,6 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PcBuilder.SharedKernel.Enums;
-using PcBuilder.SharedKernel.Exceptions;
 using PcBuilder.SharedKernel.Filtering;
 using PcBuilds.Application.Commands;
 using PcBuilds.Application.Dtos;
@@ -36,7 +35,11 @@ namespace PcBuilder.Api.Controllers
         [HttpPost("check")]
         public async Task<IActionResult> CheckCompatibility([FromBody] ComponentsCompatibilityDto dto)
         {
-            var results = await _mediator.Send(new CheckCompatibilityQuery(dto));
+            var result = await _mediator.Send(new CheckCompatibilityQuery(dto));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+
+            var results = result.Value!;
             return Ok(new
             {
                 Compatible = !results.Any(r => !r.IsCompatible),
@@ -51,9 +54,8 @@ namespace PcBuilder.Api.Controllers
         {
             var userId = GetUserId();
             var result = await _mediator.Send(new SaveBuildCommand(userId, buildDto));
-
-            if (!result)
-                return BadRequest(new { Success = false, Message = "Failed to save build" });
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
 
             return Ok(new { Success = true, Message = "Build saved successfully" });
         }
@@ -62,11 +64,9 @@ namespace PcBuilder.Api.Controllers
         [HttpPut("update/{id}")]
         public async Task<IActionResult> UpdateBuild(Guid id, [FromBody] PcBuildInputDto buildDto)
         {
-            var userId = GetUserId();
             var result = await _mediator.Send(new UpdateBuildCommand(id, buildDto));
-
-            if (!result)
-                return BadRequest(new { Success = false, Message = "Failed to update build" });
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
 
             return Ok(new { Success = true, Message = "Build updated successfully" });
         }
@@ -76,8 +76,11 @@ namespace PcBuilder.Api.Controllers
         public async Task<IActionResult> GetUserBuilds()
         {
             var userId = GetUserId();
-            var builds = await _mediator.Send(new GetUserBuildsQuery(userId));
-            return Ok(builds);
+            var result = await _mediator.Send(new GetUserBuildsQuery(userId));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+
+            return Ok(result.Value);
         }
 
         [HttpGet("gallery")]
@@ -114,28 +117,33 @@ namespace PcBuilder.Api.Controllers
             }
 
             var result = await _mediator.Send(new GetPublicBuildsQuery(parameters));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+
             var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+            var pagedResult = result.Value!;
 
             Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(new
             {
-                result.TotalCount,
-                result.PageSize,
-                result.PageNumber,
-                result.TotalPages,
-                result.HasNext,
-                result.HasPrevious
+                pagedResult.TotalCount,
+                pagedResult.PageSize,
+                pagedResult.PageNumber,
+                pagedResult.TotalPages,
+                pagedResult.HasNext,
+                pagedResult.HasPrevious
             }, jsonOptions));
 
-            return Ok(result.Items);
+            return Ok(pagedResult.Items);
         }
 
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetBuildById(Guid id)
         {
-            var build = await _mediator.Send(new GetBuildByIdQuery(id));
+            var result = await _mediator.Send(new GetBuildByIdQuery(id));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
 
-            if (build == null)
-                throw new NotFoundException("Build not found");
+            var build = result.Value!;
 
             if (!build.IsPublished)
             {
@@ -143,10 +151,10 @@ namespace PcBuilder.Api.Controllers
                             ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
                 if (!Guid.TryParse(idStr, out var userId))
-                    throw new UnauthorizedAccessException("Authentication required to view private builds.");
+                    return Unauthorized(new { Message = "Authentication required to view private builds." });
 
                 if (build.UserId != userId)
-                    throw new ForbiddenException("You do not have access to this build.");
+                    return StatusCode(403, new { Message = "You do not have access to this build." });
             }
 
             return Ok(build);
@@ -158,11 +166,13 @@ namespace PcBuilder.Api.Controllers
         {
             var userId = GetUserId();
             var result = await _mediator.Send(new PublishPcBuildCommand(id, userId, request.IsPublished));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
 
             return Ok(new
             {
                 Success = true,
-                Message = result ? "Build published successfully" : "Build unpublished successfully"
+                Message = result.Value ? "Build published successfully" : "Build unpublished successfully"
             });
         }
 
@@ -172,9 +182,8 @@ namespace PcBuilder.Api.Controllers
         {
             var userId = GetUserId();
             var result = await _mediator.Send(new DeleteBuildCommand(id, userId));
-
-            if (!result)
-                return BadRequest(new { Success = false, Message = "Failed to delete build" });
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
 
             return Ok(new { Success = true, Message = "Build deleted successfully" });
         }
@@ -183,19 +192,23 @@ namespace PcBuilder.Api.Controllers
         public async Task<IActionResult> GetBuildComments(Guid id, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             var result = await _mediator.Send(new GetBuildCommentsQuery(id, pageNumber, pageSize));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+
             var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+            var pagedResult = result.Value!;
 
             Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(new
             {
-                result.TotalCount,
-                result.PageSize,
-                result.PageNumber,
-                result.TotalPages,
-                result.HasNext,
-                result.HasPrevious
+                pagedResult.TotalCount,
+                pagedResult.PageSize,
+                pagedResult.PageNumber,
+                pagedResult.TotalPages,
+                pagedResult.HasNext,
+                pagedResult.HasPrevious
             }, jsonOptions));
 
-            return Ok(result.Items);
+            return Ok(pagedResult.Items);
         }
 
         [Authorize]
@@ -203,8 +216,11 @@ namespace PcBuilder.Api.Controllers
         public async Task<IActionResult> AddComment(Guid id, [FromBody] AddCommentDto dto)
         {
             var userId = GetUserId();
-            var commentId = await _mediator.Send(new AddCommentCommand(id, userId, dto.Text, dto.Rating));
-            return Ok(new { Success = true, CommentId = commentId });
+            var result = await _mediator.Send(new AddCommentCommand(id, userId, dto.Text, dto.Rating));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+
+            return Ok(new { Success = true, CommentId = result.Value });
         }
 
         [Authorize]
@@ -212,7 +228,10 @@ namespace PcBuilder.Api.Controllers
         public async Task<IActionResult> DeleteComment(Guid commentId)
         {
             var userId = GetUserId();
-            await _mediator.Send(new DeleteCommentCommand(commentId, userId));
+            var result = await _mediator.Send(new DeleteCommentCommand(commentId, userId));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+
             return Ok(new { Success = true, Message = "Comment deleted" });
         }
 
@@ -221,8 +240,11 @@ namespace PcBuilder.Api.Controllers
         public async Task<IActionResult> CloneBuild(Guid id)
         {
             var userId = GetUserId();
-            var newBuildId = await _mediator.Send(new CloneBuildCommand(id, userId));
-            return Ok(new { Success = true, BuildId = newBuildId });
+            var result = await _mediator.Send(new CloneBuildCommand(id, userId));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+
+            return Ok(new { Success = true, BuildId = result.Value });
         }
     }
 

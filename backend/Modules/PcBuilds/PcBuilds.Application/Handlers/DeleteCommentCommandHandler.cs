@@ -1,13 +1,13 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using PcBuilder.SharedKernel.Exceptions;
+using PcBuilder.SharedKernel;
 using PcBuilder.SharedKernel.Persistence;
 using PcBuilds.Application.Commands;
 using PcBuilds.Domain.Entities;
 
 namespace PcBuilds.Application.Handlers
 {
-    public class DeleteCommentCommandHandler : IRequestHandler<DeleteCommentCommand, bool>
+    public class DeleteCommentCommandHandler : IRequestHandler<DeleteCommentCommand, Result<bool>>
     {
         private readonly IApplicationDbContext _context;
 
@@ -16,23 +16,22 @@ namespace PcBuilds.Application.Handlers
             _context = context;
         }
 
-        public async Task<bool> Handle(DeleteCommentCommand request, CancellationToken cancellationToken)
+        public async Task<Result<bool>> Handle(DeleteCommentCommand request, CancellationToken cancellationToken)
         {
             var review = await _context.Set<Review>()
                 .FirstOrDefaultAsync(r => r.Id == request.CommentId, cancellationToken);
 
             if (review == null)
-                throw new NotFoundException("Review not found.");
+                return Result.Failure<bool>(new Error("NotFound", "Review not found.", 404));
 
             if (review.UserId != request.UserId)
-                throw new ForbiddenException("You can only delete your own reviews.");
+                return Result.Failure<bool>(new Error("Forbidden", "You can only delete your own reviews.", 403));
 
             var buildId = review.PcBuildId;
 
             _context.Remove(review);
             await _context.SaveChangesAsync(cancellationToken);
 
-            // Recalculate average rating
             var build = await _context.Set<PcBuild>()
                 .FirstOrDefaultAsync(b => b.Id == buildId, cancellationToken);
 
@@ -49,7 +48,7 @@ namespace PcBuilds.Application.Handlers
                 await _context.SaveChangesAsync(cancellationToken);
             }
 
-            return true;
+            return Result.Success(true);
         }
     }
 }

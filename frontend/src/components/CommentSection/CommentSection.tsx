@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import styles from './CommentSection.module.css';
 import { commentService } from '../../api/comment.service';
 import { Pagination } from '../Pagination/Pagination';
+import ReportModal from '../ReportModal/ReportModal';
 import type { IComment } from '../../types/comment.types';
 
 interface PaginationMeta {
@@ -55,6 +56,7 @@ function CommentSection({ buildId, currentUserId }: CommentSectionProps) {
     const [newRating, setNewRating] = useState(0);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [reportTarget, setReportTarget] = useState<string | null>(null);
 
     const fetchComments = useCallback(async (page: number) => {
         try {
@@ -177,6 +179,15 @@ function CommentSection({ buildId, currentUserId }: CommentSectionProps) {
                                     </div>
                                     <div className={styles['comment-meta']}>
                                         <span className={styles['comment-date']}>{formatDate(comment.createdAt)}</span>
+                                        {currentUserId && currentUserId !== comment.userId && (
+                                            <button
+                                                className={styles['report-btn']}
+                                                onClick={() => setReportTarget(comment.id)}
+                                                title="Поскаржитись"
+                                            >
+                                                ⚑
+                                            </button>
+                                        )}
                                         {currentUserId === comment.userId && (
                                             <button
                                                 className={styles['delete-btn']}
@@ -203,6 +214,13 @@ function CommentSection({ buildId, currentUserId }: CommentSectionProps) {
                     />
                 </>
             )}
+
+            <ReportModal
+                isOpen={reportTarget !== null}
+                targetType="review"
+                targetId={reportTarget ?? ""}
+                onClose={() => setReportTarget(null)}
+            />
         </div>
     );
 }

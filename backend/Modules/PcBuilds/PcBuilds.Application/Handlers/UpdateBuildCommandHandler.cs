@@ -1,13 +1,15 @@
+using Auth.Domain.Entities;
 using Components.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using PcBuilder.SharedKernel;
 using PcBuilder.SharedKernel.Persistence;
 using PcBuilds.Application.Commands;
 using PcBuilds.Domain.Entities;
 
 namespace PcBuilds.Application.Handlers
 {
-    public class UpdateBuildCommandHandler : IRequestHandler<UpdateBuildCommand, bool>
+    public class UpdateBuildCommandHandler : IRequestHandler<UpdateBuildCommand, Result<bool>>
     {
         private readonly IApplicationDbContext _context;
 
@@ -16,148 +18,91 @@ namespace PcBuilds.Application.Handlers
             _context = context;
         }
 
-        public async Task<bool> Handle(UpdateBuildCommand request, CancellationToken cancellationToken)
+        public async Task<Result<bool>> Handle(UpdateBuildCommand request, CancellationToken cancellationToken)
         {
-            try
-            {
-                var buildDto = request.BuildDto;
+            var pcBuild = await _context.Set<PcBuild>()
+                .Include(b => b.PcBuild_Rams)
+                .Include(b => b.PcBuild_Ssds)
+                .Include(b => b.PcBuild_Hdds)
+                .Include(b => b.PcBuild_Fans)
+                .FirstOrDefaultAsync(b => b.Id == request.PcBuildId, cancellationToken);
 
-                var pcBuild = await _context.Set<PcBuild>()
-                    .Include(b => b.PcBuild_Rams)
-                    .Include(b => b.PcBuild_Ssds)
-                    .Include(b => b.PcBuild_Hdds)
-                    .Include(b => b.PcBuild_Fans)
-                    .FirstOrDefaultAsync(b => b.Id == request.PcBuildId, cancellationToken);
+            if (pcBuild == null)
+                return Result.Failure<bool>(new Error("NotFound", "Build not found.", 404));
 
-                if (pcBuild == null)
-                    return false;
+            var owner = await _context.Set<User>()
+                .FirstOrDefaultAsync(u => u.Id == pcBuild.UserId, cancellationToken);
+            if (owner != null && owner.PostBanUntil > DateTime.UtcNow && request.BuildDto.IsPublished)
+                return Result.Failure<bool>(new Error("Forbidden", "You are temporarily banned from posting.", 403));
 
-                pcBuild.Name = buildDto.Name;
-                pcBuild.Description = buildDto.Description;
+            var buildDto = request.BuildDto;
 
-                if (buildDto.IsPublished && !pcBuild.IsPublished)
-                    pcBuild.PublishedAt = DateTime.UtcNow;
-                else if (!buildDto.IsPublished)
-                    pcBuild.PublishedAt = null;
+            pcBuild.Name = buildDto.Name;
+            pcBuild.Description = buildDto.Description;
 
-                pcBuild.IsPublished = buildDto.IsPublished;
-                pcBuild.UpdatedAt = DateTime.UtcNow;
+            if (buildDto.IsPublished && !pcBuild.IsPublished)
+                pcBuild.PublishedAt = DateTime.UtcNow;
+            else if (!buildDto.IsPublished)
+                pcBuild.PublishedAt = null;
 
-                pcBuild.CpuId = buildDto.CpuId;
-                pcBuild.GpuId = buildDto.GpuId;
-                pcBuild.MotherboardId = buildDto.MotherboardId;
-                pcBuild.CpuCoolerId = buildDto.CpuCoolerId;
-                pcBuild.PowerSupplyId = buildDto.PowerSupplyId;
-                pcBuild.PcCaseId = buildDto.PcCaseId;
+            pcBuild.IsPublished = buildDto.IsPublished;
+            pcBuild.UpdatedAt = DateTime.UtcNow;
 
-                pcBuild.CpuOfferId = buildDto.CpuOfferId;
-                pcBuild.GpuOfferId = buildDto.GpuOfferId;
-                pcBuild.MotherboardOfferId = buildDto.MotherboardOfferId;
-                pcBuild.CpuCoolerOfferId = buildDto.CpuCoolerOfferId;
-                pcBuild.PowerSupplyOfferId = buildDto.PowerSupplyOfferId;
-                pcBuild.PcCaseOfferId = buildDto.PcCaseOfferId;
+            pcBuild.CpuId = buildDto.CpuId;
+            pcBuild.GpuId = buildDto.GpuId;
+            pcBuild.MotherboardId = buildDto.MotherboardId;
+            pcBuild.CpuCoolerId = buildDto.CpuCoolerId;
+            pcBuild.PowerSupplyId = buildDto.PowerSupplyId;
+            pcBuild.PcCaseId = buildDto.PcCaseId;
 
-                // Handle RAM components
-                UpdateMultiComponents(
-                    pcBuild.PcBuild_Rams,
-                    buildDto.Rams,
-                    r => r.RamId,
-                    async (dto) =>
-                    {
-                        var ram = await _context.Set<Ram>().FirstOrDefaultAsync(r => r.Id == dto.ComponentId, cancellationToken);
-                        return ram == null ? null : new PcBuild_Ram
-                        {
-                            RamId = ram.Id,
-                            PcBuild = pcBuild,
-                            PcBuildId = pcBuild.Id,
-                            Quantity = dto.Quantity,
-                            ProductOfferId = dto.OfferId
-                        };
-                    },
-                    (existing, dto) =>
-                    {
-                        existing.Quantity = dto.Quantity;
-                        existing.ProductOfferId = dto.OfferId;
-                    });
+            pcBuild.CpuOfferId = buildDto.CpuOfferId;
+            pcBuild.GpuOfferId = buildDto.GpuOfferId;
+            pcBuild.MotherboardOfferId = buildDto.MotherboardOfferId;
+            pcBuild.CpuCoolerOfferId = buildDto.CpuCoolerOfferId;
+            pcBuild.PowerSupplyOfferId = buildDto.PowerSupplyOfferId;
+            pcBuild.PcCaseOfferId = buildDto.PcCaseOfferId;
 
-                // Handle SSD components
-                UpdateMultiComponents(
-                    pcBuild.PcBuild_Ssds,
-                    buildDto.Ssds,
-                    s => s.SsdId,
-                    async (dto) =>
-                    {
-                        var ssd = await _context.Set<Ssd>().FirstOrDefaultAsync(s => s.Id == dto.ComponentId, cancellationToken);
-                        return ssd == null ? null : new PcBuild_Ssd
-                        {
-                            SsdId = ssd.Id,
-                            PcBuild = pcBuild,
-                            PcBuildId = pcBuild.Id,
-                            Quantity = dto.Quantity,
-                            ProductOfferId = dto.OfferId
-                        };
-                    },
-                    (existing, dto) =>
-                    {
-                        existing.Quantity = dto.Quantity;
-                        existing.ProductOfferId = dto.OfferId;
-                    });
+            UpdateMultiComponents(
+                pcBuild.PcBuild_Rams, buildDto.Rams, r => r.RamId,
+                async (dto) =>
+                {
+                    var ram = await _context.Set<Ram>().FirstOrDefaultAsync(r => r.Id == dto.ComponentId, cancellationToken);
+                    return ram == null ? null : new PcBuild_Ram { RamId = ram.Id, PcBuild = pcBuild, PcBuildId = pcBuild.Id, Quantity = dto.Quantity, ProductOfferId = dto.OfferId };
+                },
+                (existing, dto) => { existing.Quantity = dto.Quantity; existing.ProductOfferId = dto.OfferId; });
 
-                // Handle HDD components
-                UpdateMultiComponents(
-                    pcBuild.PcBuild_Hdds,
-                    buildDto.Hdds,
-                    h => h.HddId,
-                    async (dto) =>
-                    {
-                        var hdd = await _context.Set<Hdd>().FirstOrDefaultAsync(h => h.Id == dto.ComponentId, cancellationToken);
-                        return hdd == null ? null : new PcBuild_Hdd
-                        {
-                            HddId = hdd.Id,
-                            PcBuild = pcBuild,
-                            PcBuildId = pcBuild.Id,
-                            Quantity = dto.Quantity,
-                            ProductOfferId = dto.OfferId
-                        };
-                    },
-                    (existing, dto) =>
-                    {
-                        existing.Quantity = dto.Quantity;
-                        existing.ProductOfferId = dto.OfferId;
-                    });
+            UpdateMultiComponents(
+                pcBuild.PcBuild_Ssds, buildDto.Ssds, s => s.SsdId,
+                async (dto) =>
+                {
+                    var ssd = await _context.Set<Ssd>().FirstOrDefaultAsync(s => s.Id == dto.ComponentId, cancellationToken);
+                    return ssd == null ? null : new PcBuild_Ssd { SsdId = ssd.Id, PcBuild = pcBuild, PcBuildId = pcBuild.Id, Quantity = dto.Quantity, ProductOfferId = dto.OfferId };
+                },
+                (existing, dto) => { existing.Quantity = dto.Quantity; existing.ProductOfferId = dto.OfferId; });
 
-                // Handle Fan components
-                UpdateMultiComponents(
-                    pcBuild.PcBuild_Fans,
-                    buildDto.Fans,
-                    f => f.FanId,
-                    async (dto) =>
-                    {
-                        var fan = await _context.Set<Fan>().FirstOrDefaultAsync(f => f.Id == dto.ComponentId, cancellationToken);
-                        return fan == null ? null : new PcBuild_Fan
-                        {
-                            FanId = fan.Id,
-                            PcBuild = pcBuild,
-                            PcBuildId = pcBuild.Id,
-                            Quantity = dto.Quantity,
-                            ProductOfferId = dto.OfferId
-                        };
-                    },
-                    (existing, dto) =>
-                    {
-                        existing.Quantity = dto.Quantity;
-                        existing.ProductOfferId = dto.OfferId;
-                    });
+            UpdateMultiComponents(
+                pcBuild.PcBuild_Hdds, buildDto.Hdds, h => h.HddId,
+                async (dto) =>
+                {
+                    var hdd = await _context.Set<Hdd>().FirstOrDefaultAsync(h => h.Id == dto.ComponentId, cancellationToken);
+                    return hdd == null ? null : new PcBuild_Hdd { HddId = hdd.Id, PcBuild = pcBuild, PcBuildId = pcBuild.Id, Quantity = dto.Quantity, ProductOfferId = dto.OfferId };
+                },
+                (existing, dto) => { existing.Quantity = dto.Quantity; existing.ProductOfferId = dto.OfferId; });
 
-                await UpdateTotalPrice(pcBuild, cancellationToken);
-                _context.Set<PcBuild>().Update(pcBuild);
-                await _context.SaveChangesAsync(cancellationToken);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            UpdateMultiComponents(
+                pcBuild.PcBuild_Fans, buildDto.Fans, f => f.FanId,
+                async (dto) =>
+                {
+                    var fan = await _context.Set<Fan>().FirstOrDefaultAsync(f => f.Id == dto.ComponentId, cancellationToken);
+                    return fan == null ? null : new PcBuild_Fan { FanId = fan.Id, PcBuild = pcBuild, PcBuildId = pcBuild.Id, Quantity = dto.Quantity, ProductOfferId = dto.OfferId };
+                },
+                (existing, dto) => { existing.Quantity = dto.Quantity; existing.ProductOfferId = dto.OfferId; });
+
+            await UpdateTotalPrice(pcBuild, cancellationToken);
+            _context.Set<PcBuild>().Update(pcBuild);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return Result.Success(true);
         }
 
         private static void UpdateMultiComponents<T>(
@@ -185,9 +130,7 @@ namespace PcBuilds.Application.Handlers
             }
 
             foreach (var toRemove in existingDict.Values)
-            {
                 existingItems.Remove(toRemove);
-            }
         }
 
         private async Task UpdateTotalPrice(PcBuild pcBuild, CancellationToken cancellationToken)
@@ -202,28 +145,16 @@ namespace PcBuilds.Application.Handlers
             totalPrice += await GetComponentPrice(pcBuild.PcCaseOfferId, cancellationToken);
 
             foreach (var ram in pcBuild.PcBuild_Rams)
-            {
-                decimal ramPrice = await GetComponentPrice(ram.ProductOfferId, cancellationToken);
-                totalPrice += ramPrice * ram.Quantity;
-            }
+                totalPrice += await GetComponentPrice(ram.ProductOfferId, cancellationToken) * ram.Quantity;
 
             foreach (var ssd in pcBuild.PcBuild_Ssds)
-            {
-                decimal ssdPrice = await GetComponentPrice(ssd.ProductOfferId, cancellationToken);
-                totalPrice += ssdPrice * ssd.Quantity;
-            }
+                totalPrice += await GetComponentPrice(ssd.ProductOfferId, cancellationToken) * ssd.Quantity;
 
             foreach (var hdd in pcBuild.PcBuild_Hdds)
-            {
-                decimal hddPrice = await GetComponentPrice(hdd.ProductOfferId, cancellationToken);
-                totalPrice += hddPrice * hdd.Quantity;
-            }
+                totalPrice += await GetComponentPrice(hdd.ProductOfferId, cancellationToken) * hdd.Quantity;
 
             foreach (var fan in pcBuild.PcBuild_Fans)
-            {
-                decimal fanPrice = await GetComponentPrice(fan.ProductOfferId, cancellationToken);
-                totalPrice += fanPrice * fan.Quantity;
-            }
+                totalPrice += await GetComponentPrice(fan.ProductOfferId, cancellationToken) * fan.Quantity;
 
             pcBuild.Price = totalPrice;
         }

@@ -1,5 +1,6 @@
 using Components.Domain.Entities;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PcBuilder.Api.Models;
 using PcBuilder.Api.Services;
@@ -11,8 +12,7 @@ namespace PcBuilder.Api.Controllers
 {
     [Route("api/scraper")]
     [ApiController]
-    //[Authorize]
-    //[EnableRateLimiting("scraper")]
+    [Authorize(Roles = "Admin")]
     public class ScraperController : ControllerBase
     {
         private readonly IRabbitMqPublisher _publisher;
@@ -30,6 +30,16 @@ namespace PcBuilder.Api.Controllers
         public IActionResult GetAllJobs()
         {
             return Ok(_tracker.GetAllStatuses());
+        }
+
+        [HttpGet("jobs/latest")]
+        public IActionResult GetLatestJobPerType()
+        {
+            var latest = _tracker.GetAllStatuses()
+                .GroupBy(j => j.ComponentType)
+                .Select(g => g.OrderByDescending(j => j.QueuedAt).First())
+                .ToList();
+            return Ok(latest);
         }
 
         [HttpGet("jobs/{jobId:guid}")]
