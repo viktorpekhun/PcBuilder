@@ -167,7 +167,7 @@ namespace PcBuilder.Api.Controllers
             var userId = GetUserId();
             var result = await _mediator.Send(new PublishPcBuildCommand(id, userId, request.IsPublished));
             if (result.IsFailure)
-                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message, Code = result.Error.Code });
 
             return Ok(new
             {
@@ -218,7 +218,7 @@ namespace PcBuilder.Api.Controllers
             var userId = GetUserId();
             var result = await _mediator.Send(new AddCommentCommand(id, userId, dto.Text, dto.Rating));
             if (result.IsFailure)
-                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message, Code = result.Error.Code });
 
             return Ok(new { Success = true, CommentId = result.Value });
         }

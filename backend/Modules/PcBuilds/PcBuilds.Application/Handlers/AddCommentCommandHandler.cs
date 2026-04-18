@@ -1,10 +1,13 @@
 using Auth.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Moderation.Application.Commands;
+using Moderation.Domain.Enums;
 using Notifications.Application.Commands;
 using Notifications.Domain;
 using PcBuilder.SharedKernel;
 using PcBuilder.SharedKernel.Persistence;
+using PcBuilder.SharedKernel.Services;
 using PcBuilds.Application.Commands;
 using PcBuilds.Domain.Entities;
 
@@ -14,11 +17,13 @@ namespace PcBuilds.Application.Handlers
     {
         private readonly IApplicationDbContext _context;
         private readonly ISender _sender;
+        private readonly ITextModerationService _textModeration;
 
-        public AddCommentCommandHandler(IApplicationDbContext context, ISender sender)
+        public AddCommentCommandHandler(IApplicationDbContext context, ISender sender, ITextModerationService textModeration)
         {
             _context = context;
             _sender = sender;
+            _textModeration = textModeration;
         }
 
         public async Task<Result<Guid>> Handle(AddCommentCommand request, CancellationToken cancellationToken)
@@ -40,6 +45,18 @@ namespace PcBuilds.Application.Handlers
 
             if (user.CommentBanUntil > DateTime.UtcNow)
                 return Result.Failure<Guid>(new Error("Forbidden", "You are temporarily banned from commenting.", 403));
+
+            var moderation = await _textModeration.CheckAsync(request.Text, cancellationToken: cancellationToken);
+            if (moderation.IsToxic)
+            {
+                await _sender.Send(new IssueWarningCommand(
+                    null,
+                    request.UserId,
+                    BanType.Comment,
+                    "Automated warning: toxic comment"), cancellationToken);
+
+                return Result.Failure<Guid>(new Error("Toxic", "Comment rejected by moderation.", 400));
+            }
 
             var review = new Review
             {

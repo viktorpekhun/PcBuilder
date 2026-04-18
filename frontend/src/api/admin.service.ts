@@ -10,7 +10,7 @@ import type {
     IReport,
     IReportsQuery,
     IResolveReportRequest,
-    IWarnUserRequest,
+    IUnbanUserRequest,
 } from '../types/admin.types';
 
 const PATH = '/admin';
@@ -45,11 +45,11 @@ export const adminService = {
     getUserDetail: (userId: string) =>
         axiosPrivate.get<IAdminUserDetail>(`${PATH}/users/${userId}`),
 
-    warnUser: (userId: string, data: IWarnUserRequest) =>
-        axiosPrivate.post(`${PATH}/users/${userId}/warn`, data),
-
     banUser: (userId: string, data: IBanUserRequest) =>
         axiosPrivate.post(`${PATH}/users/${userId}/ban`, data),
+
+    unbanUser: (userId: string, data: IUnbanUserRequest) =>
+        axiosPrivate.post(`${PATH}/users/${userId}/unban`, data),
 
     changeUserRole: (userId: string, data: IChangeRoleRequest) =>
         axiosPrivate.patch<{ success: boolean; promoted: boolean }>(`${PATH}/users/${userId}/role`, data),

@@ -1,9 +1,12 @@
 using System.Security.Claims;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using PcBuilder.Api.Hubs;
 using PcBuilder.Api.Middleware;
+using PcBuilder.Api.RealTime;
 using PcBuilder.Api.Services;
 using PcBuilder.Persistence;
 using Components.Infrastructure;
@@ -30,7 +33,11 @@ builder.Host.UseSerilog((context, configuration) =>
 // Add services to the container.
 
 builder.Services.AddControllers()
-    .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase);
+    .AddJsonOptions(o =>
+    {
+        o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        o.JsonSerializerOptions.Converters.Add(new PcBuilder.Api.Middleware.UtcDateTimeConverter());
+    });
 builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddComponentsModule();
 builder.Services.AddAuthModule();
@@ -39,7 +46,19 @@ builder.Services.AddScrapingModule(builder.Configuration);
 builder.Services.AddModerationModule();
 builder.Services.AddNotificationsModule();
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-builder.Services.AddSingleton<IProfanityFilterService, ProfanityFilterService>();
+builder.Services.AddSignalR().AddJsonProtocol(o =>
+{
+    o.PayloadSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    o.PayloadSerializerOptions.Converters.Add(new PcBuilder.Api.Middleware.UtcDateTimeConverter());
+});
+builder.Services.AddTransient<MediatR.INotificationHandler<Notifications.Application.Events.NotificationCreatedEvent>, NotificationSignalRPublisher>();
+builder.Services.AddHttpClient<ITextModerationService, TextModerationService>(client =>
+{
+    var baseUrl = builder.Configuration["TextModeration:BaseUrl"]
+        ?? "http://localhost:8001";
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = TimeSpan.FromSeconds(5);
+});
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<CacheService>();
 builder.Services.AddSingleton<ICacheInvalidator>(sp => sp.GetRequiredService<CacheService>());
@@ -129,6 +148,19 @@ builder.Services.AddAuthentication("Bearer").AddJwtBearer(options =>
         RoleClaimType = ClaimTypes.Role,
         NameClaimType = JwtRegisteredClaimNames.Sub
     };
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = ctx =>
+        {
+            var token = ctx.Request.Query["access_token"];
+            if (!string.IsNullOrEmpty(token) &&
+                ctx.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+            {
+                ctx.Token = token;
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 
 var app = builder.Build();
@@ -166,6 +198,7 @@ app.UseAuthorization();
 
 app.MapHealthChecks("/health");
 app.MapControllers();
+app.MapHub<NotificationHub>("/hubs/notifications");
 app.MapFallbackToFile("/index.html");
 
 app.Run();

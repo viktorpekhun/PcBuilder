@@ -19,14 +19,18 @@ const messageTemplates: Record<NotificationType, MessageRenderer> = {
     return `You have been banned from posting until ${until}. Reason: ${p.reason ?? "No reason provided."}`;
   },
 
-  CommentWarning: (p) =>
-    `You received a comment warning (${p.warningsCount ?? "?"} total). Reason: ${p.reason ?? "No reason provided."}`,
+  CommentWarning: () =>
+    `Your comment was removed for violating our rules. Futher violations may leed to limitations for your account.`,
 
-  PostWarning: (p) =>
-    `You received a post warning (${p.warningsCount ?? "?"} total). Reason: ${p.reason ?? "No reason provided."}`,
+  PostWarning: () =>
+    `You build was removed from active posts for violating our rules. Futher violations may leed to limitations for your account.`,
 
   NewReview: (p) =>
     `${p.reviewerUsername ?? "Someone"} left a review on your build "${p.buildName ?? "a build"}".`,
+
+  CommentUnbanned: () => "Your comment ban has been lifted.",
+
+  PostUnbanned: () => "Your post ban has been lifted.",
 };
 
 export function renderNotificationText(

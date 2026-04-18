@@ -117,22 +117,22 @@ namespace PcBuilder.Api.Controllers
             return Ok(new { Success = true, Promoted = result.Value });
         }
 
-        [HttpPost("users/{userId:guid}/warn")]
-        public async Task<IActionResult> WarnUser(Guid userId, [FromBody] WarnUserRequest request)
-        {
-            var adminId = GetUserId();
-            var result = await _mediator.Send(new IssueWarningCommand(adminId, userId, request.BanType, request.Reason));
-            if (result.IsFailure)
-                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
-
-            return Ok(new { Success = true, WarningId = result.Value });
-        }
-
         [HttpPost("users/{userId:guid}/ban")]
         public async Task<IActionResult> BanUser(Guid userId, [FromBody] BanUserRequest request)
         {
             var adminId = GetUserId();
             var result = await _mediator.Send(new IssueBanCommand(adminId, userId, request.BanType, request.DurationDays, request.Reason));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+
+            return Ok(new { Success = true });
+        }
+
+        [HttpPost("users/{userId:guid}/unban")]
+        public async Task<IActionResult> UnbanUser(Guid userId, [FromBody] UnbanUserRequest request)
+        {
+            var adminId = GetUserId();
+            var result = await _mediator.Send(new RevokeBanCommand(adminId, userId, request.BanType));
             if (result.IsFailure)
                 return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
 
@@ -207,7 +207,7 @@ namespace PcBuilder.Api.Controllers
 
     public record ChangeRoleRequest(string Role);
 
-    public record WarnUserRequest(BanType BanType, string Reason);
-
     public record BanUserRequest(BanType BanType, int DurationDays, string Reason);
+
+    public record UnbanUserRequest(BanType BanType);
 }

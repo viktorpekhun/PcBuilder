@@ -3,6 +3,8 @@ export type NotificationType =
   | "BuildDeleted"
   | "CommentBanned"
   | "PostBanned"
+  | "CommentUnbanned"
+  | "PostUnbanned"
   | "CommentWarning"
   | "PostWarning"
   | "NewReview";

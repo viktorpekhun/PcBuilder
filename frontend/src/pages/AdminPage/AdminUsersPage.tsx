@@ -61,20 +61,6 @@ const AdminUsersPage = () => {
         setPageNumber(1);
     };
 
-    const handleWarn = async (user: IAdminUser) => {
-        const reason = window.prompt(`Warn ${user.username} — reason (max 500)?`);
-        if (!reason) return;
-        const typeStr = window.prompt("Ban type? Enter 'comment' or 'post'", "comment");
-        if (!typeStr) return;
-        const banType = typeStr.toLowerCase().startsWith("p") ? BanType.Post : BanType.Comment;
-        try {
-            await adminService.warnUser(user.id, { banType, reason });
-            await fetchUsers(search, pageNumber);
-        } catch {
-            window.alert("Failed to issue warning.");
-        }
-    };
-
     const handleBan = async (user: IAdminUser) => {
         const typeStr = window.prompt("Ban type? Enter 'comment' or 'post'", "comment");
         if (!typeStr) return;
@@ -93,6 +79,28 @@ const AdminUsersPage = () => {
             await fetchUsers(search, pageNumber);
         } catch {
             window.alert("Failed to ban user.");
+        }
+    };
+
+    const handleUnban = async (user: IAdminUser) => {
+        if (!user.isCommentBanned && !user.isPostBanned) {
+            window.alert("User has no active bans.");
+            return;
+        }
+        let banType: BanTypeValue;
+        if (user.isCommentBanned && user.isPostBanned) {
+            const typeStr = window.prompt("Unban type? Enter 'comment' or 'post'", "comment");
+            if (!typeStr) return;
+            banType = typeStr.toLowerCase().startsWith("p") ? BanType.Post : BanType.Comment;
+        } else {
+            banType = user.isCommentBanned ? BanType.Comment : BanType.Post;
+        }
+        if (!window.confirm(`Lift ${banTypeLabel(banType).toLowerCase()} ban for ${user.username}?`)) return;
+        try {
+            await adminService.unbanUser(user.id, { banType });
+            await fetchUsers(search, pageNumber);
+        } catch {
+            window.alert("Failed to unban user.");
         }
     };
 
@@ -203,17 +211,19 @@ const AdminUsersPage = () => {
                                             <button
                                                 type="button"
                                                 className={styles["action-btn"]}
-                                                onClick={() => handleWarn(user)}
-                                            >
-                                                Warn
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className={styles["action-btn"]}
                                                 onClick={() => handleBan(user)}
                                             >
                                                 Ban
                                             </button>
+                                            {(user.isCommentBanned || user.isPostBanned) && (
+                                                <button
+                                                    type="button"
+                                                    className={styles["action-btn"]}
+                                                    onClick={() => handleUnban(user)}
+                                                >
+                                                    Unban
+                                                </button>
+                                            )}
                                             <button
                                                 type="button"
                                                 className={styles["action-btn"]}

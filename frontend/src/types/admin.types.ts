@@ -71,15 +71,14 @@ export interface IPaginationHeader {
     hasPrevious: boolean;
 }
 
-export interface IWarnUserRequest {
-    banType: BanTypeValue;
-    reason: string;
-}
-
 export interface IBanUserRequest {
     banType: BanTypeValue;
     durationDays: number;
     reason: string;
+}
+
+export interface IUnbanUserRequest {
+    banType: BanTypeValue;
 }
 
 export interface IChangeRoleRequest {

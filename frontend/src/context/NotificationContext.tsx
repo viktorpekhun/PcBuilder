@@ -1,8 +1,12 @@
 import { createContext, useState, useEffect, useCallback, useRef } from "react";
 import type { ReactNode } from "react";
+import { HubConnectionBuilder } from "@microsoft/signalr";
+import type { HubConnection } from "@microsoft/signalr";
 import type { INotification } from "../types/notification.types";
 import { notificationService } from "../api/notification.service";
 import useAuth from "../hooks/useAuth";
+
+const HUB_URL = "https://localhost:5000/hubs/notifications";
 
 export interface INotificationContextType {
     notifications: INotification[];
@@ -24,22 +28,22 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     const [notifications, setNotifications] = useState<INotification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [isOpen, setIsOpen] = useState(false);
-    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const connectionRef = useRef<HubConnection | null>(null);
 
     const isAuthenticated = !!auth?.accessToken;
 
     const refreshUnreadCount = useCallback(async () => {
-        if (!isAuthenticated) return;
+        if (!auth?.accessToken) return;
         try {
             const res = await notificationService.getUnreadCount();
             setUnreadCount(res.data.count);
         } catch {
-            // silently ignore polling errors
+            // silently ignore
         }
-    }, [isAuthenticated]);
+    }, [auth?.accessToken]);
 
     const fetchNotifications = useCallback(async () => {
-        if (!isAuthenticated) return;
+        if (!auth?.accessToken) return;
         try {
             const res = await notificationService.getNotifications(1, 10);
             setNotifications(res.data);
@@ -47,7 +51,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         } catch {
             // silently ignore
         }
-    }, [isAuthenticated, refreshUnreadCount]);
+    }, [auth?.accessToken, refreshUnreadCount]);
 
     const markRead = useCallback(async (id: string) => {
         try {
@@ -71,23 +75,47 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         }
     }, []);
 
-    // Poll unread count every 60s when authenticated
     useEffect(() => {
-        if (isAuthenticated) {
-            refreshUnreadCount();
-            intervalRef.current = setInterval(refreshUnreadCount, 60_000);
-        } else {
+        if (!isAuthenticated) {
             setNotifications([]);
             setUnreadCount(0);
+            connectionRef.current?.stop();
+            connectionRef.current = null;
+            return;
         }
 
+        const connection = new HubConnectionBuilder()
+            .withUrl(HUB_URL, { accessTokenFactory: () => auth.accessToken! })
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on("notification", (n: INotification) => {
+            setNotifications((prev) => [n, ...prev].slice(0, 10));
+            setUnreadCount((c) => c + 1);
+        });
+
+        connection.onreconnected(() => {
+            refreshUnreadCount();
+            fetchNotifications();
+        });
+
+        connectionRef.current = connection;
+
+        connection.start()
+            .then(() => {
+                refreshUnreadCount();
+            })
+            .catch(() => {
+                // fall back to initial fetch if hub fails
+                refreshUnreadCount();
+            });
+
         return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null;
-            }
+            connection.stop();
+            connectionRef.current = null;
         };
-    }, [isAuthenticated, refreshUnreadCount]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isAuthenticated]);
 
     return (
         <NotificationContext.Provider
