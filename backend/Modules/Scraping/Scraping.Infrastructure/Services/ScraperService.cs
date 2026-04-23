@@ -338,9 +338,53 @@ namespace Scraping.Infrastructure.Services
                     //    _logger.LogWarning(ex, "Помилка перекладу описів");
                     //}
 
+                    var nameProperty = typeof(T).GetProperty("Name");
+                    var idProperty = typeof(T).GetProperty("Id");
+
+                    if (nameProperty != null && idProperty != null)
+                    {
+                        var keeperIdByName = new Dictionary<string, Guid>();
+
+                        foreach (var existing in componentsFromDb)
+                        {
+                            var name = nameProperty.GetValue(existing) as string;
+                            if (string.IsNullOrWhiteSpace(name)) continue;
+                            if (idProperty.GetValue(existing) is not Guid existingId) continue;
+                            keeperIdByName[name] = existingId;
+                        }
+
+                        foreach (var component in componentsToSave)
+                        {
+                            var name = nameProperty.GetValue(component) as string;
+                            if (string.IsNullOrWhiteSpace(name)) continue;
+                            if (idProperty.GetValue(component) is not Guid scrapedId) continue;
+                            if (!keeperIdByName.ContainsKey(name))
+                                keeperIdByName[name] = scrapedId;
+                        }
+
+                        var idRemap = new Dictionary<Guid, Guid>();
+                        foreach (var component in componentsToSave)
+                        {
+                            var name = nameProperty.GetValue(component) as string;
+                            if (string.IsNullOrWhiteSpace(name)) continue;
+                            if (idProperty.GetValue(component) is not Guid scrapedId) continue;
+                            if (keeperIdByName.TryGetValue(name, out var keeperId) && keeperId != scrapedId)
+                                idRemap[scrapedId] = keeperId;
+                        }
+
+                        if (idRemap.Count > 0)
+                        {
+                            foreach (var offer in offersToSave)
+                            {
+                                if (idRemap.TryGetValue(offer.ComponentId, out var keeperId))
+                                    offer.ComponentId = keeperId;
+                            }
+                            _logger.LogInformation("Merged {Count} duplicate-named components for {Type}", idRemap.Count, typeof(T).Name);
+                        }
+                    }
+
                     int savedComponentsCount = 0;
                     int updatedComponentsCount = 0;
-                    var nameProperty = typeof(T).GetProperty("Name");
                     var processedNames = new HashSet<string>();
                     foreach (var component in componentsToSave)
                     {
