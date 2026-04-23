@@ -37,6 +37,7 @@ builder.Services.AddControllers()
     {
         o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
         o.JsonSerializerOptions.Converters.Add(new PcBuilder.Api.Middleware.UtcDateTimeConverter());
+        o.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter(allowIntegerValues: true));
     });
 builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddComponentsModule();
@@ -78,6 +79,7 @@ builder.Services.AddSingleton<IConnection>(_ =>
 builder.Services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
 builder.Services.AddSingleton<IScrapeJobTracker, DbScrapeJobTracker>();
 builder.Services.AddHostedService<ScrapeResultConsumer>();
+builder.Services.AddHostedService<SignalRNotificationConsumer>();
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));
 builder.Services.AddHealthChecks()
     .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")!);

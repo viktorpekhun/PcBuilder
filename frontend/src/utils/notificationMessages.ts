@@ -31,6 +31,21 @@ const messageTemplates: Record<NotificationType, MessageRenderer> = {
   CommentUnbanned: () => "Your comment ban has been lifted.",
 
   PostUnbanned: () => "Your post ban has been lifted.",
+
+  PriceAlert: (p) => {
+    const name = p.componentName ? `"${p.componentName}"` : "a component you follow";
+    const oldPrice = Number(p.oldPrice);
+    const newPrice = Number(p.newPrice);
+    const verb = p.direction === "down" ? "dropped" : "rose";
+    const hasNumbers = Number.isFinite(oldPrice) && Number.isFinite(newPrice) && oldPrice > 0;
+    const deltaPct = hasNumbers
+      ? Math.abs((newPrice - oldPrice) / oldPrice) * 100
+      : null;
+    const fmt = (n: number) => n.toLocaleString("uk-UA", { maximumFractionDigits: 0 });
+    const deltaText = deltaPct !== null ? ` by ${deltaPct.toFixed(1)}%` : "";
+    const rangeText = hasNumbers ? ` (${fmt(oldPrice)} → ${fmt(newPrice)} грн)` : "";
+    return `Price of ${name} ${verb}${deltaText}${rangeText}.`;
+  },
 };
 
 export function renderNotificationText(

@@ -18,6 +18,11 @@ public class ScrapeJobConfiguration : IEntityTypeConfiguration<ScrapeJob>
             .IsRequired()
             .HasMaxLength(20);
 
+        builder.Property(j => j.Kind)
+            .IsRequired()
+            .HasMaxLength(30)
+            .HasDefaultValue("Category");
+
         builder.Property(j => j.ErrorMessage)
             .HasMaxLength(1000);
 

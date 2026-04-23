@@ -25,7 +25,7 @@ namespace Scraping.Infrastructure.Scrapers
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
 
-            var gpu = new Gpu();
+            var gpu = new Gpu { HotlineUrl = url };
             var stores = new List<Store>();
             var offers = new List<ProductOffer>();
 

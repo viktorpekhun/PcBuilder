@@ -23,7 +23,7 @@ namespace Scraping.Infrastructure.Scrapers
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
 
-            var hdd = new Hdd();
+            var hdd = new Hdd { HotlineUrl = url };
             var stores = new List<Store>();
             var offers = new List<ProductOffer>();
 

@@ -23,7 +23,7 @@ namespace Scraping.Infrastructure.Scrapers
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
 
-            var cpuCooler = new CpuCooler();
+            var cpuCooler = new CpuCooler { HotlineUrl = url };
             var stores = new List<Store>();
             var offers = new List<ProductOffer>();
 

@@ -21,6 +21,7 @@
     <ProjectReference Include="..\PcBuilder.SharedKernel\PcBuilder.SharedKernel.csproj" />
     <ProjectReference Include="..\PcBuilder.Persistence\PcBuilder.Persistence.csproj" />
     <ProjectReference Include="..\Modules\Scraping\Scraping.Infrastructure\Scraping.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Notifications\Notifications.Infrastructure\Notifications.Infrastructure.csproj" />
     <ProjectReference Include="..\Modules\Scraping\Scraping.Application\Scraping.Application.csproj" />
     <ProjectReference Include="..\Modules\Components\Components.Domain\Components.Domain.csproj" />
   </ItemGroup>

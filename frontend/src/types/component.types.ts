@@ -390,6 +390,12 @@ export interface ComponentListMap {
     Fan: IFanList;
 }
 
+export interface IPriceHistoryPoint {
+    date: string;
+    averagePrice: number;
+    offersCount: number;
+}
+
 export interface ComponentDetailMap {
     Cpu: ICpuDetail;
     Gpu: IGpuDetail;

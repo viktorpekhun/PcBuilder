@@ -1,6 +1,7 @@
 using Components.Domain.Entities;
 using Components.Domain.ValueObjects;
 using PcBuilder.Contracts.Messages;
+using PcBuilder.SharedKernel.Caching;
 using PcBuilder.SharedKernel.Enums;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -53,11 +54,17 @@ public class Worker : BackgroundService
     {
         _logger.LogInformation("Scraper Worker started, waiting for jobs...");
 
-        // Separate channel for jobs (with prefetch=1 so we process one job at a time)
+        // Consumer channel for jobs. We ack immediately on receipt and run the actual
+        // scrape on a background Task, so the consumer ack timeout is never hit.
         await using var jobChannel = await _rabbitConnection.CreateChannelAsync(cancellationToken: stoppingToken);
         await jobChannel.QueueDeclareAsync("scrape-jobs", durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
         await jobChannel.QueueDeclareAsync("scrape-results", durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
-        await jobChannel.BasicQosAsync(prefetchSize: 0, prefetchCount: 1, global: false, cancellationToken: stoppingToken);
+        await jobChannel.QueueDeclareAsync("scrape-started", durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
+
+        // Dedicated publisher channel for started/result messages. Not subject to the
+        // consumer ack timeout, so long-running jobs can still report completion.
+        await using var publishChannel = await _rabbitConnection.CreateChannelAsync(cancellationToken: stoppingToken);
+        var publishLock = new SemaphoreSlim(1, 1);
 
         // Separate channel for cancellations — must not be blocked by job channel's QoS
         await using var cancelChannel = await _rabbitConnection.CreateChannelAsync(cancellationToken: stoppingToken);
@@ -95,105 +102,30 @@ public class Worker : BackgroundService
         {
             var body = ea.Body.ToArray();
             var json = Encoding.UTF8.GetString(body);
-            ScrapeJobMessage? message = null;
+            ScrapeJobMessage? message;
 
             try
             {
                 message = JsonSerializer.Deserialize<ScrapeJobMessage>(json);
-                if (message == null)
-                {
-                    _logger.LogWarning("Received null scrape job message, skipping.");
-                    await jobChannel.BasicAckAsync(ea.DeliveryTag, false);
-                    return;
-                }
-
-                _logger.LogInformation("Processing scrape job {JobId} for {ComponentType}", message.JobId, message.ComponentType);
-
-                if (!EntityTypeMap.TryGetValue(message.EntityTypeName, out var entityType))
-                {
-                    _logger.LogWarning("Unknown entity type: {EntityTypeName}", message.EntityTypeName);
-                    await PublishResultAsync(jobChannel, message.JobId, message.ComponentType, false, $"Unknown entity type: {message.EntityTypeName}", stoppingToken);
-                    await jobChannel.BasicAckAsync(ea.DeliveryTag, false);
-                    return;
-                }
-
-                using var jobCts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
-                _activeJobs[message.JobId] = jobCts;
-
-                try
-                {
-                    using var scope = _scopeFactory.CreateScope();
-                    var scraperService = scope.ServiceProvider.GetRequiredService<ScraperService>();
-
-                    if (message.Kind == "Category")
-                    {
-                        var method = typeof(ScraperService)
-                            .GetMethod(nameof(ScraperService.ScrapeCategoryAsync))!
-                            .MakeGenericMethod(entityType);
-
-                        var task = (Task)method.Invoke(scraperService, [message.Url, Enum.Parse<ComponentType>(message.ComponentType), jobCts.Token])!;
-                        await task;
-                    }
-                    else if (message.Kind == "SingleComponent")
-                    {
-                        var nestedTypes = message.NestedTypeNames?
-                            .Select(n => NestedTypeMap.TryGetValue(message.EntityTypeName, out var types) ? types : Array.Empty<Type>())
-                            .SelectMany(t => t)
-                            .Distinct()
-                            .ToArray();
-
-                        var method = typeof(ScraperService)
-                            .GetMethod(nameof(ScraperService.ScrapeSingleComponentAsync))!
-                            .MakeGenericMethod(entityType);
-
-                        var task = (Task)method.Invoke(scraperService, [message.Url, Enum.Parse<ComponentType>(message.ComponentType), nestedTypes, jobCts.Token])!;
-                        await task;
-                    }
-
-                    //if (message.CorrectGpuModels)
-                    //{
-                    //    var correctionService = scope.ServiceProvider.GetRequiredService<IDataCorrectionService>();
-                    //    await correctionService.CorrectGpuModels();
-                    //    _logger.LogInformation("GPU model correction completed for job {JobId}", message.JobId);
-                    //}
-
-                    //if (message.ComponentType == "PcCase")
-                    //{
-                    //    var translationService = scope.ServiceProvider.GetRequiredService<IComponentTranslationService>();
-                    //    await translationService.TranslatePcCaseFieldsAsync(jobCts.Token);
-                    //    _logger.LogInformation("PcCase field translation completed for job {JobId}", message.JobId);
-                    //}
-
-                    //if (message.ComponentType == "Ram")
-                    //{
-                    //    var translationService = scope.ServiceProvider.GetRequiredService<IComponentTranslationService>();
-                    //    await translationService.TranslateRamFieldsAsync(jobCts.Token);
-                    //    _logger.LogInformation("Ram field translation completed for job {JobId}", message.JobId);
-                    //}
-
-                    await PublishResultAsync(jobChannel, message.JobId, message.ComponentType, true, null, stoppingToken);
-                    _logger.LogInformation("Scrape job {JobId} for {ComponentType} completed successfully", message.JobId, message.ComponentType);
-                }
-                catch (OperationCanceledException) when (jobCts.IsCancellationRequested && !stoppingToken.IsCancellationRequested)
-                {
-                    _logger.LogInformation("Scrape job {JobId} for {ComponentType} was cancelled", message.JobId, message.ComponentType);
-                    await PublishResultAsync(jobChannel, message.JobId, message.ComponentType, false, "Cancelled", stoppingToken);
-                }
-                finally
-                {
-                    _activeJobs.TryRemove(message.JobId, out CancellationTokenSource? _);
-                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Scrape job {JobId} failed", message?.JobId);
-                if (message != null)
-                    await PublishResultAsync(jobChannel, message.JobId, message.ComponentType, false, ex.Message, stoppingToken);
-            }
-            finally
-            {
+                _logger.LogError(ex, "Failed to deserialize scrape job message, dropping.");
                 await jobChannel.BasicAckAsync(ea.DeliveryTag, false);
+                return;
             }
+
+            // Ack immediately — actual work runs on a background task so the broker
+            // never sees the 30-min consumer timeout, regardless of how long scraping takes.
+            await jobChannel.BasicAckAsync(ea.DeliveryTag, false);
+
+            if (message == null)
+            {
+                _logger.LogWarning("Received null scrape job message, skipping.");
+                return;
+            }
+
+            _ = Task.Run(() => RunJobAsync(message, publishChannel, publishLock, stoppingToken), stoppingToken);
         };
 
         await jobChannel.BasicConsumeAsync("scrape-jobs", autoAck: false, consumer: jobConsumer, cancellationToken: stoppingToken);
@@ -202,13 +134,117 @@ public class Worker : BackgroundService
         await Task.Delay(Timeout.Infinite, stoppingToken).ContinueWith(_ => { }, CancellationToken.None);
     }
 
-    private static async Task PublishResultAsync(IChannel channel, Guid jobId, string componentType, bool success, string? errorMessage, CancellationToken ct)
+    private async Task RunJobAsync(ScrapeJobMessage message, IChannel publishChannel, SemaphoreSlim publishLock, CancellationToken stoppingToken)
     {
-        var result = new ScrapeJobResultMessage(jobId, componentType, success, errorMessage, DateTime.UtcNow);
-        var json = JsonSerializer.Serialize(result);
-        var body = Encoding.UTF8.GetBytes(json);
+        _logger.LogInformation("Processing scrape job {JobId} for {ComponentType}", message.JobId, message.ComponentType);
 
+        if (!EntityTypeMap.TryGetValue(message.EntityTypeName, out var entityType))
+        {
+            _logger.LogWarning("Unknown entity type: {EntityTypeName}", message.EntityTypeName);
+            await PublishResultAsync(publishChannel, publishLock, message.JobId, message.ComponentType, false, $"Unknown entity type: {message.EntityTypeName}", 0, stoppingToken);
+            return;
+        }
+
+        using var jobCts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+        _activeJobs[message.JobId] = jobCts;
+
+        int itemsScraped = 0;
+
+        try
+        {
+            await PublishStartedAsync(publishChannel, publishLock, message.JobId, message.ComponentType, stoppingToken);
+
+            using var scope = _scopeFactory.CreateScope();
+            var scraperService = scope.ServiceProvider.GetRequiredService<ScraperService>();
+
+            if (message.Kind == "Category")
+            {
+                var method = typeof(ScraperService)
+                    .GetMethod(nameof(ScraperService.ScrapeCategoryAsync))!
+                    .MakeGenericMethod(entityType);
+
+                var task = (Task<int>)method.Invoke(scraperService, [message.Url, Enum.Parse<ComponentType>(message.ComponentType), jobCts.Token])!;
+                itemsScraped = await task;
+            }
+            else if (message.Kind == "SingleComponent")
+            {
+                var nestedTypes = message.NestedTypeNames?
+                    .Select(n => NestedTypeMap.TryGetValue(message.EntityTypeName, out var types) ? types : Array.Empty<Type>())
+                    .SelectMany(t => t)
+                    .Distinct()
+                    .ToArray();
+
+                var method = typeof(ScraperService)
+                    .GetMethod(nameof(ScraperService.ScrapeSingleComponentAsync))!
+                    .MakeGenericMethod(entityType);
+
+                var task = (Task)method.Invoke(scraperService, [message.Url, Enum.Parse<ComponentType>(message.ComponentType), nestedTypes, jobCts.Token])!;
+                await task;
+                itemsScraped = 1;
+            }
+            else if (message.Kind == "PriceUpdate")
+            {
+                var method = typeof(ScraperService)
+                    .GetMethod(nameof(ScraperService.UpdatePricesAsync))!
+                    .MakeGenericMethod(entityType);
+
+                var task = (Task<int>)method.Invoke(scraperService, [Enum.Parse<ComponentType>(message.ComponentType), jobCts.Token])!;
+                itemsScraped = await task;
+
+                var cacheInvalidator = scope.ServiceProvider.GetRequiredService<ICacheInvalidator>();
+                cacheInvalidator.InvalidateByPrefix($"components:{message.ComponentType}");
+            }
+
+            await PublishResultAsync(publishChannel, publishLock, message.JobId, message.ComponentType, true, null, itemsScraped, stoppingToken);
+            _logger.LogInformation("Scrape job {JobId} for {ComponentType} completed successfully", message.JobId, message.ComponentType);
+        }
+        catch (OperationCanceledException) when (jobCts.IsCancellationRequested && !stoppingToken.IsCancellationRequested)
+        {
+            _logger.LogInformation("Scrape job {JobId} for {ComponentType} was cancelled", message.JobId, message.ComponentType);
+            await PublishResultAsync(publishChannel, publishLock, message.JobId, message.ComponentType, false, "Cancelled", itemsScraped, stoppingToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Scrape job {JobId} failed", message.JobId);
+            await PublishResultAsync(publishChannel, publishLock, message.JobId, message.ComponentType, false, ex.Message, itemsScraped, stoppingToken);
+        }
+        finally
+        {
+            _activeJobs.TryRemove(message.JobId, out _);
+        }
+    }
+
+    private static async Task PublishResultAsync(IChannel channel, SemaphoreSlim publishLock, Guid jobId, string componentType, bool success, string? errorMessage, int itemsScraped, CancellationToken ct)
+    {
+        var result = new ScrapeJobResultMessage(jobId, componentType, success, errorMessage, DateTime.UtcNow, itemsScraped);
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(result));
         var props = new BasicProperties { Persistent = true };
-        await channel.BasicPublishAsync("", "scrape-results", mandatory: false, basicProperties: props, body: body, cancellationToken: ct);
+
+        await publishLock.WaitAsync(ct);
+        try
+        {
+            await channel.BasicPublishAsync("", "scrape-results", mandatory: false, basicProperties: props, body: body, cancellationToken: ct);
+        }
+        finally
+        {
+            publishLock.Release();
+        }
+    }
+
+    private static async Task PublishStartedAsync(IChannel channel, SemaphoreSlim publishLock, Guid jobId, string componentType, CancellationToken ct)
+    {
+        var msg = new ScrapeJobStartedMessage(jobId, componentType, DateTime.UtcNow);
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg));
+        var props = new BasicProperties { Persistent = true };
+
+        await publishLock.WaitAsync(ct);
+        try
+        {
+            await channel.BasicPublishAsync("", "scrape-started", mandatory: false, basicProperties: props, body: body, cancellationToken: ct);
+        }
+        finally
+        {
+            publishLock.Release();
+        }
     }
 }

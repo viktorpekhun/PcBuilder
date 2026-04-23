@@ -60,6 +60,24 @@
     color: #d1d5db;
 }
 
+.ban-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: #b91c1c;
+    margin-bottom: 0.65rem;
+}
+
+.ban-inline svg {
+    flex-shrink: 0;
+}
+
+.ban-inline strong {
+    font-weight: 600;
+    color: #991b1b;
+}
+
 /* Form */
 .comment-form {
     margin-bottom: 1.5rem;

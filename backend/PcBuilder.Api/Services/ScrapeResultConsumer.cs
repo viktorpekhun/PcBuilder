@@ -37,6 +37,7 @@ namespace PcBuilder.Api.Services
 
             await using var channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
             await channel.QueueDeclareAsync("scrape-results", durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
+            await channel.QueueDeclareAsync("scrape-started", durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
 
             var consumer = new AsyncEventingBasicConsumer(channel);
             consumer.ReceivedAsync += async (_, ea) =>
@@ -48,7 +49,7 @@ namespace PcBuilder.Api.Services
 
                     if (result != null)
                     {
-                        _tracker.MarkCompleted(result.JobId, result.Success ? null : result.ErrorMessage);
+                        _tracker.MarkCompleted(result.JobId, result.Success ? null : result.ErrorMessage, result.ItemsScraped);
 
                         if (result.Success)
                         {
@@ -71,7 +72,32 @@ namespace PcBuilder.Api.Services
                 }
             };
 
+            var startedConsumer = new AsyncEventingBasicConsumer(channel);
+            startedConsumer.ReceivedAsync += async (_, ea) =>
+            {
+                try
+                {
+                    var json = Encoding.UTF8.GetString(ea.Body.ToArray());
+                    var msg = JsonSerializer.Deserialize<ScrapeJobStartedMessage>(json);
+
+                    if (msg != null)
+                    {
+                        _tracker.MarkRunning(msg.JobId);
+                        _logger.LogInformation("Scrape job {JobId} for {ComponentType} started", msg.JobId, msg.ComponentType);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error processing scrape started message");
+                }
+                finally
+                {
+                    await channel.BasicAckAsync(ea.DeliveryTag, false);
+                }
+            };
+
             await channel.BasicConsumeAsync("scrape-results", autoAck: false, consumer: consumer, cancellationToken: stoppingToken);
+            await channel.BasicConsumeAsync("scrape-started", autoAck: false, consumer: startedConsumer, cancellationToken: stoppingToken);
 
             await Task.Delay(Timeout.Infinite, stoppingToken).ContinueWith(_ => { }, CancellationToken.None);
         }

@@ -142,9 +142,12 @@ export type ScrapeJobState =
     | "Completed"
     | "Failed";
 
+export type ScrapeJobKind = "Category" | "PriceUpdate" | "SingleComponent";
+
 export interface IScrapeJobStatus {
     jobId: string;
     componentType: string;
+    kind: ScrapeJobKind;
     state: ScrapeJobState;
     queuedAt: string;
     startedAt: string | null;

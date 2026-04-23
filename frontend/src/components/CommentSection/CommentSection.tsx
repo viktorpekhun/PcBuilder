@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import styles from './CommentSection.module.css';
 import { commentService } from '../../api/comment.service';
+import { profileService } from '../../api/profile.service';
 import { Pagination } from '../Pagination/Pagination';
 import ReportModal from '../ReportModal/ReportModal';
 import useAuth from '../../hooks/useAuth';
@@ -65,6 +66,14 @@ function CommentSection({ buildId, currentUserId }: CommentSectionProps) {
     const [formError, setFormError] = useState<string | null>(null);
     const [listError, setListError] = useState<string | null>(null);
     const [reportTarget, setReportTarget] = useState<string | null>(null);
+    const [commentBanUntil, setCommentBanUntil] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!currentUserId) return;
+        profileService.getBans().then(res => {
+            setCommentBanUntil(res.data.isCommentBanned ? res.data.commentBanUntil : null);
+        }).catch(() => {});
+    }, [currentUserId]);
 
     const fetchComments = useCallback(async (page: number) => {
         try {
@@ -160,6 +169,18 @@ function CommentSection({ buildId, currentUserId }: CommentSectionProps) {
         });
     };
 
+    const formatRemaining = (dateStr: string) => {
+        const diffMs = new Date(dateStr).getTime() - Date.now();
+        if (diffMs <= 0) return null;
+        const mins = Math.floor(diffMs / 60000);
+        const days = Math.floor(mins / 1440);
+        const hours = Math.floor((mins % 1440) / 60);
+        const minutes = mins % 60;
+        if (days > 0) return `${days} д ${hours} год`;
+        if (hours > 0) return `${hours} год ${minutes} хв`;
+        return `${minutes} хв`;
+    };
+
     return (
         <div className={styles['comment-section']}>
             <h3 className={styles['section-title']}>
@@ -168,9 +189,18 @@ function CommentSection({ buildId, currentUserId }: CommentSectionProps) {
 
             {currentUserId && (
                 <form className={styles['comment-form']} onSubmit={handleSubmit} noValidate>
+                    {commentBanUntil && (
+                        <div className={styles['ban-inline']} role="status">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <rect x="3" y="11" width="18" height="11" rx="2" />
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            </svg>
+                            <span>Коментування заблоковано до <strong>{formatDate(commentBanUntil)}</strong>{formatRemaining(commentBanUntil) && <> · {formatRemaining(commentBanUntil)}</>}</span>
+                        </div>
+                    )}
                     <div className={styles['rating-picker']}>
                         <span className={styles['rating-label']}>Ваша оцінка:</span>
-                        <StarRating rating={newRating} interactive onRate={setNewRating} />
+                        <StarRating rating={newRating} interactive={!commentBanUntil} {...(!commentBanUntil && { onRate: setNewRating })} />
                     </div>
                     <textarea
                         className={`${styles['comment-input']} ${formError ? styles['comment-input--error'] : ''}`}
@@ -179,6 +209,7 @@ function CommentSection({ buildId, currentUserId }: CommentSectionProps) {
                         placeholder="Напишіть відгук..."
                         maxLength={500}
                         rows={3}
+                        disabled={!!commentBanUntil}
                         aria-invalid={!!formError}
                         aria-describedby={formError ? 'comment-form-error' : undefined}
                     />
@@ -195,7 +226,7 @@ function CommentSection({ buildId, currentUserId }: CommentSectionProps) {
                         <button
                             type="submit"
                             className={styles['submit-btn']}
-                            disabled={!newComment.trim() || newRating === 0 || submitting}
+                            disabled={!!commentBanUntil || !newComment.trim() || newRating === 0 || submitting}
                         >
                             {submitting ? 'Надсилання...' : 'Надіслати'}
                         </button>

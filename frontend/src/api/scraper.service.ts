@@ -15,4 +15,7 @@ export const scraperService = {
 
     startCategoryScrape: (routeSlug: string) =>
         axiosPrivate.post(`${PATH}/${routeSlug}`),
+
+    startPriceUpdate: (componentType: string) =>
+        axiosPrivate.post(`${PATH}/prices/${componentType}`),
 };

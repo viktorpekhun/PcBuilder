@@ -92,5 +92,18 @@ namespace PcBuilder.Api.Controllers
             var filterOptions = await _mediator.Send(new GetFilterOptionsQuery(componentType));
             return Ok(filterOptions);
         }
+
+        [HttpGet("{componentType}/{id:guid}/price-history")]
+        public async Task<IActionResult> GetPriceHistory(
+            ComponentType componentType,
+            Guid id,
+            [FromQuery] int days = 30)
+        {
+            var result = await _mediator.Send(new GetPriceHistoryQuery(componentType, id, days));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+
+            return Ok(result.Value);
+        }
     }
 }

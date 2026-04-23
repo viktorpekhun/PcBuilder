@@ -6,6 +6,7 @@ import type {
     IResourceParameters,
     IFilterOptions,
     IPagination,
+    IPriceHistoryPoint,
 } from "../types/component.types";
 
 const PATH = "/Component";
@@ -47,4 +48,7 @@ export const componentService = {
 
     getFilterOptions: (type: ComponentType) =>
         axios.get<IFilterOptions>(`${PATH}/${type}/filter-options`),
+
+    getPriceHistory: (type: ComponentType, id: string, days: number) =>
+        axios.get<IPriceHistoryPoint[]>(`${PATH}/${type}/${id}/price-history?days=${days}`),
 };

@@ -26,7 +26,7 @@ namespace Scraping.Infrastructure.Scrapers
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
 
-            var powerSupply = new PowerSupply();
+            var powerSupply = new PowerSupply { HotlineUrl = url };
             var stores = new List<Store>();
             var offers = new List<ProductOffer>();
 

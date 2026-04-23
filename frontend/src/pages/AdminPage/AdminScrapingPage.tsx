@@ -42,6 +42,23 @@ const formatDuration = (start: string | null, end: string | null): string => {
     return `${m}m ${rem}s`;
 };
 
+const formatKind = (kind: string): string => {
+    switch (kind) {
+        case "PriceUpdate": return "Prices";
+        case "Category": return "Components";
+        case "SingleComponent": return "Single";
+        default: return kind;
+    }
+};
+
+const kindBadgeClass = (kind: string): string => {
+    switch (kind) {
+        case "PriceUpdate": return "kind-prices";
+        case "SingleComponent": return "kind-single";
+        default: return "kind-components";
+    }
+};
+
 const badgeClass = (state: ScrapeJobState): string => {
     switch (state) {
         case "Queued": return "badge-queued";
@@ -121,6 +138,20 @@ const AdminScrapingPage = () => {
         }
     };
 
+    const handleUpdatePrices = async (category: CategoryDef) => {
+        try {
+            await scraperService.startPriceUpdate(category.componentType);
+            await fetchJobs();
+        } catch (e: unknown) {
+            const message = (e as { response?: { data?: string | { message?: string } } })
+                ?.response?.data;
+            const text = typeof message === "string"
+                ? message
+                : message?.message || "Failed to start price update job.";
+            window.alert(text);
+        }
+    };
+
     const handleCancel = async (jobId: string) => {
         if (!window.confirm("Cancel this scrape job?")) return;
         try {
@@ -184,6 +215,14 @@ const AdminScrapingPage = () => {
                                 >
                                     {active ? "In progress…" : "Start Scraping"}
                                 </button>
+                                <button
+                                    type="button"
+                                    className={`${styles.btn} ${styles["btn-prices"]}`}
+                                    disabled={active}
+                                    onClick={() => handleUpdatePrices(category)}
+                                >
+                                    Update Prices
+                                </button>
                                 {active && latest && latest.state !== "Cancelling" && (
                                     <button
                                         type="button"
@@ -212,6 +251,7 @@ const AdminScrapingPage = () => {
                         <thead>
                             <tr>
                                 <th>Component</th>
+                                <th>Kind</th>
                                 <th>State</th>
                                 <th>Queued</th>
                                 <th>Completed</th>
@@ -224,6 +264,11 @@ const AdminScrapingPage = () => {
                             {jobs.slice(0, 50).map(job => (
                                 <tr key={job.jobId}>
                                     <td>{job.componentType}</td>
+                                    <td>
+                                        <span className={`${styles.badge} ${styles[kindBadgeClass(job.kind)]}`}>
+                                            {formatKind(job.kind)}
+                                        </span>
+                                    </td>
                                     <td>
                                         <span className={`${styles.badge} ${styles[badgeClass(job.state)]}`}>
                                             {job.state}

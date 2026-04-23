@@ -63,6 +63,13 @@ export default function NotificationCenter() {
                 navigate(`/builds/${buildId}`);
                 setIsOpen(false);
             }
+        } else if (notification.type === "PriceAlert") {
+            const componentId = notification.payload?.componentId;
+            const componentType = notification.payload?.componentType;
+            if (componentId && componentType) {
+                navigate(`/components/${componentType.toLowerCase()}/${componentId}`);
+                setIsOpen(false);
+            }
         }
     };
 

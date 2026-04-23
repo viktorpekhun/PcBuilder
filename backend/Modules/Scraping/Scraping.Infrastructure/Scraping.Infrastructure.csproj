@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Scraping.Application\Scraping.Application.csproj" />
+    <ProjectReference Include="..\..\Notifications\Notifications.Application\Notifications.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

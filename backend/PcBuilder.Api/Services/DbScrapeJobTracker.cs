@@ -52,6 +52,7 @@ namespace PcBuilder.Api.Services
             {
                 Id = status.JobId,
                 ComponentType = status.ComponentType,
+                Kind = status.Kind,
                 State = status.State,
                 QueuedAt = status.QueuedAt,
                 StartedAt = status.StartedAt,
@@ -83,19 +84,37 @@ namespace PcBuilder.Api.Services
                 (j.State == "Queued" || j.State == "Running" || j.State == "Cancelling"));
         }
 
-        public void MarkCompleted(Guid jobId, string? errorMessage = null)
+        public void MarkRunning(Guid jobId)
+        {
+            if (!_cache.TryGetValue(jobId, out var status)) return;
+
+            status.State = "Running";
+            status.StartedAt = DateTime.UtcNow;
+
+            Persist(jobId, j =>
+            {
+                j.State = "Running";
+                j.StartedAt = status.StartedAt;
+            });
+        }
+
+        public void MarkCompleted(Guid jobId, string? errorMessage = null, int? itemsScraped = null)
         {
             if (!_cache.TryGetValue(jobId, out var status)) return;
 
             status.State = errorMessage == null ? "Completed" : "Failed";
             status.CompletedAt = DateTime.UtcNow;
             status.ErrorMessage = errorMessage;
+            if (itemsScraped.HasValue)
+                status.ItemsScraped = itemsScraped.Value;
 
             Persist(jobId, j =>
             {
                 j.State = status.State;
                 j.CompletedAt = status.CompletedAt;
                 j.ErrorMessage = status.ErrorMessage;
+                if (itemsScraped.HasValue)
+                    j.ItemsScraped = itemsScraped.Value;
             });
         }
 
@@ -129,6 +148,7 @@ namespace PcBuilder.Api.Services
         {
             JobId = j.Id,
             ComponentType = j.ComponentType,
+            Kind = j.Kind,
             State = j.State,
             QueuedAt = j.QueuedAt,
             StartedAt = j.StartedAt,

@@ -168,6 +168,9 @@ namespace PcBuilder.Persistence.Migrations
                     b.Property<string>("FactoryLink")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("HotlineUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IntegratedGraphics")
                         .HasColumnType("bit");
 
@@ -234,6 +237,9 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.Property<double?>("Height")
                         .HasColumnType("float");
+
+                    b.Property<string>("HotlineUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<double?>("Length")
                         .HasColumnType("float");
@@ -365,6 +371,9 @@ namespace PcBuilder.Persistence.Migrations
                     b.Property<string>("FactoryLink")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("HotlineUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("MaxSpeed")
                         .HasColumnType("int");
 
@@ -445,6 +454,9 @@ namespace PcBuilder.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("HotlineUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("MaxFrequency")
                         .HasColumnType("int");
@@ -546,6 +558,9 @@ namespace PcBuilder.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FormFactor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HotlineUrl")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Interface")
@@ -690,6 +705,9 @@ namespace PcBuilder.Persistence.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("HotlineUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -764,6 +782,9 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.Property<bool>("HasMicrophone")
                         .HasColumnType("bit");
+
+                    b.Property<string>("HotlineUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<double?>("MaxCpuCoolerHeight")
                         .HasColumnType("float");
@@ -918,6 +939,9 @@ namespace PcBuilder.Persistence.Migrations
                     b.Property<bool>("HasApcf")
                         .HasColumnType("bit");
 
+                    b.Property<string>("HotlineUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("InputMaxVoltage")
                         .HasColumnType("int");
 
@@ -986,6 +1010,76 @@ namespace PcBuilder.Persistence.Migrations
                     b.ToTable("PowerSupplyPowerConnectors");
                 });
 
+            modelBuilder.Entity("Components.Domain.Entities.PriceAlertSubscription", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ComponentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ComponentType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("InitialPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("LastNotifiedPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("ThresholdPercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComponentId", "ComponentType");
+
+                    b.HasIndex("UserId", "ComponentId", "ComponentType")
+                        .IsUnique();
+
+                    b.ToTable("PriceAlertSubscriptions");
+                });
+
+            modelBuilder.Entity("Components.Domain.Entities.PriceHistoryEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("AveragePrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("ComponentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ComponentType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OffersCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("SnapshotDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComponentId", "ComponentType", "SnapshotDate")
+                        .IsUnique();
+
+                    b.ToTable("PriceHistoryEntries");
+                });
+
             modelBuilder.Entity("Components.Domain.Entities.ProductOffer", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1051,6 +1145,9 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.Property<int>("Frequency")
                         .HasColumnType("int");
+
+                    b.Property<string>("HotlineUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("ModuleQuantity")
                         .HasColumnType("int");
@@ -1140,6 +1237,9 @@ namespace PcBuilder.Persistence.Migrations
                     b.Property<string>("FormFactor")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("HotlineUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Interface")
                         .HasMaxLength(300)
@@ -1365,6 +1465,13 @@ namespace PcBuilder.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(0);
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasDefaultValue("Category");
 
                     b.Property<DateTime>("QueuedAt")
                         .HasColumnType("datetime2");

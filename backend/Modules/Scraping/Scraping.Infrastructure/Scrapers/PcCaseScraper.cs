@@ -25,7 +25,7 @@ namespace Scraping.Infrastructure.Scrapers
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
 
-            var pcCase = new PcCase();
+            var pcCase = new PcCase { HotlineUrl = url };
             var stores = new List<Store>();
             var offers = new List<ProductOffer>();
 
@@ -278,10 +278,10 @@ namespace Scraping.Infrastructure.Scrapers
                                         {
                                             if (string.IsNullOrEmpty(value))
                                             {
-                                                pcCase.BuiltInFans = new LocalizedString { Uk = null };
+                                                pcCase.AdditionalFanPlaces = new LocalizedString { Uk = null };
                                                 continue;
                                             }
-                                            pcCase.BuiltInFans = new LocalizedString { Uk = char.ToUpper(value[0]) + value.Substring(1) };
+                                            pcCase.AdditionalFanPlaces = new LocalizedString { Uk = char.ToUpper(value[0]) + value.Substring(1) };
                                             continue;
                                         }
 
@@ -319,10 +319,10 @@ namespace Scraping.Infrastructure.Scrapers
                                                     {
                                                         if (string.IsNullOrEmpty(value))
                                                         {
-                                                            pcCase.BuiltInFans = new LocalizedString { Uk = null };
+                                                            pcCase.AdditionalFanPlaces = new LocalizedString { Uk = null };
                                                             continue;
                                                         }
-                                                        pcCase.BuiltInFans = new LocalizedString { Uk = char.ToUpper(value[0]) + value.Substring(1) };
+                                                        pcCase.AdditionalFanPlaces = new LocalizedString { Uk = char.ToUpper(value[0]) + value.Substring(1) };
                                                     }
                                                 }
                                             }

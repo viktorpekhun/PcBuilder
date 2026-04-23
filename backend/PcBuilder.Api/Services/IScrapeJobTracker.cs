@@ -8,7 +8,8 @@ namespace PcBuilder.Api.Services
         ScrapeJobStatus? GetStatus(Guid jobId);
         IReadOnlyList<ScrapeJobStatus> GetAllStatuses();
         bool HasActiveJob(string componentType);
-        void MarkCompleted(Guid jobId, string? errorMessage = null);
+        void MarkRunning(Guid jobId);
+        void MarkCompleted(Guid jobId, string? errorMessage = null, int? itemsScraped = null);
         void MarkCancelled(Guid jobId);
     }
 }

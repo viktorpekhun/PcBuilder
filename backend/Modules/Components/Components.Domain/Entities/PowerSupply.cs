@@ -33,6 +33,10 @@ namespace Components.Domain.Entities
 
         [Url]
         public string? FactoryLink { get; set; }
+
+        [Url]
+        public string? HotlineUrl { get; set; }
+
         public decimal? AveragePrice { get; set; }
         public int? OffersCount { get; set; }
         public List<PowerSupplyPowerConnector> PowerSupplyPowerConnectors { get; set; } = new();

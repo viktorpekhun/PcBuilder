@@ -11,5 +11,6 @@ namespace Notifications.Domain
         public const string CommentWarning = "CommentWarning";
         public const string PostWarning = "PostWarning";
         public const string NewReview = "NewReview";
+        public const string PriceAlert = "PriceAlert";
     }
 }

@@ -36,6 +36,8 @@ namespace PcBuilder.Persistence.Data
         public DbSet<Fan> Fans { get; set; }
         public DbSet<Store> Stores { get; set; }
         public DbSet<ProductOffer> ProductOffers { get; set; }
+        public DbSet<PriceHistoryEntry> PriceHistoryEntries { get; set; }
+        public DbSet<PriceAlertSubscription> PriceAlertSubscriptions { get; set; }
 
         // Auth
         public DbSet<User> Users { get; set; }

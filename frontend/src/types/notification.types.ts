@@ -7,7 +7,8 @@ export type NotificationType =
   | "PostUnbanned"
   | "CommentWarning"
   | "PostWarning"
-  | "NewReview";
+  | "NewReview"
+  | "PriceAlert";
 
 export interface INotificationPayload {
   [key: string]: string;

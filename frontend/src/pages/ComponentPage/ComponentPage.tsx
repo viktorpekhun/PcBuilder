@@ -6,6 +6,8 @@ import type { ComponentType, IComponentBase, IProductOffer } from '../../types/c
 import { componentSpecFullConfigs } from './componentSpecsFullConfigs';
 import type { FullSpecConfig } from './componentSpecsFullConfigs';
 import { Button } from '../../components/Button/Button';
+import PriceHistoryChart from '../../components/PriceHistoryChart/PriceHistoryChart';
+import PriceAlertButton from '../../components/PriceAlertButton/PriceAlertButton';
 
 interface SelectedComponentOffer {
     componentId: string;
@@ -256,6 +258,9 @@ function ComponentPage() {
                             <h2>
                                 Середня ціна: <span className={styles['price']}>{component.averagePrice} грн</span>
                             </h2>
+                            {type && id && (
+                                <PriceAlertButton componentId={id} componentType={type as ComponentType} />
+                            )}
                         </div>
                         
                         <div className={styles['component-specs']}>
@@ -268,6 +273,10 @@ function ComponentPage() {
                         </div>
                     </div>
                 </div>
+
+                {type && id && (
+                    <PriceHistoryChart type={type as ComponentType} id={id} />
+                )}
 
                 {productOffers && productOffers.length > 0 && (
                     <div className={styles['offers-section']}>
