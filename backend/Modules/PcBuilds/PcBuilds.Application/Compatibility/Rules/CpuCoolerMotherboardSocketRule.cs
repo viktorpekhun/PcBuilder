@@ -1,35 +1,32 @@
-﻿
 using Components.Domain.Entities;
-using PcBuilds.Domain.Entities;
-using System.Net.Sockets;
 using PcBuilder.SharedKernel.Enums;
+using PcBuilds.Domain.Entities;
 
 namespace PcBuilds.Application.Compatibility.Rules
 {
     public class CpuCoolerMotherboardSocketRule : ICompatibilityRule
     {
-        public string Name => "CPU Cooler and Motherboard Socket Compatibility";
+        public string Name => "CoolerSocket";
 
         public CompatibilityResult Check(PcBuild pcBuild)
         {
             var result = new CompatibilityResult();
-
             var cpuCooler = pcBuild.CpuCooler;
             var motherboard = pcBuild.Motherboard;
 
             if (cpuCooler == null || motherboard == null)
-            {
                 return result;
-            }
 
             var cpuCoolerSockets = cpuCooler.CpuCoolerSockets;
 
             if (string.IsNullOrEmpty(motherboard.Socket) || cpuCoolerSockets == null || !cpuCoolerSockets.Any())
             {
-                result.Messages.Add(new CompatibilityMessage
+                result.FitnessScore = 0.7;
+                result.Issues.Add(new CompatibilityIssue
                 {
-                    Type = CompatibilityMessageType.Warning,
-                    Message = "Неможливо перевірити сумісність кулера CPU та материнської плати — недостатньо даних."
+                    Severity = CompatibilitySeverity.Warning,
+                    Code = IssueCodes.CoolerSocketDataMissing,
+                    Parameters = new() { ["CoolerName"] = cpuCooler.Name ?? "", ["MbSocket"] = motherboard.Socket ?? "" }
                 });
                 return result;
             }
@@ -39,21 +36,23 @@ namespace PcBuilds.Application.Compatibility.Rules
             foreach (var socket in cpuCoolerSockets)
             {
                 if (motherboard.Socket.Contains("Socket 115") && socket.SocketType.Contains("Socket 115"))
-                {
                     return result;
-                }
-                else if (motherboard.Socket == socket.SocketType)
+
+                if (motherboard.Socket == socket.SocketType)
                 {
                     isCompatible = true;
                     break;
                 }
             }
+
             if (!isCompatible)
             {
-                result.Messages.Add(new CompatibilityMessage
+                result.FitnessScore = 0.0;
+                result.Issues.Add(new CompatibilityIssue
                 {
-                    Type = CompatibilityMessageType.Problem,
-                    Message = $"Кулер CPU не сумісний з сокетом материнської плати ({motherboard.Socket})."
+                    Severity = CompatibilitySeverity.Critical,
+                    Code = IssueCodes.CoolerSocketMismatch,
+                    Parameters = new() { ["CoolerName"] = cpuCooler.Name ?? "", ["MbSocket"] = motherboard.Socket }
                 });
             }
 

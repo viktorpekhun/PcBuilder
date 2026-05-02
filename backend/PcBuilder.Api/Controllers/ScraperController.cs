@@ -7,6 +7,7 @@ using PcBuilder.Api.Services;
 using PcBuilder.Contracts.Messages;
 using Scraping.Application.Commands;
 using Scraping.Infrastructure.Handlers;
+using Scraping.Infrastructure.Scrapers.PassMark;
 
 namespace PcBuilder.Api.Controllers
 {
@@ -18,12 +19,14 @@ namespace PcBuilder.Api.Controllers
         private readonly IRabbitMqPublisher _publisher;
         private readonly IScrapeJobTracker _tracker;
         private readonly ISender _sender;
+        private readonly PassMarkUpdateJobHandler _passMarkHandler;
 
-        public ScraperController(IRabbitMqPublisher publisher, IScrapeJobTracker tracker, ISender sender)
+        public ScraperController(IRabbitMqPublisher publisher, IScrapeJobTracker tracker, ISender sender, PassMarkUpdateJobHandler passMarkHandler)
         {
             _publisher = publisher;
             _tracker = tracker;
             _sender = sender;
+            _passMarkHandler = passMarkHandler;
         }
 
         [HttpGet("jobs")]
@@ -177,6 +180,38 @@ namespace PcBuilder.Api.Controllers
         [HttpPost("fan")]
         public async Task<IActionResult> ScrapeFans(CancellationToken cancellationToken)
             => await EnqueueCategoryAsync("https://hotline.ua/ua/computer/kulery-i-radiatory/1569/", "Fan", nameof(Fan), cancellationToken);
+
+        [HttpPost("passmark/preview")]
+        public async Task<IActionResult> PreviewPassMark(CancellationToken cancellationToken)
+        {
+            var result = await _passMarkHandler.PreviewAsync(cancellationToken);
+            return Ok(result);
+        }
+
+        [HttpPost("passmark")]
+        public async Task<IActionResult> UpdatePassMark(CancellationToken cancellationToken)
+        {
+            const string componentType = "PassMark";
+
+            if (_tracker.HasActiveJob(componentType))
+                return Conflict("A PassMark update job is already running or queued.");
+
+            var jobId = Guid.NewGuid();
+            var message = new ScrapeJobMessage(jobId, string.Empty, componentType, string.Empty, "PassMarkUpdate", null, false);
+
+            _tracker.TrackJob(new ScrapeJobStatus
+            {
+                JobId = jobId,
+                ComponentType = componentType,
+                Kind = "PassMarkUpdate",
+                State = "Queued",
+                QueuedAt = DateTime.UtcNow
+            });
+
+            await _publisher.PublishAsync("scrape-jobs", message, cancellationToken);
+
+            return Accepted($"/api/scraper/jobs/{jobId}", new { jobId, status = "Queued", kind = "PassMarkUpdate" });
+        }
 
         private static readonly Dictionary<string, string> PriceEntityMap = new()
         {

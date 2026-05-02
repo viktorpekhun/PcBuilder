@@ -1,7 +1,9 @@
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using PcBuilds.Application.AutoBuilder;
 using PcBuilds.Application.Compatibility;
 using PcBuilds.Application.Compatibility.Rules;
+using PcBuilds.Infrastructure.AutoBuilder;
 
 namespace PcBuilds.Infrastructure
 {
@@ -30,6 +32,9 @@ namespace PcBuilds.Infrastructure
             services.AddScoped<ICompatibilityRule, PowerSupplyGpuConnectorRule>();
             services.AddScoped<ICompatibilityRule, PowerSupplyCpuConnectorRule>();
             services.AddScoped<ICompatibilityRule, RequiredPowerSupplyRule>();
+            services.AddScoped<ICompatibilityRule, CpuGpuBottleneckRule>();
+
+            services.AddScoped<IAutoBuilderService, GreedyAutoBuilderService>();
 
             return services;
         }

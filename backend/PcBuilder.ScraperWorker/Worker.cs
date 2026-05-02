@@ -6,6 +6,7 @@ using PcBuilder.SharedKernel.Enums;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using Scraping.Application.Interfaces;
+using Scraping.Infrastructure.Scrapers.PassMark;
 using Scraping.Infrastructure.Services;
 using System.Collections.Concurrent;
 using System.Text;
@@ -138,11 +139,16 @@ public class Worker : BackgroundService
     {
         _logger.LogInformation("Processing scrape job {JobId} for {ComponentType}", message.JobId, message.ComponentType);
 
-        if (!EntityTypeMap.TryGetValue(message.EntityTypeName, out var entityType))
+        // PassMarkUpdate does not target a single component type — skip entity-type resolution.
+        Type? entityType = null;
+        if (message.Kind != "PassMarkUpdate")
         {
-            _logger.LogWarning("Unknown entity type: {EntityTypeName}", message.EntityTypeName);
-            await PublishResultAsync(publishChannel, publishLock, message.JobId, message.ComponentType, false, $"Unknown entity type: {message.EntityTypeName}", 0, stoppingToken);
-            return;
+            if (!EntityTypeMap.TryGetValue(message.EntityTypeName, out entityType))
+            {
+                _logger.LogWarning("Unknown entity type: {EntityTypeName}", message.EntityTypeName);
+                await PublishResultAsync(publishChannel, publishLock, message.JobId, message.ComponentType, false, $"Unknown entity type: {message.EntityTypeName}", 0, stoppingToken);
+                return;
+            }
         }
 
         using var jobCts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
@@ -193,6 +199,11 @@ public class Worker : BackgroundService
 
                 var cacheInvalidator = scope.ServiceProvider.GetRequiredService<ICacheInvalidator>();
                 cacheInvalidator.InvalidateByPrefix($"components:{message.ComponentType}");
+            }
+            else if (message.Kind == "PassMarkUpdate")
+            {
+                var handler = scope.ServiceProvider.GetRequiredService<PassMarkUpdateJobHandler>();
+                await handler.RunAsync(jobCts.Token);
             }
 
             await PublishResultAsync(publishChannel, publishLock, message.JobId, message.ComponentType, true, null, itemsScraped, stoppingToken);

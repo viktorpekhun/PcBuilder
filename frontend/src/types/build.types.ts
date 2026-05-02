@@ -37,22 +37,25 @@ export type IComponentsCompatibility = Pick<
     "cpuId" | "gpuId" | "motherboardId" | "cpuCoolerId" | "powerSupplyId" | "pcCaseId" | "rams" | "ssds" | "hdds" | "fans"
 >;
 
-export type CompatibilityMessageType = "Problem" | "Warning";
+export type CompatibilitySeverity = "Critical" | "Warning" | "Info";
 
-export interface ICompatibilityMessage {
-    type: CompatibilityMessageType;
-    message: string;
+export interface ICompatibilityIssue {
+    severity: CompatibilitySeverity;
+    code: string;
+    parameters: Record<string, string>;
 }
 
 export interface ICompatibilityResult {
-    isCompatible: boolean;
-    messages: ICompatibilityMessage[];
+    ruleName: string;
+    fitnessScore: number;
+    isStrictlyCompatible: boolean;
+    issues: ICompatibilityIssue[];
 }
 
-export interface ICompatibilityResponse {
-    compatible: boolean;
-    hasWarnings: boolean;
-    results: ICompatibilityResult[];
+export interface IBuildCompatibilityReport {
+    isStrictlyCompatible: boolean;
+    overallFitnessScore: number;
+    ruleResults: ICompatibilityResult[];
 }
 
 // --- Build list (user-builds) ---

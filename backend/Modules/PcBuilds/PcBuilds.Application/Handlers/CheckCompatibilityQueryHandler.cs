@@ -10,7 +10,7 @@ using PcBuilds.Domain.Entities;
 
 namespace PcBuilds.Application.Handlers
 {
-    public class CheckCompatibilityQueryHandler : IRequestHandler<CheckCompatibilityQuery, Result<List<CompatibilityResult>>>
+    public class CheckCompatibilityQueryHandler : IRequestHandler<CheckCompatibilityQuery, Result<BuildCompatibilityReport>>
     {
         private readonly IApplicationDbContext _context;
         private readonly CompatibilityChecker _compatibilityChecker;
@@ -21,7 +21,7 @@ namespace PcBuilds.Application.Handlers
             _compatibilityChecker = compatibilityChecker;
         }
 
-        public async Task<Result<List<CompatibilityResult>>> Handle(CheckCompatibilityQuery request, CancellationToken cancellationToken)
+        public async Task<Result<BuildCompatibilityReport>> Handle(CheckCompatibilityQuery request, CancellationToken cancellationToken)
         {
             var dto = request.Dto;
             var tempBuild = new PcBuild();
@@ -61,10 +61,7 @@ namespace PcBuilds.Application.Handlers
                 {
                     tempBuild.PcBuild_Rams.Add(new PcBuild_Ram
                     {
-                        Ram = ram,
-                        RamId = ram.Id,
-                        PcBuild = tempBuild,
-                        Quantity = ramDto.Quantity
+                        Ram = ram, RamId = ram.Id, PcBuild = tempBuild, Quantity = ramDto.Quantity
                     });
                 }
             }
@@ -76,10 +73,7 @@ namespace PcBuilds.Application.Handlers
                 {
                     tempBuild.PcBuild_Ssds.Add(new PcBuild_Ssd
                     {
-                        Ssd = ssd,
-                        SsdId = ssd.Id,
-                        PcBuild = tempBuild,
-                        Quantity = ssdDto.Quantity
+                        Ssd = ssd, SsdId = ssd.Id, PcBuild = tempBuild, Quantity = ssdDto.Quantity
                     });
                 }
             }
@@ -91,10 +85,7 @@ namespace PcBuilds.Application.Handlers
                 {
                     tempBuild.PcBuild_Hdds.Add(new PcBuild_Hdd
                     {
-                        Hdd = hdd,
-                        HddId = hdd.Id,
-                        PcBuild = tempBuild,
-                        Quantity = hddDto.Quantity
+                        Hdd = hdd, HddId = hdd.Id, PcBuild = tempBuild, Quantity = hddDto.Quantity
                     });
                 }
             }
@@ -106,22 +97,25 @@ namespace PcBuilds.Application.Handlers
                 {
                     tempBuild.PcBuild_Fans.Add(new PcBuild_Fan
                     {
-                        Fan = fan,
-                        FanId = fan.Id,
-                        PcBuild = tempBuild,
-                        Quantity = fanDto.Quantity
+                        Fan = fan, FanId = fan.Id, PcBuild = tempBuild, Quantity = fanDto.Quantity
                     });
                 }
             }
 
-            var results = _compatibilityChecker.CheckAll(tempBuild);
+            var ruleResults = _compatibilityChecker.CheckAll(tempBuild);
 
-            return Result.Success(results.OrderBy(r =>
-            {
-                if (r.Messages.Any(m => m.Type == CompatibilityMessageType.Problem)) return 0;
-                if (r.Messages.Any(m => m.Type == CompatibilityMessageType.Warning)) return 1;
-                return 2;
-            }).ToList());
+            var sortedResults = ruleResults
+                .OrderBy(r =>
+                {
+                    if (r.Issues.Any(i => i.Severity == CompatibilitySeverity.Critical)) return 0;
+                    if (r.Issues.Any(i => i.Severity == CompatibilitySeverity.Warning)) return 1;
+                    if (r.Issues.Any(i => i.Severity == CompatibilitySeverity.Info)) return 2;
+                    return 3;
+                })
+                .ThenBy(r => r.FitnessScore)
+                .ToList();
+
+            return Result.Success(BuildCompatibilityReport.From(sortedResults));
         }
     }
 }

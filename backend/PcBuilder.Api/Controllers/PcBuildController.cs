@@ -2,8 +2,8 @@ using System.Text.Json;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PcBuilder.SharedKernel.Enums;
 using PcBuilder.SharedKernel.Filtering;
+using PcBuilds.Application.AutoBuilder;
 using PcBuilds.Application.Commands;
 using PcBuilds.Application.Dtos;
 using PcBuilds.Application.Queries;
@@ -39,13 +39,7 @@ namespace PcBuilder.Api.Controllers
             if (result.IsFailure)
                 return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
 
-            var results = result.Value!;
-            return Ok(new
-            {
-                Compatible = !results.Any(r => !r.IsCompatible),
-                HasWarnings = results.Any(r => r.Messages.Any(m => m.Type == CompatibilityMessageType.Warning)),
-                Results = results
-            });
+            return Ok(result.Value);
         }
 
         [Authorize]
@@ -233,6 +227,16 @@ namespace PcBuilder.Api.Controllers
                 return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
 
             return Ok(new { Success = true, Message = "Comment deleted" });
+        }
+
+        [HttpPost("auto")]
+        public async Task<IActionResult> AutoBuild([FromBody] AutoBuildRequestDto request, CancellationToken ct)
+        {
+            var result = await _mediator.Send(new AutoBuildCommand(request), ct);
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+
+            return Ok(result.Value);
         }
 
         [Authorize]

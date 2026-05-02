@@ -6,5 +6,5 @@ using PcBuilds.Application.Dtos;
 namespace PcBuilds.Application.Queries
 {
     public record CheckCompatibilityQuery(ComponentsCompatibilityDto Dto)
-        : IRequest<Result<List<CompatibilityResult>>>;
+        : IRequest<Result<BuildCompatibilityReport>>;
 }

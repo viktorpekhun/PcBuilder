@@ -185,6 +185,11 @@ namespace PcBuilder.Persistence.Migrations
                     b.Property<int?>("OffersCount")
                         .HasColumnType("int");
 
+                    b.Property<int>("PassMarkScore")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<string>("PhotoUrl")
                         .HasColumnType("nvarchar(max)");
 
@@ -204,6 +209,8 @@ namespace PcBuilder.Persistence.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PassMarkScore");
 
                     b.ToTable("Cpus");
                 });
@@ -482,6 +489,11 @@ namespace PcBuilder.Persistence.Migrations
                     b.Property<int?>("OffersCount")
                         .HasColumnType("int");
 
+                    b.Property<int>("PassMarkScore")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<int?>("PcleLane")
                         .HasColumnType("int");
 
@@ -507,6 +519,8 @@ namespace PcBuilder.Persistence.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PassMarkScore");
 
                     b.ToTable("Gpus");
                 });

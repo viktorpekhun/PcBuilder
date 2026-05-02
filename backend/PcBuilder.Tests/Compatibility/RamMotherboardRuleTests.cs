@@ -15,8 +15,8 @@ namespace PcBuilder.Tests.Compatibility
             var build = new PcBuild { Motherboard = null };
             var result = _rule.Check(build);
 
-            Assert.True(result.IsCompatible);
-            Assert.Empty(result.Messages);
+            Assert.True(result.IsStrictlyCompatible);
+            Assert.Empty(result.Issues);
         }
 
         [Fact]
@@ -42,8 +42,8 @@ namespace PcBuilder.Tests.Compatibility
             };
             var result = _rule.Check(build);
 
-            Assert.True(result.IsCompatible);
-            Assert.Empty(result.Messages);
+            Assert.True(result.IsStrictlyCompatible);
+            Assert.Empty(result.Issues);
         }
 
         [Fact]
@@ -67,8 +67,8 @@ namespace PcBuilder.Tests.Compatibility
             };
             var result = _rule.Check(build);
 
-            Assert.False(result.IsCompatible);
-            Assert.Contains(result.Messages, m => m.Type == CompatibilityMessageType.Problem);
+            Assert.False(result.IsStrictlyCompatible);
+            Assert.Contains(result.Issues, i => i.Severity == CompatibilitySeverity.Critical);
         }
 
         [Fact]
@@ -92,8 +92,8 @@ namespace PcBuilder.Tests.Compatibility
             };
             var result = _rule.Check(build);
 
-            Assert.False(result.IsCompatible);
-            Assert.Contains(result.Messages, m => m.Type == CompatibilityMessageType.Problem);
+            Assert.False(result.IsStrictlyCompatible);
+            Assert.Contains(result.Issues, i => i.Severity == CompatibilitySeverity.Critical);
         }
 
         [Fact]
@@ -124,8 +124,8 @@ namespace PcBuilder.Tests.Compatibility
             };
             var result = _rule.Check(build);
 
-            Assert.True(result.IsCompatible);
-            Assert.Contains(result.Messages, m => m.Type == CompatibilityMessageType.Warning);
+            Assert.True(result.IsStrictlyCompatible);
+            Assert.Contains(result.Issues, i => i.Severity == CompatibilitySeverity.Warning);
         }
 
         [Fact]
@@ -156,9 +156,8 @@ namespace PcBuilder.Tests.Compatibility
             };
             var result = _rule.Check(build);
 
-            Assert.True(result.IsCompatible);
-            Assert.Contains(result.Messages, m =>
-                m.Type == CompatibilityMessageType.Warning && m.Message.Contains("різних"));
+            Assert.True(result.IsStrictlyCompatible);
+            Assert.Contains(result.Issues, i => i.Severity == CompatibilitySeverity.Warning);
         }
     }
 }

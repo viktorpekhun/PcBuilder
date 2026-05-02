@@ -80,6 +80,7 @@ builder.Services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
 builder.Services.AddSingleton<IScrapeJobTracker, DbScrapeJobTracker>();
 builder.Services.AddHostedService<ScrapeResultConsumer>();
 builder.Services.AddHostedService<SignalRNotificationConsumer>();
+builder.Services.AddHostedService<PassMarkSchedulerService>();
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));
 builder.Services.AddHealthChecks()
     .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")!);

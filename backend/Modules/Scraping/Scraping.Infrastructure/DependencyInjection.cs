@@ -5,6 +5,7 @@ using Scraping.Application.Interfaces;
 using Scraping.Infrastructure.Configuration;
 using Scraping.Infrastructure.Handlers;
 using Scraping.Infrastructure.Scrapers;
+using Scraping.Infrastructure.Scrapers.PassMark;
 using Scraping.Infrastructure.Scrapers.Prices;
 using Scraping.Infrastructure.Services;
 
@@ -50,6 +51,11 @@ namespace Scraping.Infrastructure
             services.AddScoped<ScraperService>();
             services.AddScoped<IDataCorrectionService, DataCorrectionService>();
             services.AddScoped<IComponentTranslationService, ComponentTranslationService>();
+
+            services.AddHttpClient<ICpuPassMarkScraper, CpuPassMarkScraper>();
+            services.AddHttpClient<IGpuPassMarkScraper, GpuPassMarkScraper>();
+            services.AddSingleton<IStringMatchingService, FuzzyStringMatchingService>();
+            services.AddScoped<PassMarkUpdateJobHandler>();
 
             return services;
         }
