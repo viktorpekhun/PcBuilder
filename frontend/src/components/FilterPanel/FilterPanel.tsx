@@ -28,6 +28,7 @@ const FilterPanel = ({ config, onFilterChange }: FilterPanelProps) => {
     const isInitialMount = useRef(true);
     const previousConfigType = useRef<string | null>(null);
     const prevFiltersRef = useRef<string | null>(null);
+    const initialRangeValuesRef = useRef<Record<string, RangeValue>>({});
     const [expandedFilters, setExpandedFilters] = useState<Record<string, boolean>>({});
 
     useEffect(() => {
@@ -62,6 +63,8 @@ const FilterPanel = ({ config, onFilterChange }: FilterPanelProps) => {
         }
 
         const initialValues: FilterValues = {};
+        const newInitialRangeValues: Record<string, RangeValue> = {};
+
         config.filters.forEach(filter => {
             if (filter.type === 'checkbox') {
                 initialValues[filter.id] = [];
@@ -75,11 +78,12 @@ const FilterPanel = ({ config, onFilterChange }: FilterPanelProps) => {
                 if (parsed !== null) [min, max] = parsed;
 
                 initialValues[filter.id] = { min, max };
+                newInitialRangeValues[filter.id] = { min, max };
             }
         });
 
+        initialRangeValuesRef.current = newInitialRangeValues;
         setFilterValues(initialValues);
-        isInitialMount.current = false;
     }, [dynamicOptions, isLoading, config]);
 
     useEffect(() => {
@@ -90,12 +94,27 @@ const FilterPanel = ({ config, onFilterChange }: FilterPanelProps) => {
             return;
         }
 
-        const filtersStr = JSON.stringify(filterValues);
+        const activeFilters: FilterValues = {};
+        for (const [filterId, value] of Object.entries(filterValues)) {
+            const filterDef = config.filters.find(f => f.id === filterId);
+            if (!filterDef) continue;
+            if (filterDef.type === 'checkbox') {
+                if ((value as string[]).length > 0) activeFilters[filterId] = value;
+            } else if (filterDef.type === 'range') {
+                const initial = initialRangeValuesRef.current[filterId];
+                const range = value as RangeValue;
+                if (!initial || range.min !== initial.min || range.max !== initial.max) {
+                    activeFilters[filterId] = value;
+                }
+            }
+        }
+
+        const filtersStr = JSON.stringify(activeFilters);
         if (prevFiltersRef.current === filtersStr) return;
 
         prevFiltersRef.current = filtersStr;
-        onFilterChange(filterValues);
-    }, [filterValues, onFilterChange]);
+        onFilterChange(activeFilters);
+    }, [filterValues, onFilterChange, config.filters]);
 
     const toggleFilterExpand = (filterId: string) => {
         setExpandedFilters(prev => ({
@@ -233,8 +252,9 @@ const FilterPanel = ({ config, onFilterChange }: FilterPanelProps) => {
                 initialValues[filter.id] = { min, max };
             }
         });
+        prevFiltersRef.current = JSON.stringify({});
         setFilterValues(initialValues);
-        onFilterChange(initialValues);
+        onFilterChange({});
     };
 
     return (

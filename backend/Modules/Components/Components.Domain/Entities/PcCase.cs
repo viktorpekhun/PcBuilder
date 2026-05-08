@@ -3,7 +3,7 @@ using Components.Domain.ValueObjects;
 
 namespace Components.Domain.Entities
 {
-    public class PcCase
+    public class PcCase : IHasAveragePrice
     {
         public Guid Id { get; set; }
 

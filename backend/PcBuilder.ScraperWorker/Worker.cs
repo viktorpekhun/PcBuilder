@@ -171,6 +171,12 @@ public class Worker : BackgroundService
 
                 var task = (Task<int>)method.Invoke(scraperService, [message.Url, Enum.Parse<ComponentType>(message.ComponentType), jobCts.Token])!;
                 itemsScraped = await task;
+
+                if (message.CorrectGpuModels)
+                {
+                    var correctionService = scope.ServiceProvider.GetRequiredService<IDataCorrectionService>();
+                    await correctionService.CorrectGpuModels();
+                }
             }
             else if (message.Kind == "SingleComponent")
             {

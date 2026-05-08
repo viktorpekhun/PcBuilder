@@ -68,6 +68,13 @@ namespace PcBuilder.Api.Controllers
             return Ok(new { jobId, status = "Cancelling" });
         }
 
+        [HttpPost("correct/gpu-models")]
+        public async Task<IActionResult> CorrectGpuModels(CancellationToken cancellationToken)
+        {
+            await _sender.Send(new CorrectGpuModelsCommand(), cancellationToken);
+            return Ok();
+        }
+
         [HttpPost("translate/pc-case")]
         public async Task<IActionResult> TranslatePcCase(CancellationToken cancellationToken)
         {

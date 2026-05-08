@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Components.Domain.Entities
 {
-    public class Ram
+    public class Ram : IHasAveragePrice
     {
         public Guid Id { get; set; }
 

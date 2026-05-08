@@ -8,6 +8,8 @@ public class PcleSlotConfiguration : IEntityTypeConfiguration<PcleSlot>
 {
     public void Configure(EntityTypeBuilder<PcleSlot> builder)
     {
+        builder.ToTable("MotherboardPcleSlots");
+
         builder.HasOne(p => p.Motherboard)
             .WithMany(m => m.PcleSlots)
             .HasForeignKey(p => p.MotherboardId)

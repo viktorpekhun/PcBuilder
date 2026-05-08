@@ -8,7 +8,7 @@ using System.Collections.Concurrent;
 
 namespace Scraping.Infrastructure.Scrapers.Prices
 {
-    public abstract class HotlinePriceScraperBase<TComponent> : IPriceScraper<TComponent> where TComponent : class
+    public abstract class HotlinePriceScraperBase<TComponent> : IPriceScraper<TComponent> where TComponent : class, IHasAveragePrice
     {
         private const string BaseUrl = "https://hotline.ua";
 
@@ -17,7 +17,7 @@ namespace Scraping.Infrastructure.Scrapers.Prices
         public async Task<PriceScrapingResult> ScrapeAsync(
             string url,
             HttpClient client,
-            Guid componentId,
+            TComponent component,
             ConcurrentBag<Store> storesFromDb,
             CancellationToken cancellationToken = default)
         {
@@ -87,7 +87,7 @@ namespace Scraping.Infrastructure.Scrapers.Prices
                         Id = Guid.NewGuid(),
                         Price = price,
                         ComponentType = ComponentType,
-                        ComponentId = componentId,
+                        ComponentId = component.Id,
                         ProductOfferUrl = offerUrl,
                         StoreId = store.Id
                     });
@@ -97,6 +97,8 @@ namespace Scraping.Infrastructure.Scrapers.Prices
                     Console.WriteLine($"Error scraping offer: {ex.Message}");
                 }
             }
+
+            component.AveragePrice = offers.Count > 0 ? Math.Round(offers.Average(o => o.Price)) : 0;
 
             return new PriceScrapingResult(stores, offers);
         }

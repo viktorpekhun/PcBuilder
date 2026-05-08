@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Components.Domain.Entities
 {
-    public class CpuCooler
+    public class CpuCooler : IHasAveragePrice
     {
         public Guid Id { get; set; }
 

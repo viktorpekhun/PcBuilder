@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Components.Domain.Entities
 {
-    public class Hdd
+    public class Hdd : IHasAveragePrice
     {
         public Guid Id { get; set; }
 

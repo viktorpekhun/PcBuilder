@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Hosting;
 using RabbitMQ.Client;
 using System.Text;
 using System.Text.Json;
@@ -8,20 +9,29 @@ namespace PcBuilder.Api.Services
     {
         private readonly IConnection _rabbitConnection;
         private readonly IConfiguration _configuration;
+        private readonly IHostEnvironment _environment;
         private readonly ILogger<PassMarkSchedulerService> _logger;
 
         public PassMarkSchedulerService(
             IConnection rabbitConnection,
             IConfiguration configuration,
+            IHostEnvironment environment,
             ILogger<PassMarkSchedulerService> logger)
         {
             _rabbitConnection = rabbitConnection;
             _configuration = configuration;
+            _environment = environment;
             _logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            if (_environment.IsDevelopment())
+            {
+                _logger.LogInformation("PassMark scheduler is disabled in Development — use the endpoint to trigger manually.");
+                return;
+            }
+
             var intervalDays = _configuration.GetValue<int>("PassMark:UpdateIntervalDays", 7);
             var interval = TimeSpan.FromDays(intervalDays);
 

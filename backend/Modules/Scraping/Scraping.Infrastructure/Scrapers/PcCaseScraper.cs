@@ -218,6 +218,11 @@ namespace Scraping.Infrastructure.Scrapers
                                         {
                                             newFormFactorName = formFactorName;
                                         }
+                                        newFormFactorName = GetMainFormFactor(newFormFactorName);
+                                        if (newFormFactorName is null)
+                                        {
+                                            return new ScrapingResult<PcCase>(null, new List<Store>(), new List<ProductOffer>());
+                                        }
                                         pcCase.PcCaseFormFactors.Add(new PcCaseFormFactor
                                         {
                                             Name = newFormFactorName
@@ -437,8 +442,7 @@ namespace Scraping.Infrastructure.Scrapers
                         Console.WriteLine($"Error scraping offer: {ex.Message}");
                     }
                 }
-                var avgPrice = offers.Any() ? offers.Average(p => p.Price) : 0;
-                pcCase.AveragePrice = (decimal)avgPrice;
+                var avgPrice = offers.Any() ? Math.Round(offers.Average(p => p.Price)) : 0; pcCase.AveragePrice = (decimal)avgPrice;
                 pcCase.OffersCount = offers.Count;
             }
 
@@ -453,6 +457,27 @@ namespace Scraping.Infrastructure.Scrapers
             if (value == null) return null;
             value = value.Replace(',', '.');
             return double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var result) ? result : null;
+        }
+        private string? GetMainFormFactor(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return null;
+
+            string n = input.ToUpperInvariant().Replace(" ", "").Replace("-", "").Replace(".", "");
+
+            if (n.Contains("MICROATX") || n.Contains("MATX"))
+                return "Micro-ATX";
+
+            if (n.Contains("MINIITX"))
+                return "Mini-ITX";
+
+            if (n.Contains("EATX"))
+                return "E-ATX";
+
+            if (n.Contains("ATX"))
+                return "ATX";
+
+            return null;
         }
     }
 }

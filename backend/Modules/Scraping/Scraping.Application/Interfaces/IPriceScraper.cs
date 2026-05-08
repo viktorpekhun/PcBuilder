@@ -8,7 +8,7 @@ namespace Scraping.Application.Interfaces
         Task<PriceScrapingResult> ScrapeAsync(
             string url,
             HttpClient client,
-            Guid componentId,
+            TComponent component,
             ConcurrentBag<Store> storesFromDb,
             CancellationToken cancellationToken = default);
     }

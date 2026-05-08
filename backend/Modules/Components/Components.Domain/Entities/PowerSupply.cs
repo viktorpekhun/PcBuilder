@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Components.Domain.Entities
 {
-    public class PowerSupply
+    public class PowerSupply : IHasAveragePrice
     {
         public Guid Id { get; set; }
 

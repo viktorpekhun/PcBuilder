@@ -8,6 +8,8 @@ public class RearPortConfiguration : IEntityTypeConfiguration<RearPort>
 {
     public void Configure(EntityTypeBuilder<RearPort> builder)
     {
+        builder.ToTable("MotherboardRearPorts");
+
         builder.Property(r => r.Type)
             .IsRequired()
             .HasMaxLength(50);

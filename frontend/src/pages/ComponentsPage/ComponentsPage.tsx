@@ -22,6 +22,8 @@ function ComponentsPage() {
     const [filters, setFilters] = useState<FilterValues>({});
     const [searchQuery, setSearchQuery] = useState('');
     const firstLoadDone = useRef(false);
+    const skipNextPageEffect = useRef(false);
+    const currentPageRef = useRef(1);
 
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -119,9 +121,13 @@ function ComponentsPage() {
         fetchComponents({}, 1, '');
     }, [type]);
 
+    // Keep currentPageRef in sync
+    useEffect(() => { currentPageRef.current = currentPage; }, [currentPage]);
+
     // Filters / sort change
     useEffect(() => {
         if (!firstLoadDone.current) return;
+        skipNextPageEffect.current = currentPageRef.current !== 1;
         setCurrentPage(1);
         fetchComponents(filters, 1, searchQuery);
     }, [filters, sortField, sortDirection]);
@@ -129,15 +135,18 @@ function ComponentsPage() {
     // Page change
     useEffect(() => {
         if (!firstLoadDone.current) return;
-        if (currentPage > 1) {
-            fetchComponents(filters, currentPage, searchQuery);
+        if (skipNextPageEffect.current) {
+            skipNextPageEffect.current = false;
+            return;
         }
+        fetchComponents(filters, currentPage, searchQuery);
     }, [currentPage]);
 
     // Debounced search
     useEffect(() => {
         if (!firstLoadDone.current) return;
         const timer = setTimeout(() => {
+            skipNextPageEffect.current = currentPageRef.current !== 1;
             setCurrentPage(1);
             fetchComponents(filters, 1, searchQuery);
         }, 400);

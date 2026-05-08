@@ -778,7 +778,7 @@ namespace Scraping.Infrastructure.Services
                                 currentProxy = proxy;
                                 using (client)
                                 {
-                                    var result = await priceScraper.ScrapeAsync(target.Url!, client, target.Id, concurrentStores, cancellationToken);
+                                    var result = await priceScraper.ScrapeAsync(target.Url!, client, target.Component, concurrentStores, cancellationToken);
 
                                     if (result.Offers.Count > 0)
                                     {
