@@ -57,6 +57,9 @@ namespace Scraping.Infrastructure
             services.AddSingleton<IStringMatchingService, FuzzyStringMatchingService>();
             services.AddScoped<PassMarkUpdateJobHandler>();
 
+            services.AddHttpClient("ImageDownloader");
+            services.AddSingleton<IComponentImageService, AzureBlobComponentImageService>();
+
             return services;
         }
     }

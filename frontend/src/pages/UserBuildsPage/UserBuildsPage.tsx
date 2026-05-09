@@ -327,7 +327,7 @@ function UserBuildsPage() {
             <td>{label}</td>
             <td className={styles['component-cell']}>
                 <div className={styles['component-info']}>
-                    {comp.imageUrl && <img src={comp.imageUrl} alt={comp.name} />}
+                    {comp.imageUrl && <img src={comp.imageUrl} alt={comp.name} loading="lazy" />}
                     <div>
                         <div className={styles['component-name']}>
                             <Link to={`/components/${urlType}/${comp.id}`} className={styles['component-link']}>
@@ -360,7 +360,7 @@ function UserBuildsPage() {
             <td>{label}</td>
             <td className={styles['component-cell']}>
                 <div className={styles['component-info']}>
-                    {comp.imageUrl && <img src={comp.imageUrl} alt={comp.name} />}
+                    {comp.imageUrl && <img src={comp.imageUrl} alt={comp.name} loading="lazy" />}
                     <div>
                         <div className={styles['component-name']}>
                             <Link to={`/components/${urlType}/${comp.id}`} className={styles['component-link']}>
@@ -409,7 +409,7 @@ function UserBuildsPage() {
             <div key={sub.id} className={styles['sub-card']}>
                 <Link to={`/components/${urlType}/${sub.componentId}`} className={styles['sub-image-link']}>
                     {sub.componentImageUrl ? (
-                        <img src={sub.componentImageUrl} alt={sub.componentName ?? ''} className={styles['sub-image']} />
+                        <img src={sub.componentImageUrl} alt={sub.componentName ?? ''} className={styles['sub-image']} loading="lazy" />
                     ) : (
                         <div className={styles['sub-image-placeholder']} />
                     )}

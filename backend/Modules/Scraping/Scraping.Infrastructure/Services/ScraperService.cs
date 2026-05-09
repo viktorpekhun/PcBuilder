@@ -28,11 +28,12 @@ namespace Scraping.Infrastructure.Services
         private readonly ProxyPool _proxyPool;
         private readonly ILogger<ScraperService> _logger;
         private readonly ISender _sender;
+        private readonly IComponentImageService _imageService;
 
         private readonly object _lock = new();
         private static readonly SemaphoreSlim _throttle = new(10, 10);
 
-        public ScraperService(ComponentScraperFactory scraperFactory, PriceScraperFactory priceScraperFactory, IPaginationScraper paginationScraper, IApplicationDbContext context, IProxyScraper proxyScraper, ITranslationService translationService, ProxyPool proxyPool, ILogger<ScraperService> logger, ISender sender)
+        public ScraperService(ComponentScraperFactory scraperFactory, PriceScraperFactory priceScraperFactory, IPaginationScraper paginationScraper, IApplicationDbContext context, IProxyScraper proxyScraper, ITranslationService translationService, ProxyPool proxyPool, ILogger<ScraperService> logger, ISender sender, IComponentImageService imageService)
         {
             _scraperFactory = scraperFactory;
             _priceScraperFactory = priceScraperFactory;
@@ -43,6 +44,7 @@ namespace Scraping.Infrastructure.Services
             _proxyPool = proxyPool;
             _logger = logger;
             _sender = sender;
+            _imageService = imageService;
         }
 
         private (HttpClient client, string proxy)? CreateHttpClientWithProxy()
@@ -143,21 +145,84 @@ namespace Scraping.Infrastructure.Services
         //    }
         //}
 
+        private async Task UploadComponentImagesAsync<T>(
+            IEnumerable<T> componentsToSave,
+            IReadOnlyList<T> componentsFromDb,
+            string componentType,
+            CancellationToken cancellationToken) where T : class
+        {
+            var photoUrlProp = typeof(T).GetProperty("PhotoUrl");
+            var idProp = typeof(T).GetProperty("Id");
+            var nameProp = typeof(T).GetProperty("Name");
+            if (photoUrlProp == null || idProp == null || nameProp == null) return;
+
+            var existingBlobUrlByName = componentsFromDb
+                .ToDictionary(
+                    c => nameProp.GetValue(c) as string ?? string.Empty,
+                    c => photoUrlProp.GetValue(c) as string);
+
+            foreach (var component in componentsToSave)
+            {
+                if (idProp.GetValue(component) is not Guid id) continue;
+                var name = nameProp.GetValue(component) as string ?? string.Empty;
+                var scrapedPhotoUrl = photoUrlProp.GetValue(component) as string;
+
+                if (existingBlobUrlByName.TryGetValue(name, out var existingPhotoUrl)
+                    && AzureBlobComponentImageService.IsBlobUrl(existingPhotoUrl))
+                {
+                    photoUrlProp.SetValue(component, existingPhotoUrl);
+                    continue;
+                }
+
+                if (string.IsNullOrEmpty(scrapedPhotoUrl)) continue;
+
+                var blobUrl = await _imageService.UploadComponentImageAsync(scrapedPhotoUrl, componentType, id, cancellationToken);
+                if (blobUrl != null)
+                    photoUrlProp.SetValue(component, blobUrl);
+            }
+        }
+
+        private async Task UploadStoreLogosAsync(
+            IEnumerable<Store> storesToSave,
+            IEnumerable<Store> storesFromDb,
+            CancellationToken cancellationToken)
+        {
+            var existingBlobUrlById = storesFromDb
+                .Where(s => s.LogoUrl != null)
+                .ToDictionary(s => s.Id, s => s.LogoUrl);
+
+            foreach (var store in storesToSave)
+            {
+                if (string.IsNullOrEmpty(store.LogoUrl)) continue;
+
+                if (existingBlobUrlById.TryGetValue(store.Id, out var existingLogoUrl)
+                    && AzureBlobComponentImageService.IsBlobUrl(existingLogoUrl))
+                {
+                    store.LogoUrl = existingLogoUrl;
+                    continue;
+                }
+
+                var blobUrl = await _imageService.UploadStoreLogoAsync(store.LogoUrl, store.Id, cancellationToken);
+                if (blobUrl != null)
+                    store.LogoUrl = blobUrl;
+            }
+        }
+
         public async Task<int> ScrapeCategoryAsync<T>(string categoryUrl, ComponentType componentType, CancellationToken cancellationToken = default) where T : class
         {
             var totalStopwatch = Stopwatch.StartNew();
-            _logger.LogInformation("Початок скрапінгу категорії {ComponentType} з {Url}", componentType, categoryUrl);
+            _logger.LogInformation("Starting category scraping {ComponentType} from {Url}", componentType, categoryUrl);
 
             var scraper = _scraperFactory.GetScraper<T>();
             if (scraper == null)
             {
-                _logger.LogWarning("Скрейпер для типу {ComponentType} не знайдено", componentType);
+                _logger.LogWarning("Scraper for type {ComponentType} not found", componentType);
                 return 0;
             }
 
             var productLinks = (await _paginationScraper.GetComponentLinksAsync(categoryUrl, cancellationToken))
                 .Distinct().ToList();
-            _logger.LogInformation("Знайдено {Count} товарів у категорії {ComponentType}", productLinks.Count, componentType);
+            _logger.LogInformation("Found {Count} products in category {ComponentType}", productLinks.Count, componentType);
 
             var failedLinks = new List<string>(productLinks);
             var storesByName = new Dictionary<string, Store>();
@@ -170,18 +235,18 @@ namespace Scraping.Infrastructure.Services
                 cancellationToken.ThrowIfCancellationRequested();
 
                 outerRetry++;
-                Console.WriteLine($"\nЦикл обробки {outerRetry}/{maxOuterRetries}: {failedLinks.Count} посилань...");
+                Console.WriteLine($"\nProcessing cycle {outerRetry}/{maxOuterRetries}: {failedLinks.Count} links...");
                 var successfulProxies = new ConcurrentDictionary<string, bool>();
                 var failedProxies = new ConcurrentDictionary<string, bool>();
 
                 if (_proxyPool.NeedsRefresh())
                 {
-                    Console.WriteLine("Завантаження та валідація нових проксі...");
+                    Console.WriteLine("Loading and validating new proxies...");
                     var rawProxies = await _proxyScraper.GetProxiesAsync(cancellationToken);
 
                     if (rawProxies.Count == 0)
                     {
-                        Console.WriteLine("Не вдалося завантажити жодного проксі. Завершення.");
+                        Console.WriteLine("Failed to load any proxies. Exiting.");
                         return 0;
                     }
 
@@ -189,7 +254,7 @@ namespace Scraping.Infrastructure.Services
 
                     if (_proxyPool.AvailableCount == 0)
                     {
-                        Console.WriteLine("Жоден проксі не пройшов валідацію. Завершення.");
+                        Console.WriteLine("No proxies passed validation. Exiting.");
                         return 0;
                     }
                 }
@@ -227,7 +292,7 @@ namespace Scraping.Infrastructure.Services
                                 var proxyResult = CreateHttpClientWithProxy();
                                 if (proxyResult == null)
                                 {
-                                    Console.WriteLine($"[{index}] Немає доступних проксі, пропуск спроби.");
+                                    Console.WriteLine($"[{index}] No proxies available, skipping attempt.");
                                     attempt++;
                                     await Task.Delay(Random.Shared.Next(1000, 2000) * (attempt + 1), cancellationToken);
                                     continue;
@@ -240,9 +305,9 @@ namespace Scraping.Infrastructure.Services
 
                                     if (result.Component != null)
                                     {
-                                        Console.WriteLine($"[{index}] Отримано компонент: {result.Component}");
-                                        Console.WriteLine($"  Посилання: {link}");
-                                        Console.WriteLine($"  Магазинів: {result.Stores.Count}, Пропозицій: {result.Offers.Count}");
+                                        Console.WriteLine($"[{index}] Got component: {result.Component}");
+                                        Console.WriteLine($"  Link: {link}");
+                                        Console.WriteLine($"  Stores: {result.Stores.Count}, Offers: {result.Offers.Count}");
 
                                         foreach (var prop in result.Component.GetType().GetProperties())
                                         {
@@ -288,7 +353,7 @@ namespace Scraping.Infrastructure.Services
                                         failedProxies.TryAdd(proxy, true);
                                     }
 
-                                    Console.WriteLine($"[{index}] Парсинг не вдався для {link}");
+                                    Console.WriteLine($"[{index}] Parsing failed for {link}");
                                 }
                             }
                             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -301,7 +366,7 @@ namespace Scraping.Infrastructure.Services
                             {
                                 if (currentProxy != null)
                                     _proxyPool.ReturnProxy(currentProxy, success: false);
-                                Console.WriteLine($"[{index}] Спроба {attempt + 1}/{maxRetries} не вдалася: {ex.Message}");
+                                Console.WriteLine($"[{index}] Attempt {attempt + 1}/{maxRetries} failed: {ex.Message}");
                             }
 
                             attempt++;
@@ -323,7 +388,21 @@ namespace Scraping.Infrastructure.Services
 
                 try
                 {
-                    Console.WriteLine("Збереження компонентів в базу даних...");
+                    await UploadComponentImagesAsync(componentsToSave, componentsFromDb, componentType.ToString(), cancellationToken);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+                catch (Exception ex) { _logger.LogWarning(ex, "Image upload step failed for {ComponentType}; continuing with DB save", componentType); }
+
+                try
+                {
+                    await UploadStoreLogosAsync(storesToSave, existingStoresFromDb, cancellationToken);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+                catch (Exception ex) { _logger.LogWarning(ex, "Store logo upload step failed for {ComponentType}; continuing with DB save", componentType); }
+
+                try
+                {
+                    Console.WriteLine("Saving components to database...");
 
                     //try
                     //{
@@ -340,6 +419,24 @@ namespace Scraping.Infrastructure.Services
 
                     var nameProperty = typeof(T).GetProperty("Name");
                     var idProperty = typeof(T).GetProperty("Id");
+
+                    var offersCountFilterProp = typeof(T).GetProperty("OffersCount");
+                    if (offersCountFilterProp != null && idProperty != null)
+                    {
+                        var withOffers = componentsToSave
+                            .Where(c => offersCountFilterProp.GetValue(c) is int count && count > 0)
+                            .ToList();
+                        var skipped = componentsToSave.Count() - withOffers.Count;
+                        if (skipped > 0)
+                            _logger.LogInformation("Skipping {Count} {Type} components with 0 offers", skipped, typeof(T).Name);
+                        var allowedIds = withOffers
+                            .Select(c => idProperty.GetValue(c))
+                            .OfType<Guid>()
+                            .ToHashSet();
+                        componentsToSave = new ConcurrentBag<T>(withOffers);
+                        offersToSave = new ConcurrentBag<ProductOffer>(
+                            offersToSave.Where(o => allowedIds.Contains(o.ComponentId)));
+                    }
 
                     if (nameProperty != null && idProperty != null)
                     {
@@ -428,7 +525,7 @@ namespace Scraping.Infrastructure.Services
                                         }
                                         catch (Exception ex)
                                         {
-                                            Console.WriteLine($"Помилка при видаленні старих елементів: {ex.Message}");
+                                            Console.WriteLine($"Error removing old items: {ex.Message}");
                                         }
 
                                         var targetList = property.GetValue(existingComponent) as System.Collections.IList;
@@ -508,8 +605,8 @@ namespace Scraping.Infrastructure.Services
                     }
 
                     await _context.SaveChangesAsync(cancellationToken);
-                    Console.WriteLine($"Збережено: {savedComponentsCount} компонентів, {savedStoresCount} магазинів, {savedOffersCount} пропозицій");
-                    Console.WriteLine($"Оновлено: {updatedComponentsCount} компонентів, {updatedStoresCount} магазинів, {updatedOffersCount} пропозицій");
+                    Console.WriteLine($"Saved: {savedComponentsCount} components, {savedStoresCount} stores, {savedOffersCount} offers");
+                    Console.WriteLine($"Updated: {updatedComponentsCount} components, {updatedStoresCount} stores, {updatedOffersCount} offers");
 
                     try
                     {
@@ -542,15 +639,11 @@ namespace Scraping.Infrastructure.Services
                             {
                                 var cid = kvp.Key;
                                 var offers = kvp.Value;
-                                var avg = offers.Any() ? offers.Average(o => o.Price) : 0m;
-                                newAverages[cid] = avg;
 
-                                if (componentById.TryGetValue(cid, out var comp))
-                                {
-                                    averagePriceProp?.SetValue(comp, avg);
-                                    offersCountProp?.SetValue(comp, offers.Count);
-                                    _context.Set<T>().Update(comp);
-                                }
+                                if (!componentById.TryGetValue(cid, out var comp)) continue;
+
+                                var avg = averagePriceProp?.GetValue(comp) is decimal a ? a : 0m;
+                                newAverages[cid] = avg;
 
                                 if (historyLookup.TryGetValue(cid, out var existingHist))
                                 {
@@ -641,28 +734,28 @@ namespace Scraping.Infrastructure.Services
                         }
                     }
                     catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
-                    catch (Exception ex) { _logger.LogError(ex, "Помилка при обробці історії цін та сповіщень"); }
+                    catch (Exception ex) { _logger.LogError(ex, "Error processing price history and notifications"); }
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
-                    _logger.LogInformation("Збереження скасовано");
+                    _logger.LogInformation("Save cancelled");
                     throw;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Помилка при збереженні даних");
+                    _logger.LogError(ex, "Error saving data");
                 }
 
                 failedLinks = linksToRetry?.ToList() ?? new List<string>();
 
-                _logger.LogInformation("Цикл {Cycle}/{MaxCycles}: проксі {Available} доступних, {Success} успішних, {Failed} невдалих. Залишилось {Remaining} посилань.",
+                _logger.LogInformation("Cycle {Cycle}/{MaxCycles}: {Available} proxies available, {Success} successful, {Failed} failed. {Remaining} links remaining.",
                     outerRetry, maxOuterRetries, _proxyPool.AvailableCount, successfulProxies.Count, failedProxies.Count, failedLinks.Count);
             }
 
             totalStopwatch.Stop();
             int totalSuccessful = productLinks.Count - failedLinks.Count;
             double successRate = productLinks.Count > 0 ? (double)totalSuccessful / productLinks.Count * 100 : 0;
-            _logger.LogInformation("Скрапінг {ComponentType} завершено за {Duration:F1}с. Успішно: {Successful}/{Total} ({SuccessRate:F1}%)",
+            _logger.LogInformation("Scraping {ComponentType} completed in {Duration:F1}s. Successful: {Successful}/{Total} ({SuccessRate:F1}%)",
                 componentType, totalStopwatch.Elapsed.TotalSeconds, totalSuccessful, productLinks.Count, successRate);
             return totalSuccessful;
         }
@@ -670,12 +763,12 @@ namespace Scraping.Infrastructure.Services
         public async Task<int> UpdatePricesAsync<T>(ComponentType componentType, CancellationToken cancellationToken = default) where T : class
         {
             var totalStopwatch = Stopwatch.StartNew();
-            _logger.LogInformation("Початок оновлення цін для {ComponentType}", componentType);
+            _logger.LogInformation("Starting price update for {ComponentType}", componentType);
 
             var priceScraper = _priceScraperFactory.GetScraper<T>();
             if (priceScraper == null)
             {
-                _logger.LogWarning("Прайс-скрейпер для типу {ComponentType} не знайдено", componentType);
+                _logger.LogWarning("Price scraper for type {ComponentType} not found", componentType);
                 return 0;
             }
 
@@ -686,7 +779,7 @@ namespace Scraping.Infrastructure.Services
 
             if (hotlineUrlProp == null || idProp == null)
             {
-                _logger.LogWarning("Тип {ComponentType} не має HotlineUrl або Id властивостей", componentType);
+                _logger.LogWarning("Type {ComponentType} does not have HotlineUrl or Id properties", componentType);
                 return 0;
             }
 
@@ -699,12 +792,12 @@ namespace Scraping.Infrastructure.Services
                 .Where(t => !string.IsNullOrWhiteSpace(t.Url))
                 .ToList();
 
-            _logger.LogInformation("Знайдено {Count} компонентів з HotlineUrl для {ComponentType}",
+            _logger.LogInformation("Found {Count} components with HotlineUrl for {ComponentType}",
                 targets.Count, componentType);
 
             if (targets.Count == 0)
             {
-                _logger.LogInformation("Немає компонентів для оновлення цін ({ComponentType})", componentType);
+                _logger.LogInformation("No components to update prices for ({ComponentType})", componentType);
                 return 0;
             }
 
@@ -720,16 +813,16 @@ namespace Scraping.Infrastructure.Services
                 cancellationToken.ThrowIfCancellationRequested();
 
                 outerRetry++;
-                Console.WriteLine($"\nЦикл оновлення цін {outerRetry}/{maxOuterRetries}: {failedTargets.Count} компонентів...");
+                Console.WriteLine($"\nPrice update cycle {outerRetry}/{maxOuterRetries}: {failedTargets.Count} components...");
 
                 if (_proxyPool.NeedsRefresh())
                 {
-                    Console.WriteLine("Завантаження та валідація нових проксі...");
+                    Console.WriteLine("Loading and validating new proxies...");
                     var rawProxies = await _proxyScraper.GetProxiesAsync(cancellationToken);
 
                     if (rawProxies.Count == 0)
                     {
-                        Console.WriteLine("Не вдалося завантажити жодного проксі. Завершення.");
+                        Console.WriteLine("Failed to load any proxies. Exiting.");
                         return 0;
                     }
 
@@ -737,7 +830,7 @@ namespace Scraping.Infrastructure.Services
 
                     if (_proxyPool.AvailableCount == 0)
                     {
-                        Console.WriteLine("Жоден проксі не пройшов валідацію. Завершення.");
+                        Console.WriteLine("No proxies passed validation. Exiting.");
                         return 0;
                     }
                 }
@@ -768,7 +861,7 @@ namespace Scraping.Infrastructure.Services
                                 var proxyResult = CreateHttpClientWithProxy();
                                 if (proxyResult == null)
                                 {
-                                    Console.WriteLine($"[{index}] Немає доступних проксі, пропуск спроби.");
+                                    Console.WriteLine($"[{index}] No proxies available, skipping attempt.");
                                     attempt++;
                                     await Task.Delay(Random.Shared.Next(1000, 2000) * (attempt + 1), cancellationToken);
                                     continue;
@@ -803,13 +896,13 @@ namespace Scraping.Infrastructure.Services
 
                                         offersByComponent[target.Id] = result.Offers;
                                         _proxyPool.ReturnProxy(proxy, success: true);
-                                        Console.WriteLine($"[{index}] Отримано {result.Offers.Count} пропозицій для компонента {target.Id}");
+                                        Console.WriteLine($"[{index}] Got {result.Offers.Count} offers for component {target.Id}");
                                         return;
                                     }
                                     else
                                     {
                                         _proxyPool.ReturnProxy(proxy, success: false);
-                                        Console.WriteLine($"[{index}] Жодної пропозиції для {target.Url}");
+                                        Console.WriteLine($"[{index}] No offers for {target.Url}");
                                     }
                                 }
                             }
@@ -823,7 +916,7 @@ namespace Scraping.Infrastructure.Services
                             {
                                 if (currentProxy != null)
                                     _proxyPool.ReturnProxy(currentProxy, success: false);
-                                Console.WriteLine($"[{index}] Спроба {attempt + 1}/{maxRetries} не вдалася: {ex.Message}");
+                                Console.WriteLine($"[{index}] Attempt {attempt + 1}/{maxRetries} failed: {ex.Message}");
                             }
 
                             attempt++;
@@ -844,7 +937,14 @@ namespace Scraping.Infrastructure.Services
 
                 try
                 {
-                    Console.WriteLine("Збереження оновлених цін в базу даних...");
+                    await UploadStoreLogosAsync(storesToSave, existingStoresFromDb, cancellationToken);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+                catch (Exception ex) { _logger.LogWarning(ex, "Store logo upload step failed during price update; continuing with DB save"); }
+
+                try
+                {
+                    Console.WriteLine("Saving updated prices to database...");
 
                     int savedStoresCount = 0, updatedStoresCount = 0;
                     foreach (var store in storesToSave)
@@ -907,7 +1007,7 @@ namespace Scraping.Infrastructure.Services
 
                         if (componentById.TryGetValue(componentId, out var component))
                         {
-                            var avg = offers.Any() ? offers.Average(o => o.Price) : 0m;
+                            var avg = offers.Any() ? Math.Round(offers.Average(o => o.Price), 0) : 0m;
                             averagePriceProp?.SetValue(component, avg);
                             offersCountProp?.SetValue(component, offers.Count);
                             _context.Set<T>().Update(component);
@@ -937,14 +1037,14 @@ namespace Scraping.Infrastructure.Services
                     }
 
                     await _context.SaveChangesAsync(cancellationToken);
-                    Console.WriteLine($"Збережено: {savedStoresCount} магазинів, {savedOffersCount} пропозицій, {historyInserted} записів історії");
-                    Console.WriteLine($"Оновлено: {updatedStoresCount} магазинів, {updatedOffersCount} пропозицій, {componentsUpdated} компонентів, {historyUpdated} записів історії");
+                    Console.WriteLine($"Saved: {savedStoresCount} stores, {savedOffersCount} offers, {historyInserted} history records");
+                    Console.WriteLine($"Updated: {updatedStoresCount} stores, {updatedOffersCount} offers, {componentsUpdated} components, {historyUpdated} history records");
 
                     try
                     {
                         var newAverages = offersByComponent
                             .Where(kv => componentById.ContainsKey(kv.Key) && kv.Value.Any())
-                            .ToDictionary(kv => kv.Key, kv => kv.Value.Average(o => o.Price));
+                            .ToDictionary(kv => kv.Key, kv => Math.Round(kv.Value.Average(o => o.Price), 0));
 
                         if (newAverages.Count > 0)
                         {
@@ -989,7 +1089,7 @@ namespace Scraping.Infrastructure.Services
                             if (alertsFired > 0)
                             {
                                 await _context.SaveChangesAsync(cancellationToken);
-                                _logger.LogInformation("Відправлено {Count} сповіщень про зміну ціни ({ComponentType})", alertsFired, componentType);
+                                _logger.LogInformation("Sent {Count} price change notifications ({ComponentType})", alertsFired, componentType);
                             }
                         }
                     }
@@ -999,29 +1099,29 @@ namespace Scraping.Infrastructure.Services
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Помилка при обробці сповіщень про зміну ціни");
+                        _logger.LogError(ex, "Error processing price change notifications");
                     }
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
-                    _logger.LogInformation("Збереження оновлення цін скасовано");
+                    _logger.LogInformation("Price update save cancelled");
                     throw;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Помилка при збереженні оновлених цін");
+                    _logger.LogError(ex, "Error saving updated prices");
                 }
 
                 failedTargets = toRetry.ToList();
 
-                _logger.LogInformation("Цикл {Cycle}/{MaxCycles} оновлення цін. Залишилось: {Remaining}",
+                _logger.LogInformation("Price update cycle {Cycle}/{MaxCycles}. Remaining: {Remaining}",
                     outerRetry, maxOuterRetries, failedTargets.Count);
             }
 
             totalStopwatch.Stop();
             int totalSuccessful = targets.Count - failedTargets.Count;
             double successRate = targets.Count > 0 ? (double)totalSuccessful / targets.Count * 100 : 0;
-            _logger.LogInformation("Оновлення цін {ComponentType} завершено за {Duration:F1}с. Успішно: {Successful}/{Total} ({SuccessRate:F1}%)",
+            _logger.LogInformation("Price update {ComponentType} completed in {Duration:F1}s. Successful: {Successful}/{Total} ({SuccessRate:F1}%)",
                 componentType, totalStopwatch.Elapsed.TotalSeconds, totalSuccessful, targets.Count, successRate);
             return totalSuccessful;
         }
@@ -1030,12 +1130,12 @@ namespace Scraping.Infrastructure.Services
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            Console.WriteLine("Початок роботи ScrapeSingleComponentAsync\n");
+            Console.WriteLine("Starting ScrapeSingleComponentAsync\n");
 
             var scraper = _scraperFactory.GetScraper<T>();
             if (scraper == null)
             {
-                Console.WriteLine("Скрейпер для цього типу не знайдено!");
+                Console.WriteLine("Scraper for this type not found!");
                 return;
             }
 
@@ -1073,9 +1173,26 @@ namespace Scraping.Infrastructure.Services
 
             if (result.Component != null)
             {
-                Console.WriteLine($"  Отримано компонент: {result.Component}");
-                Console.WriteLine($"  Посилання: {componentUrl}");
-                Console.WriteLine($"  Магазинів: {result.Stores.Count}, Пропозицій: {result.Offers.Count}");
+                try
+                {
+                    var photoUrlProp = typeof(T).GetProperty("PhotoUrl");
+                    var idProp = typeof(T).GetProperty("Id");
+                    if (photoUrlProp != null && idProp != null
+                        && idProp.GetValue(result.Component) is Guid componentId
+                        && photoUrlProp.GetValue(result.Component) is string scrapedPhotoUrl)
+                    {
+                        var blobUrl = await _imageService.UploadComponentImageAsync(
+                            scrapedPhotoUrl, typeof(T).Name, componentId, cancellationToken);
+                        if (blobUrl != null)
+                            photoUrlProp.SetValue(result.Component, blobUrl);
+                    }
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+                catch (Exception ex) { Console.WriteLine($"  Image upload failed: {ex.Message}"); }
+
+                Console.WriteLine($"  Got component: {result.Component}");
+                Console.WriteLine($"  Link: {componentUrl}");
+                Console.WriteLine($"  Stores: {result.Stores.Count}, Offers: {result.Offers.Count}");
 
                 //try
                 //{
@@ -1152,7 +1269,7 @@ namespace Scraping.Infrastructure.Services
             }
             else
             {
-                Console.WriteLine($"  Не вдалось отримати компонент.");
+                Console.WriteLine($"  Failed to get component.");
             }
         }
     }

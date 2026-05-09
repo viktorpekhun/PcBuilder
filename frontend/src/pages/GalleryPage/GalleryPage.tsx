@@ -173,7 +173,7 @@ function GalleryPage() {
                                 <div className={styles['card-footer']}>
                                     <div className={styles['card-author']}>
                                         {build.avatarUrl ? (
-                                            <img src={build.avatarUrl} alt={build.username} className={styles['author-avatar']} />
+                                            <img src={build.avatarUrl} alt={build.username} className={styles['author-avatar']} loading="lazy" />
                                         ) : (
                                             <div className={styles['author-avatar-placeholder']}>
                                                 {build.username.charAt(0).toUpperCase()}

@@ -34,6 +34,23 @@ services:
       retries: 5
       start_period: 15s
 
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: pcbuilder-azurite
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    command: azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0
+    volumes:
+      - azurite_data:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get({host:'127.0.0.1',port:10000,path:'/'}, (r) => process.exit(0)).on('error', () => process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
   api:
     build:
       context: ./backend
@@ -49,10 +66,14 @@ services:
       AzureTranslator__Key: "${AZURE_TRANSLATOR_KEY:-}"
       AzureTranslator__Region: "${AZURE_TRANSLATOR_REGION:-}"
       Cors__AllowedOrigins__0: "http://localhost:5173"
+      AzureStorage__ConnectionString: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UGW0s/Y9rSKRCjteAWISd/zFoE96vsAIZNgLQ==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
+      AzureStorage__ContainerName: "component-images"
     depends_on:
       sqlserver:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      azurite:
         condition: service_healthy
 
   scraper-worker:
@@ -66,12 +87,17 @@ services:
       RabbitMq__HostName: rabbitmq
       AzureTranslator__Key: "${AZURE_TRANSLATOR_KEY:-}"
       AzureTranslator__Region: "${AZURE_TRANSLATOR_REGION:-}"
+      AzureStorage__ConnectionString: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UGW0s/Y9rSKRCjteAWISd/zFoE96vsAIZNgLQ==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
+      AzureStorage__ContainerName: "component-images"
     depends_on:
       sqlserver:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      azurite:
+        condition: service_healthy
 
 volumes:
   sqlserver_data:
   rabbitmq_data:
+  azurite_data:

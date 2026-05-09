@@ -219,6 +219,7 @@ function ComponentsPage() {
                                             src={component.photoUrl}
                                             alt={component.name}
                                             className={styles['componentImage']}
+                                            loading="lazy"
                                         />
                                     ) : (
                                         <div className={styles['no-image']}>No image</div>

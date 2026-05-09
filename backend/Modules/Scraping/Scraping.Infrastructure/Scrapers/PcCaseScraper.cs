@@ -442,7 +442,7 @@ namespace Scraping.Infrastructure.Scrapers
                         Console.WriteLine($"Error scraping offer: {ex.Message}");
                     }
                 }
-                var avgPrice = offers.Any() ? Math.Round(offers.Average(p => p.Price)) : 0; pcCase.AveragePrice = (decimal)avgPrice;
+                pcCase.AveragePrice = offers.Any() ? Math.Round(offers.Average(p => p.Price), 0) : 0;
                 pcCase.OffersCount = offers.Count;
             }
 

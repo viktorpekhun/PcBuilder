@@ -348,7 +348,7 @@ namespace Scraping.Infrastructure.Scrapers
                         Console.WriteLine($"Error scraping offer: {ex.Message}");
                     }
                 }
-                var avgPrice = offers.Any() ? Math.Round(offers.Average(p => p.Price)) : 0; powerSupply.AveragePrice = (decimal)avgPrice;
+                powerSupply.AveragePrice = offers.Any() ? Math.Round(offers.Average(p => p.Price), 0) : 0;
                 powerSupply.OffersCount = offers.Count;
             }
 

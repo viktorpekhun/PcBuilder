@@ -19,6 +19,14 @@ COPY Modules/Auth/Auth.Infrastructure/Auth.Infrastructure.csproj Modules/Auth/Au
 COPY Modules/PcBuilds/PcBuilds.Domain/PcBuilds.Domain.csproj Modules/PcBuilds/PcBuilds.Domain/
 COPY Modules/PcBuilds/PcBuilds.Application/PcBuilds.Application.csproj Modules/PcBuilds/PcBuilds.Application/
 COPY Modules/PcBuilds/PcBuilds.Infrastructure/PcBuilds.Infrastructure.csproj Modules/PcBuilds/PcBuilds.Infrastructure/
+COPY Modules/Scraping/Scraping.Application/Scraping.Application.csproj Modules/Scraping/Scraping.Application/
+COPY Modules/Scraping/Scraping.Infrastructure/Scraping.Infrastructure.csproj Modules/Scraping/Scraping.Infrastructure/
+COPY Modules/Notifications/Notifications.Domain/Notifications.Domain.csproj Modules/Notifications/Notifications.Domain/
+COPY Modules/Notifications/Notifications.Application/Notifications.Application.csproj Modules/Notifications/Notifications.Application/
+COPY Modules/Notifications/Notifications.Infrastructure/Notifications.Infrastructure.csproj Modules/Notifications/Notifications.Infrastructure/
+COPY Modules/Moderation/Moderation.Domain/Moderation.Domain.csproj Modules/Moderation/Moderation.Domain/
+COPY Modules/Moderation/Moderation.Application/Moderation.Application.csproj Modules/Moderation/Moderation.Application/
+COPY Modules/Moderation/Moderation.Infrastructure/Moderation.Infrastructure.csproj Modules/Moderation/Moderation.Infrastructure/
 RUN dotnet restore PcBuilder.Api/PcBuilder.Api.csproj
 
 # Copy everything and build

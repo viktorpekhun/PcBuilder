@@ -246,6 +246,7 @@ function ComponentPage() {
                                 <img
                                     src={component.photoUrl}
                                     alt={component.name}
+                                    loading="lazy"
                                 />
                             ) : (
                                 <div className={styles['no-image']}>No image available</div>
@@ -301,6 +302,7 @@ function ComponentPage() {
                                                             src={offer.store.logoUrl}
                                                             alt={offer.store.name}
                                                             className={styles['store-logo']}
+                                                            loading="lazy"
                                                         />
                                                     )}
                                                     <span>{offer.store.name}</span>

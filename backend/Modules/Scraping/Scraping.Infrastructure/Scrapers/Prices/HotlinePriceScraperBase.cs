@@ -98,7 +98,7 @@ namespace Scraping.Infrastructure.Scrapers.Prices
                 }
             }
 
-            component.AveragePrice = offers.Count > 0 ? Math.Round(offers.Average(o => o.Price)) : 0;
+            component.AveragePrice = offers.Count > 0 ? Math.Round(offers.Average(o => o.Price), 0) : 0;
 
             return new PriceScrapingResult(stores, offers);
         }
