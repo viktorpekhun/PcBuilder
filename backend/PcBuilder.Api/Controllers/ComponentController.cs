@@ -1,8 +1,9 @@
+using Components.Application.PreFilter;
+using Components.Application.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using PcBuilder.SharedKernel.Filtering;
 using PcBuilder.SharedKernel.Enums;
-using Components.Application.Queries;
+using PcBuilder.SharedKernel.Filtering;
 using System.Text.Json;
 
 namespace PcBuilder.Api.Controllers
@@ -18,19 +19,21 @@ namespace PcBuilder.Api.Controllers
             _mediator = mediator;
         }
 
+        private static readonly HashSet<string> _reservedKeys = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "pageNumber", "pageSize", "orderBy", "ascending", "searchQuery",
+            "prefilter", "pb_cpu", "pb_gpu", "pb_mb", "pb_ram", "pb_cooler", "pb_case", "pb_psu"
+        };
+
         [HttpGet("{componentType}")]
         public async Task<IActionResult> GetAllComponentsByType(
             ComponentType componentType,
             [FromQuery] ResourceParameters parameters)
         {
-            // Extract filter parameters from query
+            // Extract filter parameters from query (skip pagination and prefilter keys)
             foreach (var key in Request.Query.Keys)
             {
-                if (key.Equals("pageNumber", StringComparison.OrdinalIgnoreCase) ||
-                    key.Equals("pageSize", StringComparison.OrdinalIgnoreCase) ||
-                    key.Equals("orderBy", StringComparison.OrdinalIgnoreCase) ||
-                    key.Equals("ascending", StringComparison.OrdinalIgnoreCase) ||
-                    key.Equals("searchQuery", StringComparison.OrdinalIgnoreCase))
+                if (_reservedKeys.Contains(key))
                     continue;
 
                 var value = Request.Query[key].ToString();
@@ -56,7 +59,24 @@ namespace PcBuilder.Api.Controllers
                 }
             }
 
-            var result = await _mediator.Send(new GetComponentsByTypeQuery(componentType, parameters));
+            // Prefilter params
+            bool applyPrefilter = Request.Query.TryGetValue("prefilter", out var pfVal) &&
+                                   pfVal.ToString().Equals("true", StringComparison.OrdinalIgnoreCase);
+
+            PartialBuildIds? partialBuildIds = null;
+            if (applyPrefilter)
+            {
+                partialBuildIds = new PartialBuildIds(
+                    CpuId:          TryParseGuid(Request.Query["pb_cpu"]),
+                    GpuId:          TryParseGuid(Request.Query["pb_gpu"]),
+                    MotherboardId:  TryParseGuid(Request.Query["pb_mb"]),
+                    RamId:          TryParseGuid(Request.Query["pb_ram"]),
+                    CpuCoolerId:    TryParseGuid(Request.Query["pb_cooler"]),
+                    PcCaseId:       TryParseGuid(Request.Query["pb_case"]),
+                    PowerSupplyId:  TryParseGuid(Request.Query["pb_psu"]));
+            }
+
+            var result = await _mediator.Send(new GetComponentsByTypeQuery(componentType, parameters, applyPrefilter, partialBuildIds));
             if (result.IsFailure)
                 return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
 
@@ -91,6 +111,12 @@ namespace PcBuilder.Api.Controllers
         {
             var filterOptions = await _mediator.Send(new GetFilterOptionsQuery(componentType));
             return Ok(filterOptions);
+        }
+
+        private static Guid? TryParseGuid(Microsoft.Extensions.Primitives.StringValues value)
+        {
+            var str = value.ToString();
+            return Guid.TryParse(str, out var guid) ? guid : null;
         }
 
         [HttpGet("{componentType}/{id:guid}/price-history")]

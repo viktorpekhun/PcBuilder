@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import styles from './PcBuildPage.module.css';
+import buttonStyles from '../../components/Button/Button.module.css';
 import { componentService } from "../../api/component.service";
 import useAuth from "../../hooks/useAuth";
 import { buildService } from "../../api/build.service";
@@ -347,12 +348,12 @@ function PcBuildPage() {
                     <div className={styles['multi-components']}>
                         {items.map((item, i) => (
                             <div key={i} className={styles['multi-component-item']}>
-                                <div className={styles['selected-component']}>
+                                <Link to={`/components/${urlType}/${item.componentId}`} className={styles['selected-component']}>
                                     {item.component.photoUrl && (
                                         <img src={item.component.photoUrl} alt={item.component.name} width="50" />
                                     )}
                                     <div className={styles['component-name']}>{item.component.name}</div>
-                                </div>
+                                </Link>
                                 <div className={styles['quantity-control']}>
                                     <button className={styles['quantity-btn']}
                                             onClick={() => adjustQuantity(key, item.componentId, 1)}>
@@ -366,9 +367,12 @@ function PcBuildPage() {
                                 </div>
                             </div>
                         ))}
-                        <Button variant="outline-primary" size="sm">
-                            <Link to={`/components/${urlType}`}>Додати {buttonLabel}</Link>
-                        </Button>
+                        <Link
+                            to={`/components/${urlType}`}
+                            className={`${buttonStyles.button} ${buttonStyles['outline-primary']} ${buttonStyles.sm}`}
+                        >
+                            Додати {buttonLabel}
+                        </Link>
                     </div>
                 </td>
                 <td className={styles['multi-components-info-container']}>
@@ -474,16 +478,19 @@ function PcBuildPage() {
                                         {loading && selectedComponents[key] ? (
                                             <div className={styles['loading-component']}>Завантаження компонента...</div>
                                         ) : data ? (
-                                            <div className={styles['selected-component']}>
+                                            <Link to={`/components/${urlType}/${data.id}`} className={styles['selected-component']}>
                                                 {data.photoUrl && (
                                                     <img src={data.photoUrl} alt={data.name} width="50" />
                                                 )}
                                                 <div className={styles['component-name']}>{data.name}</div>
-                                            </div>
+                                            </Link>
                                         ) : (
-                                            <Button variant="outline-primary" size="sm">
-                                                <Link to={`/components/${urlType}`}>Додати {buttonLabel}</Link>
-                                            </Button>
+                                            <Link
+                                                to={`/components/${urlType}`}
+                                                className={`${buttonStyles.button} ${buttonStyles['outline-primary']} ${buttonStyles.sm}`}
+                                            >
+                                                Додати {buttonLabel}
+                                            </Link>
                                         )}
                                     </td>
                                     <td>

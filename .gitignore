@@ -366,6 +366,7 @@ MigrationBackup/
 FodyWeavers.xsd
 
 .claude/
+CLAUDE.md
 
 # Text moderation ML model artifacts — large binaries, tracked out-of-band
 TextModerationApi/model/

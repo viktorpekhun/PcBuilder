@@ -137,8 +137,14 @@ namespace Scraping.Infrastructure.Scrapers
                                     ram.Expo = false;
                                 break;
                             case "Буферизація":
-                                ram.Bufferization = value ?? string.Empty;
-                                break;
+                                {
+                                    if (!string.IsNullOrWhiteSpace(value))
+                                    {
+                                        string newValue = value.ToLower();
+                                        ram.Bufferization = char.ToUpper(newValue[0]) + newValue.Substring(1);
+                                    }
+                                    break;
+                                }
                             case "Колір":
                                 {
                                     if (string.IsNullOrEmpty(value))

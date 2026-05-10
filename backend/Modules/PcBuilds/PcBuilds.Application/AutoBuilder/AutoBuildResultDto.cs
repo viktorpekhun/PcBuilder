@@ -7,5 +7,6 @@ namespace PcBuilds.Application.AutoBuilder
         PcBuildGalleryDto Build,
         decimal TotalPrice,
         double FitnessScore,
-        BuildCompatibilityReport CompatibilityReport);
+        BuildCompatibilityReport CompatibilityReport,
+        SelectedComponentsDto Components);
 }

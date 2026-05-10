@@ -40,6 +40,8 @@ namespace PcBuilds.Application.Compatibility.Rules
                 {
                     if (pcleSlot.Lane >= gpu.PcleLane)
                         return result;
+                    if (gpu.PcleLane is null)
+                        return result;
 
                     hasPartialCompatibility = true;
                 }

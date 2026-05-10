@@ -6,7 +6,7 @@ namespace PcBuilds.Application.Compatibility.Rules
 {
     public class CpuGpuBottleneckRule : ICompatibilityRule
     {
-        private const double K = 1.2;
+        private const double K = CpuGpuBottleneckConstants.K;
         private const double LowerBound = 0.6;
         private const double UpperBound = 1.5;
         private const double BalancedLow = 0.85;

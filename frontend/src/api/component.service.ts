@@ -30,6 +30,20 @@ function buildQuery(params?: IResourceParameters): string {
         }
     }
 
+    if (params.prefilter) {
+        query.set("prefilter", "true");
+        const pb = params.partialBuild;
+        if (pb) {
+            if (pb.cpuId)         query.set("pb_cpu",     pb.cpuId);
+            if (pb.gpuId)         query.set("pb_gpu",     pb.gpuId);
+            if (pb.motherboardId) query.set("pb_mb",      pb.motherboardId);
+            if (pb.ramId)         query.set("pb_ram",     pb.ramId);
+            if (pb.cpuCoolerId)   query.set("pb_cooler",  pb.cpuCoolerId);
+            if (pb.pcCaseId)      query.set("pb_case",    pb.pcCaseId);
+            if (pb.powerSupplyId) query.set("pb_psu",     pb.powerSupplyId);
+        }
+    }
+
     const str = query.toString();
     return str ? `?${str}` : "";
 }

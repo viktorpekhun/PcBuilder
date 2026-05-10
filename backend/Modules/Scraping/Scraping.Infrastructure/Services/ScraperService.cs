@@ -167,13 +167,6 @@ namespace Scraping.Infrastructure.Services
                 var name = nameProp.GetValue(component) as string ?? string.Empty;
                 var scrapedPhotoUrl = photoUrlProp.GetValue(component) as string;
 
-                if (existingBlobUrlByName.TryGetValue(name, out var existingPhotoUrl)
-                    && AzureBlobComponentImageService.IsBlobUrl(existingPhotoUrl))
-                {
-                    photoUrlProp.SetValue(component, existingPhotoUrl);
-                    continue;
-                }
-
                 if (string.IsNullOrEmpty(scrapedPhotoUrl)) continue;
 
                 var blobUrl = await _imageService.UploadComponentImageAsync(scrapedPhotoUrl, componentType, id, cancellationToken);
@@ -184,23 +177,11 @@ namespace Scraping.Infrastructure.Services
 
         private async Task UploadStoreLogosAsync(
             IEnumerable<Store> storesToSave,
-            IEnumerable<Store> storesFromDb,
             CancellationToken cancellationToken)
         {
-            var existingBlobUrlById = storesFromDb
-                .Where(s => s.LogoUrl != null)
-                .ToDictionary(s => s.Id, s => s.LogoUrl);
-
             foreach (var store in storesToSave)
             {
                 if (string.IsNullOrEmpty(store.LogoUrl)) continue;
-
-                if (existingBlobUrlById.TryGetValue(store.Id, out var existingLogoUrl)
-                    && AzureBlobComponentImageService.IsBlobUrl(existingLogoUrl))
-                {
-                    store.LogoUrl = existingLogoUrl;
-                    continue;
-                }
 
                 var blobUrl = await _imageService.UploadStoreLogoAsync(store.LogoUrl, store.Id, cancellationToken);
                 if (blobUrl != null)
@@ -395,7 +376,7 @@ namespace Scraping.Infrastructure.Services
 
                 try
                 {
-                    await UploadStoreLogosAsync(storesToSave, existingStoresFromDb, cancellationToken);
+                    await UploadStoreLogosAsync(storesToSave, cancellationToken);
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
                 catch (Exception ex) { _logger.LogWarning(ex, "Store logo upload step failed for {ComponentType}; continuing with DB save", componentType); }
@@ -937,7 +918,7 @@ namespace Scraping.Infrastructure.Services
 
                 try
                 {
-                    await UploadStoreLogosAsync(storesToSave, existingStoresFromDb, cancellationToken);
+                    await UploadStoreLogosAsync(storesToSave, cancellationToken);
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
                 catch (Exception ex) { _logger.LogWarning(ex, "Store logo upload step failed during price update; continuing with DB save"); }

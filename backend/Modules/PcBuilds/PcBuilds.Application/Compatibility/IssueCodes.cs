@@ -40,5 +40,10 @@ namespace PcBuilds.Application.Compatibility
 
         public const string CpuBottleneck = "CPU_BOTTLENECK";
         public const string GpuBottleneck = "GPU_BOTTLENECK";
+
+        public const string BudgetTooLowForScenario = "BUDGET_TOO_LOW_FOR_SCENARIO";
+        public const string InvalidFormFactor = "INVALID_FORM_FACTOR";
+        public const string NoCompatibleBuildFound = "NO_COMPATIBLE_BUILD_FOUND";
+        public const string NoViableCorePairing = "NO_VIABLE_CORE_PAIRING";
     }
 }

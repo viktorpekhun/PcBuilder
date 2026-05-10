@@ -84,6 +84,16 @@
 }
 
 /* Selected component container */
+a.selected-component {
+    text-decoration: none;
+    color: inherit;
+}
+
+a.selected-component:hover {
+    border-color: #aaa;
+    background-color: #efefef;
+}
+
 .selected-component {
     width: 100%;
     display: flex;

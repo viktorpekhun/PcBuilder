@@ -11,6 +11,8 @@ type FilterValues = Record<string, string[] | RangeValue>;
 interface FilterPanelProps {
     config: FilterConfig;
     onFilterChange: (values: FilterValues) => void;
+    onPrefilterChange?: (enabled: boolean) => void;
+    showPrefilterToggle?: boolean;
 }
 
 const parseRangeValues = (values: string[] | undefined): [number, number] | null => {
@@ -21,7 +23,9 @@ const parseRangeValues = (values: string[] | undefined): [number, number] | null
     return [parseFloat(first.replace(',', '.')), parseFloat(second.replace(',', '.'))];
 };
 
-const FilterPanel = ({ config, onFilterChange }: FilterPanelProps) => {
+const PREFILTER_KEY = 'compat_prefilter_enabled';
+
+const FilterPanel = ({ config, onFilterChange, onPrefilterChange, showPrefilterToggle = false }: FilterPanelProps) => {
     const [filterValues, setFilterValues] = useState<FilterValues>({});
     const [dynamicOptions, setDynamicOptions] = useState<Record<string, string[] | undefined>>({});
     const [isLoading, setIsLoading] = useState(false);
@@ -30,6 +34,10 @@ const FilterPanel = ({ config, onFilterChange }: FilterPanelProps) => {
     const prevFiltersRef = useRef<string | null>(null);
     const initialRangeValuesRef = useRef<Record<string, RangeValue>>({});
     const [expandedFilters, setExpandedFilters] = useState<Record<string, boolean>>({});
+    const [prefilterEnabled, setPrefilterEnabled] = useState<boolean>(() => {
+        const stored = localStorage.getItem(PREFILTER_KEY);
+        return stored === null ? true : stored === 'true';
+    });
 
     useEffect(() => {
         const fetchFilterOptions = async () => {
@@ -235,6 +243,12 @@ const FilterPanel = ({ config, onFilterChange }: FilterPanelProps) => {
         }
     };
 
+    const handlePrefilterToggle = (enabled: boolean) => {
+        setPrefilterEnabled(enabled);
+        localStorage.setItem(PREFILTER_KEY, String(enabled));
+        onPrefilterChange?.(enabled);
+    };
+
     const handleClearFilters = () => {
         const initialValues: FilterValues = {};
         config.filters.forEach(filter => {
@@ -268,6 +282,18 @@ const FilterPanel = ({ config, onFilterChange }: FilterPanelProps) => {
                 <h3>Фільтри</h3>
             </div>
             <div className={styles.filtersContainer}>
+                {showPrefilterToggle && (
+                    <div className={styles.filterGroup}>
+                        <label className={styles.checkboxLabel}>
+                            <input
+                                type="checkbox"
+                                checked={prefilterEnabled}
+                                onChange={e => handlePrefilterToggle(e.target.checked)}
+                            />
+                            Лише сумісні компоненти
+                        </label>
+                    </div>
+                )}
                 {isLoading ? (
                     <p>Loading filter options...</p>
                 ) : (
