@@ -1,12 +1,12 @@
-﻿using Components.Domain.Entities;
-using PcBuilds.Domain.Entities;
+using Components.Domain.Entities;
 using PcBuilder.SharedKernel.Enums;
+using PcBuilds.Domain.Entities;
 
 namespace PcBuilds.Application.Compatibility.Rules
 {
     public class PowerSupplyGpuConnectorRule : ICompatibilityRule
     {
-        public string Name => "Power Supply and GPU Connector Compatibility";
+        public string Name => "PsuGpuConnector";
 
         public CompatibilityResult Check(PcBuild pcBuild)
         {
@@ -23,34 +23,32 @@ namespace PcBuilds.Application.Compatibility.Rules
             if (gpuPowerConnectors == null || !gpuPowerConnectors.Any() ||
                 powerSupplyConnectors == null || !powerSupplyConnectors.Any())
             {
-                result.Messages.Add(new CompatibilityMessage
+                result.FitnessScore = 0.7;
+                result.Issues.Add(new CompatibilityIssue
                 {
-                    Type = CompatibilityMessageType.Warning,
-                    Message = "Неможливо перевірити сумісність Відеокарти та Блоку живлення — недостатньо даних."
+                    Severity = CompatibilitySeverity.Warning,
+                    Code = IssueCodes.PsuGpuConnectorMissing,
+                    Parameters = new() { ["GpuName"] = gpu.Name ?? "", ["PsuName"] = powerSupply.Name ?? "" }
                 });
                 return result;
             }
 
-            var psuGpuConnectors = powerSupplyConnectors
-                .Where(c => c.Type == "GPU")
-                .ToList();
+            var psuGpuConnectors = powerSupplyConnectors.Where(c => c.Type == "GPU").ToList();
 
             if (!psuGpuConnectors.Any())
             {
-                result.Messages.Add(new CompatibilityMessage
+                result.FitnessScore = 0.7;
+                result.Issues.Add(new CompatibilityIssue
                 {
-                    Type = CompatibilityMessageType.Warning,
-                    Message = "Неможливо перевірити сумісність Відеокарти та Блоку живлення — недостатньо даних."
+                    Severity = CompatibilitySeverity.Warning,
+                    Code = IssueCodes.PsuGpuConnectorMissing,
+                    Parameters = new() { ["GpuName"] = gpu.Name ?? "", ["PsuName"] = powerSupply.Name ?? "" }
                 });
                 return result;
             }
 
             var availableConnectors = psuGpuConnectors
-                .Select(c => new {
-                    Pins = c.Pins,
-                    AdditionalPins = c.AdditionalPins,
-                    RemainingQuantity = c.Quantity
-                })
+                .Select(c => new { Pins = c.Pins, AdditionalPins = c.AdditionalPins, RemainingQuantity = c.Quantity })
                 .ToList();
 
             var requiredConnectors = gpuPowerConnectors
@@ -73,60 +71,45 @@ namespace PcBuilds.Application.Compatibility.Rules
                     {
                         int used = Math.Min(connector.RemainingQuantity, neededQuantity - satisfiedQuantity);
                         satisfiedQuantity += used;
-                        availableConnectors[i] = new
-                        {
-                            connector.Pins,
-                            connector.AdditionalPins,
-                            RemainingQuantity = connector.RemainingQuantity - used
-                        };
+                        availableConnectors[i] = new { connector.Pins, connector.AdditionalPins, RemainingQuantity = connector.RemainingQuantity - used };
                     }
-
                     else if (connector.Pins + (connector.AdditionalPins ?? 0) == pinCount)
                     {
                         int used = Math.Min(connector.RemainingQuantity, neededQuantity - satisfiedQuantity);
                         satisfiedQuantity += used;
-                        availableConnectors[i] = new
-                        {
-                            connector.Pins,
-                            connector.AdditionalPins,
-                            RemainingQuantity = connector.RemainingQuantity - used
-                        };
+                        availableConnectors[i] = new { connector.Pins, connector.AdditionalPins, RemainingQuantity = connector.RemainingQuantity - used };
                     }
-
-                    else if (connector.Pins + (connector.AdditionalPins ?? 0) >= pinCount &&
-                             connector.Pins <= pinCount)
+                    else if (connector.Pins + (connector.AdditionalPins ?? 0) >= pinCount && connector.Pins <= pinCount)
                     {
                         int used = Math.Min(connector.RemainingQuantity, neededQuantity - satisfiedQuantity);
                         satisfiedQuantity += used;
-                        availableConnectors[i] = new
-                        {
-                            connector.Pins,
-                            connector.AdditionalPins,
-                            RemainingQuantity = connector.RemainingQuantity - used
-                        };
+                        availableConnectors[i] = new { connector.Pins, connector.AdditionalPins, RemainingQuantity = connector.RemainingQuantity - used };
                     }
 
-                    if (satisfiedQuantity >= neededQuantity)
-                        break;
+                    if (satisfiedQuantity >= neededQuantity) break;
                 }
 
                 if (satisfiedQuantity < neededQuantity)
-                {
-                    incompatibleConnectors.Add($"{pinCount}-pin (потрібно {neededQuantity}, доступно {satisfiedQuantity})");
-                }
+                    incompatibleConnectors.Add($"{pinCount}-pin (needed {neededQuantity}, available {satisfiedQuantity})");
             }
 
             if (incompatibleConnectors.Any())
             {
-                result.Messages.Add(new CompatibilityMessage
+                result.FitnessScore = 0.0;
+                result.Issues.Add(new CompatibilityIssue
                 {
-                    Type = CompatibilityMessageType.Problem,
-                    Message = $"Блок живлення не має достатньо конекторів для відеокарти: {string.Join(", ", incompatibleConnectors)}"
+                    Severity = CompatibilitySeverity.Critical,
+                    Code = IssueCodes.PsuGpuConnectorMissing,
+                    Parameters = new()
+                    {
+                        ["GpuName"] = gpu.Name ?? "",
+                        ["PsuName"] = powerSupply.Name ?? "",
+                        ["MissingConnectors"] = string.Join(", ", incompatibleConnectors)
+                    }
                 });
             }
 
             return result;
         }
-
     }
 }

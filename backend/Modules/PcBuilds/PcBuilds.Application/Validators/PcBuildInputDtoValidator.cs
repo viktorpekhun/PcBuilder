@@ -1,25 +1,20 @@
 using FluentValidation;
-using PcBuilder.SharedKernel.Services;
 using PcBuilds.Application.Dtos;
 
 namespace PcBuilds.Application.Validators
 {
     public class PcBuildInputDtoValidator : AbstractValidator<PcBuildInputDto>
     {
-        public PcBuildInputDtoValidator(IProfanityFilterService profanityFilter)
+        public PcBuildInputDtoValidator()
         {
             RuleFor(x => x.Name)
                 .NotEmpty().WithMessage("Name is required.")
                 .MaximumLength(255).WithMessage("Name can't have more than 255 characters.")
                 .Matches(@"^[a-zA-Zа-яА-ЯіІїЇєЄґҐёЁ0-9 _-]*$")
-                .WithMessage("Name can contain letters, numbers, spaces, underscores (_) and hyphens (-)")
-                .Must(name => !profanityFilter.ContainsProfanity(name))
-                .WithMessage("Build name contains inappropriate language.");
+                .WithMessage("Name can contain letters, numbers, spaces, underscores (_) and hyphens (-)");
 
             RuleFor(x => x.Description)
-                .MaximumLength(500).WithMessage("Description can't have more than 500 characters.")
-                .Must(desc => desc == null || !profanityFilter.ContainsProfanity(desc))
-                .WithMessage("Description contains inappropriate language.");
+                .MaximumLength(500).WithMessage("Description can't have more than 500 characters.");
 
             RuleForEach(x => x.Rams).SetValidator(new ComponentQuantityDtoValidator());
             RuleForEach(x => x.Ssds).SetValidator(new ComponentQuantityDtoValidator());

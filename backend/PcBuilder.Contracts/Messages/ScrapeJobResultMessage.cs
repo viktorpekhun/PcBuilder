@@ -5,6 +5,7 @@ namespace PcBuilder.Contracts.Messages
         string ComponentType,
         bool Success,
         string? ErrorMessage,
-        DateTime CompletedAt
+        DateTime CompletedAt,
+        int ItemsScraped
     );
 }

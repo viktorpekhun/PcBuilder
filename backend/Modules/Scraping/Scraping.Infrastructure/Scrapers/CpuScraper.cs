@@ -25,7 +25,7 @@ namespace Scraping.Infrastructure.Scrapers
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
 
-            var cpu = new Cpu();
+            var cpu = new Cpu { HotlineUrl = url };
             var stores = new List<Store>();
             var offers = new List<ProductOffer>();
 
@@ -216,8 +216,7 @@ namespace Scraping.Infrastructure.Scrapers
                         Console.WriteLine($"Error scraping offer: {ex.Message}");
                     }
                 }
-                var avgPrice = offers.Any() ? offers.Average(p => p.Price) : 0;
-                cpu.AveragePrice = (decimal)avgPrice;
+                cpu.AveragePrice = offers.Any() ? Math.Round(offers.Average(p => p.Price), 0) : 0;
                 cpu.OffersCount = offers.Count;
             }
 

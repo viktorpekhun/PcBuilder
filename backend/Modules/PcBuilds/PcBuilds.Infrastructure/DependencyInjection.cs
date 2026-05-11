@@ -1,7 +1,12 @@
+using Components.Application.PreFilter;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using PcBuilds.Application.AutoBuilder;
 using PcBuilds.Application.Compatibility;
+using PcBuilds.Application.Compatibility.PreFilter;
 using PcBuilds.Application.Compatibility.Rules;
+using PcBuilds.Infrastructure.AutoBuilder;
+using PcBuilds.Infrastructure.Compatibility.PreFilter;
 
 namespace PcBuilds.Infrastructure
 {
@@ -30,6 +35,19 @@ namespace PcBuilds.Infrastructure
             services.AddScoped<ICompatibilityRule, PowerSupplyGpuConnectorRule>();
             services.AddScoped<ICompatibilityRule, PowerSupplyCpuConnectorRule>();
             services.AddScoped<ICompatibilityRule, RequiredPowerSupplyRule>();
+            services.AddScoped<ICompatibilityRule, CpuGpuBottleneckRule>();
+
+            services.AddScoped<ComponentCompatibilityFilter>();
+            services.AddScoped<IComponentCompatibilityFilter>(sp => sp.GetRequiredService<ComponentCompatibilityFilter>());
+            services.AddScoped<IComponentQueryPreFilter>(sp => sp.GetRequiredService<ComponentCompatibilityFilter>());
+
+            services.AddSingleton<IScenarioPolicyProvider, ScenarioPolicyProvider>();
+            services.AddScoped<ICandidatePruner, EfCoreCandidatePruner>();
+            services.AddScoped<ICoolerSelector, CoolerSelector>();
+            services.AddScoped<BudgetReserveCalculator>();
+            services.AddScoped<IBuildAssembler, BuildAssembler>();
+            services.AddScoped<IPcBuildGalleryMapper, PcBuildGalleryMapper>();
+            services.AddScoped<IAutoBuilderService, GreedyAutoBuilderService>();
 
             return services;
         }

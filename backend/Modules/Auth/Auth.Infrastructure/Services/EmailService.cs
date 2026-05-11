@@ -88,5 +88,37 @@ namespace Auth.Infrastructure.Services
             await client.SendAsync(message, cancellationToken);
             await client.DisconnectAsync(true, cancellationToken);
         }
+
+        public async Task SendAccountDeletionEmailAsync(string toEmail, CancellationToken cancellationToken = default)
+        {
+            var message = new MimeMessage();
+            message.From.Add(MailboxAddress.Parse(_configuration["Email:FromAddress"]));
+            message.To.Add(MailboxAddress.Parse(toEmail));
+            message.Subject = "Your PcBuilder account has been deleted";
+            message.Body = new TextPart("html")
+            {
+                Text = $"""
+                    <h2>Account Deleted</h2>
+                    <p>Your PcBuilder account has been deleted by an administrator.</p>
+                    <p>All your builds, reviews, and personal data have been removed.</p>
+                    <p>If you believe this was done in error, please contact our support team.</p>
+                    """
+            };
+
+            using var client = new SmtpClient();
+            await client.ConnectAsync(
+                _configuration["Email:Smtp:Host"],
+                _configuration.GetValue<int>("Email:Smtp:Port"),
+                SecureSocketOptions.StartTls,
+                cancellationToken);
+
+            await client.AuthenticateAsync(
+                _configuration["Email:Smtp:Username"],
+                _configuration["Email:Smtp:Password"],
+                cancellationToken);
+
+            await client.SendAsync(message, cancellationToken);
+            await client.DisconnectAsync(true, cancellationToken);
+        }
     }
 }

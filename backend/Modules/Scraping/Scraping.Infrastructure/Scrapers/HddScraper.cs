@@ -23,7 +23,7 @@ namespace Scraping.Infrastructure.Scrapers
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
 
-            var hdd = new Hdd();
+            var hdd = new Hdd { HotlineUrl = url };
             var stores = new List<Store>();
             var offers = new List<ProductOffer>();
 
@@ -238,8 +238,7 @@ namespace Scraping.Infrastructure.Scrapers
                         Console.WriteLine($"Error scraping offer: {ex.Message}");
                     }
                 }
-                var avgPrice = offers.Any() ? offers.Average(p => p.Price) : 0;
-                hdd.AveragePrice = (decimal)avgPrice;
+                hdd.AveragePrice = offers.Any() ? Math.Round(offers.Average(p => p.Price), 0) : 0;
                 hdd.OffersCount = offers.Count;
             }
 

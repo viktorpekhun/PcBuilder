@@ -1,12 +1,13 @@
-﻿using Components.Domain.Entities;
-using PcBuilds.Domain.Entities;
+using Components.Domain.Entities;
 using PcBuilder.SharedKernel.Enums;
+using PcBuilds.Domain.Entities;
 
 namespace PcBuilds.Application.Compatibility.Rules
 {
     public class PowerSupplyCpuConnectorRule : ICompatibilityRule
     {
-        public string Name => "Power Supply and CPU Connector Compatibility";
+        public string Name => "PsuCpuConnector";
+
         public CompatibilityResult Check(PcBuild pcBuild)
         {
             var result = new CompatibilityResult();
@@ -22,34 +23,32 @@ namespace PcBuilds.Application.Compatibility.Rules
             if (cpuPowerConnectors == null || !cpuPowerConnectors.Any() ||
                 powerSupplyConnectors == null || !powerSupplyConnectors.Any())
             {
-                result.Messages.Add(new CompatibilityMessage
+                result.FitnessScore = 0.7;
+                result.Issues.Add(new CompatibilityIssue
                 {
-                    Type = CompatibilityMessageType.Warning,
-                    Message = "Неможливо перевірити сумісність роз'єму живлення CPU на Материнській платі та Блоку живлення — недостатньо даних."
+                    Severity = CompatibilitySeverity.Warning,
+                    Code = IssueCodes.PsuCpuConnectorMissing,
+                    Parameters = new() { ["MbName"] = motherboard.Name ?? "", ["PsuName"] = powerSupply.Name ?? "" }
                 });
                 return result;
             }
 
-            var psuCpuConnectors = powerSupplyConnectors
-                .Where(c => c.Type == "CPU")
-                .ToList();
+            var psuCpuConnectors = powerSupplyConnectors.Where(c => c.Type == "CPU").ToList();
 
             if (!psuCpuConnectors.Any())
             {
-                result.Messages.Add(new CompatibilityMessage
+                result.FitnessScore = 0.7;
+                result.Issues.Add(new CompatibilityIssue
                 {
-                    Type = CompatibilityMessageType.Warning,
-                    Message = "Неможливо перевірити сумісність роз'єму живлення CPU на Материнській платі та Блоку живлення — недостатньо даних."
+                    Severity = CompatibilitySeverity.Warning,
+                    Code = IssueCodes.PsuCpuConnectorMissing,
+                    Parameters = new() { ["MbName"] = motherboard.Name ?? "", ["PsuName"] = powerSupply.Name ?? "" }
                 });
                 return result;
             }
 
             var availableConnectors = psuCpuConnectors
-                .Select(c => new {
-                    Pins = c.Pins,
-                    AdditionalPins = c.AdditionalPins,
-                    RemainingQuantity = c.Quantity
-                })
+                .Select(c => new { Pins = c.Pins, AdditionalPins = c.AdditionalPins, RemainingQuantity = c.Quantity })
                 .ToList();
 
             var requiredConnectors = cpuPowerConnectors
@@ -72,63 +71,47 @@ namespace PcBuilds.Application.Compatibility.Rules
                     {
                         int used = Math.Min(connector.RemainingQuantity, neededQuantity - satisfiedQuantity);
                         satisfiedQuantity += used;
-                        availableConnectors[i] = new
-                        {
-                            connector.Pins,
-                            connector.AdditionalPins,
-                            RemainingQuantity = connector.RemainingQuantity - used
-                        };
+                        availableConnectors[i] = new { connector.Pins, connector.AdditionalPins, RemainingQuantity = connector.RemainingQuantity - used };
                     }
                     else if (connector.Pins + (connector.AdditionalPins ?? 0) == pinCount)
                     {
                         int used = Math.Min(connector.RemainingQuantity, neededQuantity - satisfiedQuantity);
                         satisfiedQuantity += used;
-                        availableConnectors[i] = new
-                        {
-                            connector.Pins,
-                            connector.AdditionalPins,
-                            RemainingQuantity = connector.RemainingQuantity - used
-                        };
+                        availableConnectors[i] = new { connector.Pins, connector.AdditionalPins, RemainingQuantity = connector.RemainingQuantity - used };
                     }
                     else if (connector.Pins == pinCount * 2 && (connector.AdditionalPins ?? 0) == 0)
                     {
                         int used = Math.Min(connector.RemainingQuantity * 2, neededQuantity - satisfiedQuantity);
                         satisfiedQuantity += used;
-                        availableConnectors[i] = new
-                        {
-                            connector.Pins,
-                            connector.AdditionalPins,
-                            RemainingQuantity = connector.RemainingQuantity - (used / 2 + used % 2) 
-                        };
+                        availableConnectors[i] = new { connector.Pins, connector.AdditionalPins, RemainingQuantity = connector.RemainingQuantity - (used / 2 + used % 2) };
                     }
                     else if (connector.Pins == pinCount && connector.AdditionalPins != null && connector.AdditionalPins > 0)
                     {
                         int used = Math.Min(connector.RemainingQuantity * 2, neededQuantity - satisfiedQuantity);
                         satisfiedQuantity += used;
-                        availableConnectors[i] = new
-                        {
-                            connector.Pins,
-                            connector.AdditionalPins,
-                            RemainingQuantity = connector.RemainingQuantity - (used / 2 + used % 2)
-                        };
+                        availableConnectors[i] = new { connector.Pins, connector.AdditionalPins, RemainingQuantity = connector.RemainingQuantity - (used / 2 + used % 2) };
                     }
 
-                    if (satisfiedQuantity >= neededQuantity)
-                        break;
+                    if (satisfiedQuantity >= neededQuantity) break;
                 }
 
                 if (satisfiedQuantity < neededQuantity)
-                {
-                    incompatibleConnectors.Add($"{pinCount}-pin (потрібно {neededQuantity}, доступно {satisfiedQuantity})");
-                }
+                    incompatibleConnectors.Add($"{pinCount}-pin (needed {neededQuantity}, available {satisfiedQuantity})");
             }
 
             if (incompatibleConnectors.Any())
             {
-                result.Messages.Add(new CompatibilityMessage
+                result.FitnessScore = 0.0;
+                result.Issues.Add(new CompatibilityIssue
                 {
-                    Type = CompatibilityMessageType.Problem,
-                    Message = $"Блок живлення не має достатньо CPU-конекторів для материнської плати: {string.Join(", ", incompatibleConnectors)}"
+                    Severity = CompatibilitySeverity.Critical,
+                    Code = IssueCodes.PsuCpuConnectorMissing,
+                    Parameters = new()
+                    {
+                        ["MbName"] = motherboard.Name ?? "",
+                        ["PsuName"] = powerSupply.Name ?? "",
+                        ["MissingConnectors"] = string.Join(", ", incompatibleConnectors)
+                    }
                 });
             }
 

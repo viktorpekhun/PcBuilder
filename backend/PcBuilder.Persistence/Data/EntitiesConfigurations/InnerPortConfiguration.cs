@@ -8,6 +8,8 @@ public class InnerPortConfiguration : IEntityTypeConfiguration<InnerPort>
 {
     public void Configure(EntityTypeBuilder<InnerPort> builder)
     {
+        builder.ToTable("MotherboardInnerPorts");
+
         builder.Property(i => i.Type)
             .IsRequired()
             .HasMaxLength(50);

@@ -25,7 +25,7 @@ namespace Scraping.Infrastructure.Scrapers
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
 
-            var pcCase = new PcCase();
+            var pcCase = new PcCase { HotlineUrl = url };
             var stores = new List<Store>();
             var offers = new List<ProductOffer>();
 
@@ -218,6 +218,11 @@ namespace Scraping.Infrastructure.Scrapers
                                         {
                                             newFormFactorName = formFactorName;
                                         }
+                                        newFormFactorName = GetMainFormFactor(newFormFactorName);
+                                        if (newFormFactorName is null)
+                                        {
+                                            return new ScrapingResult<PcCase>(null, new List<Store>(), new List<ProductOffer>());
+                                        }
                                         pcCase.PcCaseFormFactors.Add(new PcCaseFormFactor
                                         {
                                             Name = newFormFactorName
@@ -278,10 +283,10 @@ namespace Scraping.Infrastructure.Scrapers
                                         {
                                             if (string.IsNullOrEmpty(value))
                                             {
-                                                pcCase.BuiltInFans = new LocalizedString { Uk = null };
+                                                pcCase.AdditionalFanPlaces = new LocalizedString { Uk = null };
                                                 continue;
                                             }
-                                            pcCase.BuiltInFans = new LocalizedString { Uk = char.ToUpper(value[0]) + value.Substring(1) };
+                                            pcCase.AdditionalFanPlaces = new LocalizedString { Uk = char.ToUpper(value[0]) + value.Substring(1) };
                                             continue;
                                         }
 
@@ -319,10 +324,10 @@ namespace Scraping.Infrastructure.Scrapers
                                                     {
                                                         if (string.IsNullOrEmpty(value))
                                                         {
-                                                            pcCase.BuiltInFans = new LocalizedString { Uk = null };
+                                                            pcCase.AdditionalFanPlaces = new LocalizedString { Uk = null };
                                                             continue;
                                                         }
-                                                        pcCase.BuiltInFans = new LocalizedString { Uk = char.ToUpper(value[0]) + value.Substring(1) };
+                                                        pcCase.AdditionalFanPlaces = new LocalizedString { Uk = char.ToUpper(value[0]) + value.Substring(1) };
                                                     }
                                                 }
                                             }
@@ -437,8 +442,7 @@ namespace Scraping.Infrastructure.Scrapers
                         Console.WriteLine($"Error scraping offer: {ex.Message}");
                     }
                 }
-                var avgPrice = offers.Any() ? offers.Average(p => p.Price) : 0;
-                pcCase.AveragePrice = (decimal)avgPrice;
+                pcCase.AveragePrice = offers.Any() ? Math.Round(offers.Average(p => p.Price), 0) : 0;
                 pcCase.OffersCount = offers.Count;
             }
 
@@ -453,6 +457,27 @@ namespace Scraping.Infrastructure.Scrapers
             if (value == null) return null;
             value = value.Replace(',', '.');
             return double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var result) ? result : null;
+        }
+        private string? GetMainFormFactor(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return null;
+
+            string n = input.ToUpperInvariant().Replace(" ", "").Replace("-", "").Replace(".", "");
+
+            if (n.Contains("MICROATX") || n.Contains("MATX"))
+                return "Micro-ATX";
+
+            if (n.Contains("MINIITX"))
+                return "Mini-ITX";
+
+            if (n.Contains("EATX"))
+                return "E-ATX";
+
+            if (n.Contains("ATX"))
+                return "ATX";
+
+            return null;
         }
     }
 }

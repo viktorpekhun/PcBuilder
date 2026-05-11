@@ -15,8 +15,8 @@ namespace PcBuilder.Tests.Compatibility
             var build = new PcBuild { Cpu = null, Motherboard = null };
             var result = _rule.Check(build);
 
-            Assert.True(result.IsCompatible);
-            Assert.Empty(result.Messages);
+            Assert.True(result.IsStrictlyCompatible);
+            Assert.Empty(result.Issues);
         }
 
         [Fact]
@@ -29,8 +29,8 @@ namespace PcBuilder.Tests.Compatibility
             };
             var result = _rule.Check(build);
 
-            Assert.True(result.IsCompatible);
-            Assert.Empty(result.Messages);
+            Assert.True(result.IsStrictlyCompatible);
+            Assert.Empty(result.Issues);
         }
 
         [Fact]
@@ -43,8 +43,8 @@ namespace PcBuilder.Tests.Compatibility
             };
             var result = _rule.Check(build);
 
-            Assert.True(result.IsCompatible);
-            Assert.Empty(result.Messages);
+            Assert.True(result.IsStrictlyCompatible);
+            Assert.Empty(result.Issues);
         }
 
         [Fact]
@@ -57,9 +57,9 @@ namespace PcBuilder.Tests.Compatibility
             };
             var result = _rule.Check(build);
 
-            Assert.False(result.IsCompatible);
-            Assert.Single(result.Messages);
-            Assert.Equal(CompatibilityMessageType.Problem, result.Messages[0].Type);
+            Assert.False(result.IsStrictlyCompatible);
+            Assert.Single(result.Issues);
+            Assert.Equal(CompatibilitySeverity.Critical, result.Issues[0].Severity);
         }
 
         [Fact]
@@ -72,9 +72,9 @@ namespace PcBuilder.Tests.Compatibility
             };
             var result = _rule.Check(build);
 
-            Assert.True(result.IsCompatible);
-            Assert.Single(result.Messages);
-            Assert.Equal(CompatibilityMessageType.Warning, result.Messages[0].Type);
+            Assert.True(result.IsStrictlyCompatible);
+            Assert.Single(result.Issues);
+            Assert.Equal(CompatibilitySeverity.Warning, result.Issues[0].Severity);
         }
     }
 }

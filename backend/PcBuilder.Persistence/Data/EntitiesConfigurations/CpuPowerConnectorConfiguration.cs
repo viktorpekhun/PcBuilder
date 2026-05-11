@@ -8,6 +8,8 @@ public class CpuPowerConnectorConfiguration : IEntityTypeConfiguration<CpuPowerC
 {
     public void Configure(EntityTypeBuilder<CpuPowerConnector> builder)
     {
+        builder.ToTable("MotherboardCpuPowerConnectors");
+
         builder.HasOne(c => c.Motherboard)
             .WithMany(m => m.CpuPowerConnectors)
             .HasForeignKey(c => c.MotherboardId)

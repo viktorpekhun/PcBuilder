@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Components.Domain.Entities
 {
-    public class Cpu
+    public class Cpu : IHasAveragePrice
     {
         public Guid Id { get; set; }
 
@@ -36,6 +36,13 @@ namespace Components.Domain.Entities
 
         public int? Tdp { get; set; }
 
+        /// <summary>
+        /// PassMark CPU score. <b>0 indicates missing data</b> — consumers MUST treat
+        /// this as "unknown" and skip bottleneck/scoring logic for that component to
+        /// avoid DivideByZero and false-negative warnings.
+        /// </summary>
+        public int PassMarkScore { get; set; }
+
         public bool IntegratedGraphics { get; set; }
 
         public void SetIntegratedGraphics(bool? hasIntegratedGraphics)
@@ -47,6 +54,9 @@ namespace Components.Domain.Entities
 
         [Url]
         public string? FactoryLink { get; set; }
+
+        [Url]
+        public string? HotlineUrl { get; set; }
 
         public decimal? AveragePrice { get; set; }
 

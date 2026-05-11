@@ -26,7 +26,7 @@ namespace Scraping.Infrastructure.Scrapers
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
 
-            var powerSupply = new PowerSupply();
+            var powerSupply = new PowerSupply { HotlineUrl = url };
             var stores = new List<Store>();
             var offers = new List<ProductOffer>();
 
@@ -124,7 +124,8 @@ namespace Scraping.Infrastructure.Scrapers
                                 }
                                 break;
                             case "Сертифікат 80 PLUS":
-                                powerSupply.EfficiencyStandart = value ?? string.Empty;
+                                
+                                powerSupply.EfficiencyStandart = ToUnifiedEfficiencyStandart(value);
                                 break;
                             case "ККД (%)":
                                 powerSupply.EfficiencyPercent = ParseDouble(value);
@@ -347,8 +348,7 @@ namespace Scraping.Infrastructure.Scrapers
                         Console.WriteLine($"Error scraping offer: {ex.Message}");
                     }
                 }
-                var avgPrice = offers.Any() ? offers.Average(p => p.Price) : 0;
-                powerSupply.AveragePrice = (decimal)avgPrice;
+                powerSupply.AveragePrice = offers.Any() ? Math.Round(offers.Average(p => p.Price), 0) : 0;
                 powerSupply.OffersCount = offers.Count;
             }
 
@@ -362,6 +362,22 @@ namespace Scraping.Infrastructure.Scrapers
             if (value == null) return null;
             value = value.Replace(',', '.');
             return double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var result) ? result : null;
+        }
+        private string? ToUnifiedEfficiencyStandart(string? input)
+        {
+            if (string.IsNullOrWhiteSpace(input) || input.Trim() == "є")
+                return null;
+
+            var cleaned = input.Trim().Replace("Plus", "PLUS", StringComparison.OrdinalIgnoreCase);
+
+            var parts = cleaned.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            if (parts.Length >= 3)
+            {
+                parts[2] = char.ToUpper(parts[2][0]) + parts[2].Substring(1).ToLower();
+            }
+
+            return string.Join(" ", parts);
         }
     }
 }

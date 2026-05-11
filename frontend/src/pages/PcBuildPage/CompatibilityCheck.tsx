@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { buildService } from "../../api/build.service";
-import type { ICompatibilityResponse, IComponentsCompatibility } from "../../types/build.types";
+import type { IBuildCompatibilityReport, ICompatibilityIssue, IComponentsCompatibility } from "../../types/build.types";
 import type { ComponentDataState, SingleKey, MultiKey } from "./types";
+import { formatIssue } from "../../utils/compatibilityMessages";
 
 import styles from "./CompatibilityCheck.module.css";
 
@@ -62,7 +63,7 @@ interface CompatibilityCheckProps {
 }
 
 function CompatibilityCheck({ selectedComponentIds, componentData }: CompatibilityCheckProps) {
-    const [compatibilityResults, setCompatibilityResults] = useState<ICompatibilityResponse | null>(null);
+    const [compatibilityResults, setCompatibilityResults] = useState<IBuildCompatibilityReport | null>(null);
     const [loading, setLoading] = useState(false);
     const [, setError] = useState<string | null>(null);
     const [totalWattage, setTotalWattage] = useState(0);
@@ -122,25 +123,29 @@ function CompatibilityCheck({ selectedComponentIds, componentData }: Compatibili
         checkCompatibility();
     }, [selectedComponentIds, hasComponents]);
 
-    // Count warnings & problems
-    const allMessages = compatibilityResults?.results?.flatMap(r => r.messages ?? []) ?? [];
-    const warningCount = allMessages.filter(m => m.type === 'Warning').length;
-    const problemCount = allMessages.filter(m => m.type === 'Problem').length;
+    // Count issues by severity
+    const allIssues: ICompatibilityIssue[] =
+        compatibilityResults?.ruleResults?.flatMap(r => r.issues ?? []) ?? [];
+    const criticalCount = allIssues.filter(i => i.severity === 'Critical').length;
+    const warningCount  = allIssues.filter(i => i.severity === 'Warning').length;
 
     // Determine overall status
+    const isStrict = compatibilityResults?.isStrictlyCompatible ?? false;
+    const hasWarnings = warningCount > 0;
+
     const statusClass = !hasComponents
         ? styles['status-warning']
-        : !compatibilityResults?.compatible
+        : !isStrict
             ? styles['status-error']
-            : compatibilityResults?.hasWarnings
+            : hasWarnings
                 ? styles['status-warning']
                 : styles['status-success'];
 
     const statusContent = !hasComponents
         ? { icon: <WarningIcon />, text: 'Компоненти не вибрано' }
-        : !compatibilityResults?.compatible
+        : !isStrict
             ? { icon: <ErrorIcon />, text: 'Виявлено несумісні комплектуючі' }
-            : compatibilityResults?.hasWarnings
+            : hasWarnings
                 ? { icon: <WarningIcon />, text: 'Виявлено потенційні проблеми' }
                 : loading
                     ? { icon: null, text: 'Перевірка сумісності...' }
@@ -170,7 +175,7 @@ function CompatibilityCheck({ selectedComponentIds, componentData }: Compatibili
                 <div className={`${styles['basic-info']} ${styles['problems-info']}`}>
                     <ErrorIcon />
                     <div className={styles['info-text']}>
-                        Кількість критичних проблем у збірці: {problemCount}
+                        Кількість критичних проблем у збірці: {criticalCount}
                     </div>
                 </div>
                 <div className={`${styles['basic-info']} ${styles['warnings-info']}`}>
@@ -186,16 +191,18 @@ function CompatibilityCheck({ selectedComponentIds, componentData }: Compatibili
                 <p>{statusContent.text}</p>
             </div>
 
-            {hasComponents && allMessages.length > 0 && (
+            {hasComponents && allIssues.length > 0 && (
                 <ul className={styles['compatibility-messages']}>
-                    {allMessages.map((message, i) => (
+                    {allIssues.map((issue, i) => (
                         <li
                             key={i}
                             className={`${styles['compatibility-message']} ${
-                                message.type === 'Problem' ? styles['message-error'] : styles['message-warning']
+                                issue.severity === 'Critical' ? styles['message-error'] :
+                                issue.severity === 'Warning'  ? styles['message-warning'] :
+                                                                styles['message-info']
                             }`}
                         >
-                            {message.message}
+                            {formatIssue(issue)}
                         </li>
                     ))}
                 </ul>

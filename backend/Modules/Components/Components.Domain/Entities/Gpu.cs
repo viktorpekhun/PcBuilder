@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Components.Domain.Entities
 {
-    public class Gpu
+    public class Gpu : IHasAveragePrice
     {
         public Guid Id { get; set; }
 
@@ -43,8 +43,19 @@ namespace Components.Domain.Entities
 
         public int? PsuReccomended { get; set; }
 
+        /// <summary>
+        /// PassMark GPU score. <b>0 indicates missing data</b> — consumers MUST treat
+        /// this as "unknown" and skip bottleneck/scoring logic for that component to
+        /// avoid DivideByZero and false-negative warnings.
+        /// </summary>
+        public int PassMarkScore { get; set; }
+
         [Url]
         public string? FactoryLink { get; set; }
+
+        [Url]
+        public string? HotlineUrl { get; set; }
+
         public decimal? AveragePrice { get; set; }
         public int? OffersCount { get; set; }
 

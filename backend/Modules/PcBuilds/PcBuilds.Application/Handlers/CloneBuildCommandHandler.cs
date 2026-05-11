@@ -1,13 +1,13 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using PcBuilder.SharedKernel.Exceptions;
+using PcBuilder.SharedKernel;
 using PcBuilder.SharedKernel.Persistence;
 using PcBuilds.Application.Commands;
 using PcBuilds.Domain.Entities;
 
 namespace PcBuilds.Application.Handlers
 {
-    public class CloneBuildCommandHandler : IRequestHandler<CloneBuildCommand, Guid>
+    public class CloneBuildCommandHandler : IRequestHandler<CloneBuildCommand, Result<Guid>>
     {
         private readonly IApplicationDbContext _context;
 
@@ -16,7 +16,7 @@ namespace PcBuilds.Application.Handlers
             _context = context;
         }
 
-        public async Task<Guid> Handle(CloneBuildCommand request, CancellationToken cancellationToken)
+        public async Task<Result<Guid>> Handle(CloneBuildCommand request, CancellationToken cancellationToken)
         {
             var source = await _context.Set<PcBuild>()
                 .Include(b => b.PcBuild_Rams)
@@ -26,10 +26,10 @@ namespace PcBuilds.Application.Handlers
                 .FirstOrDefaultAsync(b => b.Id == request.SourceBuildId, cancellationToken);
 
             if (source == null)
-                throw new NotFoundException("Build not found.");
+                return Result.Failure<Guid>(new Error("NotFound", "Build not found.", 404));
 
             if (!source.IsPublished && source.UserId != request.UserId)
-                throw new ForbiddenException("You do not have access to clone this build.");
+                return Result.Failure<Guid>(new Error("Forbidden", "You do not have access to clone this build.", 403));
 
             var clonedName = source.Name.Length > 245
                 ? "Копія " + source.Name[..245]
@@ -61,49 +61,21 @@ namespace PcBuilds.Application.Handlers
             };
 
             foreach (var ram in source.PcBuild_Rams)
-            {
-                clone.PcBuild_Rams.Add(new PcBuild_Ram
-                {
-                    RamId = ram.RamId,
-                    Quantity = ram.Quantity,
-                    ProductOfferId = ram.ProductOfferId,
-                });
-            }
+                clone.PcBuild_Rams.Add(new PcBuild_Ram { RamId = ram.RamId, Quantity = ram.Quantity, ProductOfferId = ram.ProductOfferId });
 
             foreach (var ssd in source.PcBuild_Ssds)
-            {
-                clone.PcBuild_Ssds.Add(new PcBuild_Ssd
-                {
-                    SsdId = ssd.SsdId,
-                    Quantity = ssd.Quantity,
-                    ProductOfferId = ssd.ProductOfferId,
-                });
-            }
+                clone.PcBuild_Ssds.Add(new PcBuild_Ssd { SsdId = ssd.SsdId, Quantity = ssd.Quantity, ProductOfferId = ssd.ProductOfferId });
 
             foreach (var hdd in source.PcBuild_Hdds)
-            {
-                clone.PcBuild_Hdds.Add(new PcBuild_Hdd
-                {
-                    HddId = hdd.HddId,
-                    Quantity = hdd.Quantity,
-                    ProductOfferId = hdd.ProductOfferId,
-                });
-            }
+                clone.PcBuild_Hdds.Add(new PcBuild_Hdd { HddId = hdd.HddId, Quantity = hdd.Quantity, ProductOfferId = hdd.ProductOfferId });
 
             foreach (var fan in source.PcBuild_Fans)
-            {
-                clone.PcBuild_Fans.Add(new PcBuild_Fan
-                {
-                    FanId = fan.FanId,
-                    Quantity = fan.Quantity,
-                    ProductOfferId = fan.ProductOfferId,
-                });
-            }
+                clone.PcBuild_Fans.Add(new PcBuild_Fan { FanId = fan.FanId, Quantity = fan.Quantity, ProductOfferId = fan.ProductOfferId });
 
             await _context.Set<PcBuild>().AddAsync(clone, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
 
-            return clone.Id;
+            return Result.Success(clone.Id);
         }
     }
 }

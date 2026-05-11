@@ -1,38 +1,51 @@
-﻿using Components.Domain.Entities;
-using PcBuilds.Domain.Entities;
+using Components.Domain.Entities;
 using PcBuilder.SharedKernel.Enums;
+using PcBuilds.Domain.Entities;
 
 namespace PcBuilds.Application.Compatibility.Rules
 {
     public class PcCaseGpuLengthRule : ICompatibilityRule
     {
-        public string Name => "GPU and PC Case Length Compatibility Rule";
+        public string Name => "GpuCaseLength";
+
         public CompatibilityResult Check(PcBuild pcBuild)
         {
             var result = new CompatibilityResult();
             var gpu = pcBuild.Gpu;
             var pcCase = pcBuild.PcCase;
+
             if (gpu == null || pcCase == null)
-            {
                 return result;
-            }
+
             if (gpu.SizeLength == null || pcCase.MaxGpuLength == null)
             {
-                result.Messages.Add(new CompatibilityMessage
+                result.FitnessScore = 0.7;
+                result.Issues.Add(new CompatibilityIssue
                 {
-                    Type = CompatibilityMessageType.Warning,
-                    Message = $"Неможливо перевірити сумісність Відеокарти та Корпусу ПК — недостатньо даних."
+                    Severity = CompatibilitySeverity.Warning,
+                    Code = IssueCodes.GpuLengthDataMissing,
+                    Parameters = new() { ["GpuName"] = gpu.Name ?? "", ["CaseName"] = pcCase.Name ?? "" }
                 });
                 return result;
             }
+
             if (gpu.SizeLength > pcCase.MaxGpuLength)
             {
-                result.Messages.Add(new CompatibilityMessage
+                result.FitnessScore = 0.0;
+                result.Issues.Add(new CompatibilityIssue
                 {
-                    Type = CompatibilityMessageType.Problem,
-                    Message = $"Довжина Відеокарти ({gpu.SizeLength} мм) перевищує максимальну довжину відеокарти в Корпусі ({pcCase.MaxGpuLength} мм)."
+                    Severity = CompatibilitySeverity.Critical,
+                    Code = IssueCodes.GpuLengthExceedsCase,
+                    Parameters = new()
+                    {
+                        ["GpuName"] = gpu.Name ?? "",
+                        ["GpuLength"] = gpu.SizeLength.ToString()!,
+                        ["CaseName"] = pcCase.Name ?? "",
+                        ["MaxLength"] = pcCase.MaxGpuLength.ToString()!
+                    }
                 });
             }
+
             return result;
         }
     }

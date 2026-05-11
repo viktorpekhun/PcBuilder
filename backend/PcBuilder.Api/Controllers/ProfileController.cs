@@ -4,6 +4,7 @@ using Auth.Application.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Moderation.Application.Queries;
 using PcBuilds.Application.Queries;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -30,8 +31,8 @@ namespace PcBuilder.Api.Controllers
             if (result.IsFailure)
                 return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
 
-            var builds = await _mediator.Send(new GetUserBuildsQuery(userId));
-            result.Value!.BuildCount = builds.Count;
+            var buildsResult = await _mediator.Send(new GetUserBuildsQuery(userId));
+            result.Value!.BuildCount = buildsResult.IsSuccess ? buildsResult.Value!.Count : 0;
 
             return Ok(result.Value);
         }
@@ -44,8 +45,8 @@ namespace PcBuilder.Api.Controllers
             if (result.IsFailure)
                 return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
 
-            var builds = await _mediator.Send(new GetUserBuildsQuery(userId));
-            result.Value!.BuildCount = builds.Count;
+            var buildsResult = await _mediator.Send(new GetUserBuildsQuery(userId));
+            result.Value!.BuildCount = buildsResult.IsSuccess ? buildsResult.Value!.Count : 0;
 
             return Ok(result.Value);
         }
@@ -129,6 +130,17 @@ namespace PcBuilder.Api.Controllers
             });
 
             return Ok(new { Message = result.Value });
+        }
+
+        [HttpGet("bans")]
+        public async Task<IActionResult> GetBans()
+        {
+            var userId = GetUserId();
+            var result = await _mediator.Send(new GetUserBansQuery(userId));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+
+            return Ok(result.Value);
         }
 
         private Guid GetUserId()

@@ -29,5 +29,10 @@ public class GpuConfiguration : IEntityTypeConfiguration<Gpu>
 
         builder.Property(g => g.AveragePrice)
             .HasPrecision(18, 2);
+
+        builder.Property(g => g.PassMarkScore)
+            .HasDefaultValue(0);
+
+        builder.HasIndex(g => g.PassMarkScore);
     }
 }

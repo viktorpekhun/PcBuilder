@@ -24,6 +24,13 @@ namespace Components.Application.Mappers
                 .ForMember(dest => dest.Store, opt => opt.MapFrom(src => src.Store));
             CreateMap<Store, StoreDto>();
 
+            CreateMap<PriceHistoryEntry, PriceHistoryPointDto>()
+                .ForCtorParam(nameof(PriceHistoryPointDto.Date), opt => opt.MapFrom(src => src.SnapshotDate))
+                .ForCtorParam(nameof(PriceHistoryPointDto.AveragePrice), opt => opt.MapFrom(src => src.AveragePrice))
+                .ForCtorParam(nameof(PriceHistoryPointDto.OffersCount), opt => opt.MapFrom(src => src.OffersCount));
+
+            CreateMap<PriceAlertSubscription, PriceAlertDto>();
+
             // CPU
             CreateMap<Cpu, CpuDto>()
                 .ForMember(dest => dest.ProductOffers, opt => opt.Ignore());

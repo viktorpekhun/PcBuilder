@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import styles from './PcBuildPage.module.css';
+import buttonStyles from '../../components/Button/Button.module.css';
 import { componentService } from "../../api/component.service";
 import useAuth from "../../hooks/useAuth";
 import { buildService } from "../../api/build.service";
@@ -9,11 +10,12 @@ import CancelEditModal from "../../components/CanselEditModal/CanselEditModal";
 import { Button } from "../../components/Button/Button";
 import Toast from "../../components/Toast/Toast";
 import CompatibilityCheck from "./CompatibilityCheck";
-import type { IComponentsCompatibility, IPcBuildInput } from "../../types/build.types";
+import AutoBuilderPanel from "./AutoBuilderPanel";
+import type { IAutoBuildComponents, IComponentsCompatibility, IPcBuildInput } from "../../types/build.types";
 import type {
     SelectedComponents, ComponentDataState, EditingBuild,
     SaveModalState, ToastState, SingleComponentData, MultiComponentData,
-    MultiKey,
+    MultiKey, SelectedOffer, SelectedMultiOffer,
 } from "./types";
 import {
     EMPTY_SELECTED, EMPTY_DATA,
@@ -43,6 +45,12 @@ const CaretDown = () => (
     </svg>
 );
 
+const WandIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M9.5 2.672a.5.5 0 1 0 1 0V.843a.5.5 0 0 0-1 0zm4.5.035A.5.5 0 0 0 13.293 2L12 3.293a.5.5 0 1 0 .707.707zM7.293 4A.5.5 0 1 0 8 3.293L6.707 2A.5.5 0 0 0 6 2.707zm-.621 2.5a.5.5 0 1 0 0-1H4.843a.5.5 0 1 0 0 1zm8.485 0a.5.5 0 1 0 0-1h-1.829a.5.5 0 0 0 0 1zM13.293 10A.5.5 0 1 0 14 9.293L12.707 8a.5.5 0 1 0-.707.707zM9.5 11.157a.5.5 0 0 0 1 0V9.328a.5.5 0 0 0-1 0zm1.854-5.097a.5.5 0 0 0 0-.706l-.708-.708a.5.5 0 0 0-.707 0L8.646 5.94a.5.5 0 0 0 0 .707l.708.708a.5.5 0 0 0 .707 0l1.293-1.293zM3 7.5l-.364-.364a.5.5 0 0 0-.707.707l7.5 7.5a.5.5 0 0 0 .707-.707L5.175 9.68 3 7.5z"/>
+    </svg>
+);
+
 const PencilIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
          className="bi bi-pencil-square" viewBox="0 0 16 16">
@@ -61,6 +69,7 @@ function PcBuildPage() {
     const [saveModal, setSaveModal] = useState<SaveModalState>({ isOpen: false });
     const [saveLoading, setSaveLoading] = useState(false);
     const [toast, setToast] = useState<ToastState>({ visible: false, message: '', type: 'success' });
+    const [autoPanelOpen, setAutoPanelOpen] = useState(false);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -336,6 +345,33 @@ function PcBuildPage() {
         navigate('/user/builds');
     };
 
+    const handleApplyAutoBuild = (components: IAutoBuildComponents) => {
+        const makeOffer = (id: string, price: number): SelectedOffer => ({
+            componentId: id, offerId: '', price, storeName: '', storeLogoUrl: null, productOfferUrl: null,
+        });
+        const makeMultiOffer = (id: string, price: number, qty: number): SelectedMultiOffer => ({
+            componentId: id, offerId: '', price, quantity: qty, storeName: '', storeLogoUrl: null, productOfferUrl: null,
+        });
+
+        setSelectedComponents({
+            cpu: components.cpu ? makeOffer(components.cpu.id, components.cpu.averagePrice ?? 0) : null,
+            gpu: components.gpu ? makeOffer(components.gpu.id, components.gpu.averagePrice ?? 0) : null,
+            motherboard: components.motherboard ? makeOffer(components.motherboard.id, components.motherboard.averagePrice ?? 0) : null,
+            powerSupply: components.powerSupply ? makeOffer(components.powerSupply.id, components.powerSupply.averagePrice ?? 0) : null,
+            cpuCooler: components.cpuCooler ? makeOffer(components.cpuCooler.id, components.cpuCooler.averagePrice ?? 0) : null,
+            pcCase: components.pcCase ? makeOffer(components.pcCase.id, components.pcCase.averagePrice ?? 0) : null,
+            rams: components.ram && components.ramQuantity > 0
+                ? [makeMultiOffer(components.ram.id, components.ram.averagePrice ?? 0, components.ramQuantity)] : [],
+            ssds: components.ssd && components.ssdQuantity > 0
+                ? [makeMultiOffer(components.ssd.id, components.ssd.averagePrice ?? 0, components.ssdQuantity)] : [],
+            hdds: components.hdd && components.hddQuantity > 0
+                ? [makeMultiOffer(components.hdd.id, components.hdd.averagePrice ?? 0, components.hddQuantity)] : [],
+            fans: components.fan && components.fanQuantity > 0
+                ? [makeMultiOffer(components.fan.id, components.fan.averagePrice ?? 0, components.fanQuantity)] : [],
+        });
+        setAutoPanelOpen(false);
+    };
+
     // --- Render helpers ---
 
     const renderMultiRow = (key: MultiKey, buttonLabel: string, urlType: string) => {
@@ -347,12 +383,12 @@ function PcBuildPage() {
                     <div className={styles['multi-components']}>
                         {items.map((item, i) => (
                             <div key={i} className={styles['multi-component-item']}>
-                                <div className={styles['selected-component']}>
+                                <Link to={`/components/${urlType}/${item.componentId}`} className={styles['selected-component']}>
                                     {item.component.photoUrl && (
                                         <img src={item.component.photoUrl} alt={item.component.name} width="50" />
                                     )}
                                     <div className={styles['component-name']}>{item.component.name}</div>
-                                </div>
+                                </Link>
                                 <div className={styles['quantity-control']}>
                                     <button className={styles['quantity-btn']}
                                             onClick={() => adjustQuantity(key, item.componentId, 1)}>
@@ -366,9 +402,12 @@ function PcBuildPage() {
                                 </div>
                             </div>
                         ))}
-                        <Button variant="outline-primary" size="sm">
-                            <Link to={`/components/${urlType}`}>Додати {buttonLabel}</Link>
-                        </Button>
+                        <Link
+                            to={`/components/${urlType}`}
+                            className={`${buttonStyles.button} ${buttonStyles['outline-primary']} ${buttonStyles.sm}`}
+                        >
+                            Додати {buttonLabel}
+                        </Link>
                     </div>
                 </td>
                 <td className={styles['multi-components-info-container']}>
@@ -415,6 +454,14 @@ function PcBuildPage() {
 
     return (
         <section className={styles['build-components-page']}>
+            <AutoBuilderPanel
+                isOpen={autoPanelOpen}
+                hasExistingComponents={Object.values(selectedComponents).some(
+                    v => v !== null && (Array.isArray(v) ? v.length > 0 : true)
+                )}
+                onClose={() => setAutoPanelOpen(false)}
+                onApply={handleApplyAutoBuild}
+            />
             {toast.visible && (
                 <Toast
                     message={toast.message}
@@ -453,6 +500,17 @@ function PcBuildPage() {
 
             <div className={styles['build-components-container']}>
                 <div className={styles['build-components-section']}>
+                    {!Object.values(selectedComponents).some(v => v !== null && (Array.isArray(v) ? v.length > 0 : true)) && (
+                        <div className={styles['autobuilder-empty-cta']}>
+                            <div className={styles['autobuilder-empty-text']}>
+                                <strong>Починіть збирати свій ПК</strong>
+                                <span>Додайте компоненти вручну або дозвольте автопідбору зібрати оптимальну збірку за вашим бюджетом</span>
+                            </div>
+                            <Button variant="primary" size="md" onClick={() => setAutoPanelOpen(true)}>
+                                Автопідбір ПК
+                            </Button>
+                        </div>
+                    )}
                     <table className={styles['build-components-table']}>
                         <thead>
                         <tr>
@@ -474,16 +532,19 @@ function PcBuildPage() {
                                         {loading && selectedComponents[key] ? (
                                             <div className={styles['loading-component']}>Завантаження компонента...</div>
                                         ) : data ? (
-                                            <div className={styles['selected-component']}>
+                                            <Link to={`/components/${urlType}/${data.id}`} className={styles['selected-component']}>
                                                 {data.photoUrl && (
                                                     <img src={data.photoUrl} alt={data.name} width="50" />
                                                 )}
                                                 <div className={styles['component-name']}>{data.name}</div>
-                                            </div>
+                                            </Link>
                                         ) : (
-                                            <Button variant="outline-primary" size="sm">
-                                                <Link to={`/components/${urlType}`}>Додати {buttonLabel}</Link>
-                                            </Button>
+                                            <Link
+                                                to={`/components/${urlType}`}
+                                                className={`${buttonStyles.button} ${buttonStyles['outline-primary']} ${buttonStyles.sm}`}
+                                            >
+                                                Додати {buttonLabel}
+                                            </Link>
                                         )}
                                     </td>
                                     <td>
@@ -543,6 +604,13 @@ function PcBuildPage() {
                     componentData={componentData}
                 />
             </div>
+
+            {Object.values(selectedComponents).some(v => v !== null && (Array.isArray(v) ? v.length > 0 : true)) && (
+                <button className={styles['autobuilder-fab']} onClick={() => setAutoPanelOpen(true)}>
+                    <WandIcon />
+                    <span>Автопідбір</span>
+                </button>
+            )}
         </section>
     );
 }

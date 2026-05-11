@@ -1,3 +1,4 @@
+using Notifications.Infrastructure;
 using PcBuilder.Persistence;
 using PcBuilder.ScraperWorker;
 using PcBuilder.SharedKernel.Caching;
@@ -12,6 +13,8 @@ builder.Services.AddSerilog((_, config) =>
 
 builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddScrapingModule(builder.Configuration);
+builder.Services.AddNotificationsModule();
+builder.Services.AddTransient<MediatR.INotificationHandler<Notifications.Application.Events.NotificationCreatedEvent>, PcBuilder.ScraperWorker.RabbitMqNotificationPublisher>();
 
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<CacheService>();

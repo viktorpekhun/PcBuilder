@@ -1,102 +1,138 @@
-﻿
 using Components.Domain.Entities;
-using PcBuilds.Domain.Entities;
 using PcBuilder.SharedKernel.Enums;
+using PcBuilds.Domain.Entities;
 
 namespace PcBuilds.Application.Compatibility.Rules
 {
     public class RamMotherboardRule : ICompatibilityRule
     {
-        public string Name => "RAM and Motherboard Compatibility Rule";
+        public string Name => "RamMotherboard";
+
         public CompatibilityResult Check(PcBuild pcBuild)
         {
-            CompatibilityResult result = new CompatibilityResult();
+            var result = new CompatibilityResult();
             var pcBuild_Rams = pcBuild.PcBuild_Rams;
             var motherboard = pcBuild.Motherboard;
+
             if (pcBuild_Rams == null || !pcBuild_Rams.Any() || motherboard == null)
-            {
                 return result;
-            }
+
             if (motherboard.DimmType == null || motherboard.DimmFrequency == null)
             {
-                result.Messages.Add(new CompatibilityMessage
+                result.FitnessScore = 0.7;
+                result.Issues.Add(new CompatibilityIssue
                 {
-                    Type = CompatibilityMessageType.Warning,
-                    Message = $"Неможливо перевірити сумісність Оперативної пам'яті та Материнської плати — недостатньо даних."
+                    Severity = CompatibilitySeverity.Warning,
+                    Code = IssueCodes.RamTypeMismatch,
+                    Parameters = new() { ["MbName"] = motherboard.Name ?? "" }
                 });
                 return result;
             }
+
             int moduleCount = 0;
             int overallSize = 0;
-            List<int> frequencies = new List<int>();
+            var frequencies = new List<int>();
+
             foreach (var pcBuild_Ram in pcBuild_Rams)
             {
                 var ram = pcBuild_Ram.Ram;
-                if (ram == null)
-                {
-                    continue;
-                }
+                if (ram == null) continue;
+
                 if (ram.Type != null && ram.Type != motherboard.DimmType)
                 {
-                    result.Messages.Add(new CompatibilityMessage
+                    result.FitnessScore = 0.0;
+                    result.Issues.Add(new CompatibilityIssue
                     {
-                        Type = CompatibilityMessageType.Problem,
-                        Message = $"Материнська плата не підтримує тип Оперативної пам'яті {ram.Type}."
+                        Severity = CompatibilitySeverity.Critical,
+                        Code = IssueCodes.RamTypeMismatch,
+                        Parameters = new()
+                        {
+                            ["RamName"] = ram.Name ?? "",
+                            ["RamType"] = ram.Type,
+                            ["MbDimmType"] = motherboard.DimmType
+                        }
                     });
                     continue;
                 }
+
                 if (motherboard.DimmFrequency != null && ram.Frequency > motherboard.DimmFrequency)
                 {
-                    result.Messages.Add(new CompatibilityMessage
+                    result.FitnessScore = 0.0;
+                    result.Issues.Add(new CompatibilityIssue
                     {
-                        Type = CompatibilityMessageType.Problem,
-                        Message = $"Частота Оперативної пам'яті ({ram.Name}) вища за максимально дозволену для Материнської плати ({motherboard.DimmFrequency})."
+                        Severity = CompatibilitySeverity.Critical,
+                        Code = IssueCodes.RamFrequencyExceeded,
+                        Parameters = new()
+                        {
+                            ["RamName"] = ram.Name ?? "",
+                            ["RamFrequency"] = ram.Frequency.ToString(),
+                            ["MbMaxFrequency"] = motherboard.DimmFrequency.ToString()!
+                        }
                     });
                     continue;
                 }
+
                 if (!frequencies.Contains(ram.Frequency))
-                {
                     frequencies.Add(ram.Frequency);
-                }
+
                 if (ram.ModuleQuantity != null)
                 {
                     moduleCount += (int)ram.ModuleQuantity * pcBuild_Ram.Quantity;
                     if (ram.Capacity != null)
-                    {
                         overallSize += (int)ram.Capacity * (int)ram.ModuleQuantity * pcBuild_Ram.Quantity;
-                    }
                 }
             }
 
-            if (result.Messages.Any(m => m.Type == CompatibilityMessageType.Problem) == true)
-            {
+            if (result.Issues.Any(i => i.Severity == CompatibilitySeverity.Critical))
                 return result;
-            }
 
             if (motherboard.DimmSlots != null && motherboard.DimmSlots < moduleCount)
             {
-                result.Messages.Add(new CompatibilityMessage
+                result.FitnessScore = Math.Min(result.FitnessScore, 0.7);
+                result.Issues.Add(new CompatibilityIssue
                 {
-                    Type = CompatibilityMessageType.Warning,
-                    Message = $"Материнська плата має недостатню кількість слотів для Оперативної пам'яті. Кількість слотів: {motherboard.DimmSlots}, кількість модулів: {moduleCount}."
+                    Severity = CompatibilitySeverity.Warning,
+                    Code = IssueCodes.RamSlotsExceeded,
+                    Parameters = new()
+                    {
+                        ["MbName"] = motherboard.Name ?? "",
+                        ["MbSlots"] = motherboard.DimmSlots.ToString()!,
+                        ["ModuleCount"] = moduleCount.ToString()
+                    }
                 });
             }
+
             if (motherboard.DimmCapacity != null && overallSize > motherboard.DimmCapacity)
             {
-                result.Messages.Add(new CompatibilityMessage
+                result.FitnessScore = Math.Min(result.FitnessScore, 0.7);
+                result.Issues.Add(new CompatibilityIssue
                 {
-                    Type = CompatibilityMessageType.Warning,
-                    Message = $"Загальний об'єм Оперативної пам'яті ({overallSize}) вищий за максимально дозволений для Материнської плати ({motherboard.DimmCapacity})."
+                    Severity = CompatibilitySeverity.Warning,
+                    Code = IssueCodes.RamCapacityExceeded,
+                    Parameters = new()
+                    {
+                        ["MbName"] = motherboard.Name ?? "",
+                        ["MaxCapacity"] = motherboard.DimmCapacity.ToString()!,
+                        ["TotalCapacity"] = overallSize.ToString()
+                    }
                 });
             }
+
             if (frequencies.Distinct().Count() > 1)
             {
-                result.Messages.Add(new CompatibilityMessage
+                result.FitnessScore = Math.Min(result.FitnessScore, 0.7);
+                result.Issues.Add(new CompatibilityIssue
                 {
-                    Type = CompatibilityMessageType.Warning,
-                    Message = $"Планки оперативної пам'яті працюють на різних максимальних частотах. Оперативна пам'ять працюватиме на нижчій швидкості ({frequencies.Min()}) замість ({frequencies.Max()})."
+                    Severity = CompatibilitySeverity.Warning,
+                    Code = IssueCodes.RamMixedFrequencies,
+                    Parameters = new()
+                    {
+                        ["MinFrequency"] = frequencies.Min().ToString(),
+                        ["MaxFrequency"] = frequencies.Max().ToString()
+                    }
                 });
             }
+
             return result;
         }
     }

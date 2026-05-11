@@ -2,7 +2,10 @@ using Microsoft.EntityFrameworkCore;
 using PcBuilder.SharedKernel.Persistence;
 using Components.Domain.Entities;
 using Auth.Domain.Entities;
+using Moderation.Domain.Entities;
+using Notifications.Domain.Entities;
 using PcBuilds.Domain.Entities;
+using PcBuilder.Persistence.Data.Entities;
 
 namespace PcBuilder.Persistence.Data
 {
@@ -33,6 +36,8 @@ namespace PcBuilder.Persistence.Data
         public DbSet<Fan> Fans { get; set; }
         public DbSet<Store> Stores { get; set; }
         public DbSet<ProductOffer> ProductOffers { get; set; }
+        public DbSet<PriceHistoryEntry> PriceHistoryEntries { get; set; }
+        public DbSet<PriceAlertSubscription> PriceAlertSubscriptions { get; set; }
 
         // Auth
         public DbSet<User> Users { get; set; }
@@ -45,7 +50,16 @@ namespace PcBuilder.Persistence.Data
         public DbSet<PcBuild_Ram> PcBuild_Rams { get; set; }
         public DbSet<PcBuild_Fan> PcBuild_Fans { get; set; }
         public DbSet<Review> Reviews { get; set; }
-        public DbSet<Comment> Comments { get; set; }
+
+        // Moderation
+        public DbSet<Report> Reports { get; set; }
+        public DbSet<Warning> Warnings { get; set; }
+
+        // Notifications
+        public DbSet<Notification> Notifications { get; set; }
+
+        // Scraping
+        public DbSet<ScrapeJob> ScrapeJobs { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

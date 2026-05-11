@@ -53,4 +53,5 @@ export interface IAuthContextType {
     setAuth: Dispatch<SetStateAction<AuthUser>>;
     persist: boolean;
     setPersist: Dispatch<SetStateAction<boolean>>;
+    isAuthInitializing: boolean;
 }

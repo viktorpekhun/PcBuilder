@@ -71,6 +71,5 @@ namespace PcBuilds.Domain.Entities
         public List<PcBuild_Ram> PcBuild_Rams { get; set; } = new();
         public List<PcBuild_Fan> PcBuild_Fans { get; set; } = new();
         public List<Review> Reviews { get; set; } = new();
-        public List<Comment> Comments { get; set; } = new();
     }
 }

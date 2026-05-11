@@ -1,16 +1,17 @@
-using Scraping.Application;
-using Scraping.Application.Interfaces;
+using Components.Domain.Entities;
 ﻿using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;
-using Components.Domain.Entities;
 using PcBuilder.SharedKernel;
-using Scraping.Infrastructure.Utilities;
 using PcBuilder.SharedKernel.Enums;
+using Scraping.Application;
+using Scraping.Application.Interfaces;
+using Scraping.Infrastructure.Utilities;
 using System;
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Net.NetworkInformation;
 using System.Numerics;
+using System.Runtime.Intrinsics.X86;
 using System.Text.RegularExpressions;
 
 namespace Scraping.Infrastructure.Scrapers
@@ -25,7 +26,7 @@ namespace Scraping.Infrastructure.Scrapers
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
 
-            var motherboard = new Motherboard();
+            var motherboard = new Motherboard { HotlineUrl = url };
             var stores = new List<Store>();
             var offers = new List<ProductOffer>();
 
@@ -70,8 +71,22 @@ namespace Scraping.Infrastructure.Scrapers
                                 motherboard.Brand = value ?? string.Empty;
                                 break;
                             case "Тип роз'єму CPU":
-                                motherboard.Socket = value ?? string.Empty;
-                                break;
+                                {
+                                    if (string.IsNullOrWhiteSpace(value))
+                                    {
+                                        break;
+                                    }
+                                    if (value.Contains("нтегрований"))
+                                    {
+                                        return new ScrapingResult<Motherboard>(null, new List<Store>(), new List<ProductOffer>());
+                                    }
+                                    if (!value.ToLower().Contains("socket"))
+                                    {
+                                        motherboard.Socket = "Socket " + value;
+                                    }
+                                    motherboard.Socket = value ?? string.Empty;
+                                    break;
+                                }
                             case "Чіпсет":
                                 motherboard.Chipset = value ?? string.Empty;
                                 break;
@@ -175,6 +190,11 @@ namespace Scraping.Infrastructure.Scrapers
                                     else
                                     {
                                         motherboard.FormFactor = value.Trim();
+                                    }
+                                    motherboard.FormFactor = GetFormFactor(motherboard.FormFactor);
+                                    if (motherboard.FormFactor is null)
+                                    {
+                                        return new ScrapingResult<Motherboard>(null, new List<Store>(), new List<ProductOffer>());
                                     }
                                 }
                                 break;
@@ -409,7 +429,7 @@ namespace Scraping.Infrastructure.Scrapers
                             case "e-atx":
                                 motherboard.Wattage = 100;
                                 break;
-                            case "microatx":
+                            case "micro-atx":
                                 motherboard.Wattage = 60;
                                 break;
                             case "mini-itx":
@@ -534,8 +554,7 @@ namespace Scraping.Infrastructure.Scrapers
                         Console.WriteLine($"Error scraping offer: {ex.Message}");
                     }
                 }
-                var avgPrice = offers.Any() ? offers.Average(p => p.Price) : 0;
-                motherboard.AveragePrice = (decimal)avgPrice;
+                motherboard.AveragePrice = offers.Any() ? Math.Round(offers.Average(p => p.Price), 0) : 0;
                 motherboard.OffersCount = offers.Count;
             }
 
@@ -549,6 +568,28 @@ namespace Scraping.Infrastructure.Scrapers
             if (value == null) return null;
             value = value.Replace(',', '.');
             return double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var result) ? result : null;
+        }
+
+        private string? GetFormFactor(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return null;
+
+            string normalized = input.ToUpper().Replace(" ", "").Replace("-", "");
+
+            if (normalized.Contains("MICROATX"))
+                return "Micro-ATX";
+
+            if (normalized.Contains("MINIITX"))
+                return "Mini-ITX";
+
+            if (normalized.Contains("EATX"))
+                return "E-ATX";
+
+            if (normalized.Contains("ATX"))
+                return "ATX";
+
+            return null;
         }
     }
 }

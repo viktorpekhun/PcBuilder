@@ -16,6 +16,9 @@
   <ItemGroup>
     <ProjectReference Include="..\PcBuilds.Domain\PcBuilds.Domain.csproj" />
     <ProjectReference Include="..\..\Components\Components.Domain\Components.Domain.csproj" />
+    <ProjectReference Include="..\..\Auth\Auth.Domain\Auth.Domain.csproj" />
+    <ProjectReference Include="..\..\Moderation\Moderation.Application\Moderation.Application.csproj" />
+    <ProjectReference Include="..\..\Notifications\Notifications.Application\Notifications.Application.csproj" />
     <ProjectReference Include="..\..\..\PcBuilder.SharedKernel\PcBuilder.SharedKernel.csproj" />
   </ItemGroup>
 

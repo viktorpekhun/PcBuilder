@@ -1,93 +1,104 @@
-﻿
 using Components.Domain.Entities;
-using PcBuilds.Domain.Entities;
 using PcBuilder.SharedKernel.Enums;
+using PcBuilds.Domain.Entities;
 
 namespace PcBuilds.Application.Compatibility.Rules
 {
     public class FanPcCaseCompatibilityRule : ICompatibilityRule
     {
-        public string Name => "Fan and PC Case Compatibility Rule";
+        public string Name => "FanCaseSlots";
+
         public CompatibilityResult Check(PcBuild pcBuild)
         {
-            CompatibilityResult result = new CompatibilityResult();
+            var result = new CompatibilityResult();
             var pcBuild_Fans = pcBuild.PcBuild_Fans;
             var pcCase = pcBuild.PcCase;
-            if (pcBuild_Fans == null || !pcBuild_Fans.Any() || pcCase == null)
-            {
-                return result;
-            }
-            var pcCaseFanSlots = pcCase.PcCaseFanLocations;
 
+            if (pcBuild_Fans == null || !pcBuild_Fans.Any() || pcCase == null)
+                return result;
+
+            var pcCaseFanSlots = pcCase.PcCaseFanLocations;
             if (pcCaseFanSlots == null || !pcCaseFanSlots.Any())
             {
-                result.Messages.Add(new CompatibilityMessage
+                result.FitnessScore = 0.7;
+                result.Issues.Add(new CompatibilityIssue
                 {
-                    Type = CompatibilityMessageType.Warning,
-                    Message = $"Неможливо перевірити сумісність вентилятора/рів та Корпусу ПК — недостатньо даних."
+                    Severity = CompatibilitySeverity.Warning,
+                    Code = IssueCodes.FanCaseDataMissing,
+                    Parameters = new() { ["CaseName"] = pcCase.Name ?? "" }
                 });
                 return result;
             }
 
-            Dictionary<int, int> fanCount = new Dictionary<int, int>();
+            var fanCount = new Dictionary<int, int>();
             foreach (var pcBuild_Fan in pcBuild_Fans)
             {
                 var fan = pcBuild_Fan.Fan;
-                if (fan == null)
-                {
-                    continue;
-                }
+                if (fan == null) continue;
+
                 if (fan.ModuleCount == null || fan.SizeLength == null)
                 {
-                    result.Messages.Add(new CompatibilityMessage
+                    result.FitnessScore = 0.7;
+                    result.Issues.Add(new CompatibilityIssue
                     {
-                        Type = CompatibilityMessageType.Warning,
-                        Message = $"Неможливо перевірити сумісність вентилятора/рів ({fan.Name}) та Корпусу ПК — недостатньо даних."
+                        Severity = CompatibilitySeverity.Warning,
+                        Code = IssueCodes.FanCaseDataMissing,
+                        Parameters = new() { ["FanName"] = fan.Name ?? "", ["CaseName"] = pcCase.Name ?? "" }
                     });
                     continue;
                 }
+
                 int fanSize = (int)fan.SizeLength.Value;
                 if (fanCount.ContainsKey(fanSize))
-                {
                     fanCount[fanSize] += pcBuild_Fan.Quantity * (int)fan.ModuleCount;
-                }
                 else
-                {
                     fanCount.Add(fanSize, pcBuild_Fan.Quantity * (int)fan.ModuleCount);
-                }
             }
 
-            Dictionary<int, int> pcCaseFanSlotsCount = new Dictionary<int, int>();
+            var pcCaseFanSlotsCount = new Dictionary<int, int>();
             foreach (var pcCaseFanSlot in pcCaseFanSlots)
             {
                 if (pcCaseFanSlotsCount.ContainsKey(pcCaseFanSlot.FanSize))
-                {
                     pcCaseFanSlotsCount[pcCaseFanSlot.FanSize] += pcCaseFanSlot.MaxFans;
-                }
                 else
-                {
                     pcCaseFanSlotsCount.Add(pcCaseFanSlot.FanSize, pcCaseFanSlot.MaxFans);
-                }
             }
+
             foreach (var fanSize in fanCount.Keys)
             {
                 if (pcCaseFanSlotsCount.ContainsKey(fanSize))
                 {
                     if (fanCount[fanSize] > pcCaseFanSlotsCount[fanSize])
                     {
-                        result.Messages.Add(new CompatibilityMessage
+                        result.FitnessScore = 0.7;
+                        result.Issues.Add(new CompatibilityIssue
                         {
-                            Type = CompatibilityMessageType.Warning,
-                            Message = $"Кількість вентиляторів ({fanCount[fanSize]}) розміру {fanSize} мм перевищує максимальну кількість, яку підтримує корпус ПК ({pcCaseFanSlotsCount[fanSize]})."
+                            Severity = CompatibilitySeverity.Warning,
+                            Code = IssueCodes.FanCaseSlotsInsufficient,
+                            Parameters = new()
+                            {
+                                ["CaseName"] = pcCase.Name ?? "",
+                                ["FanSize"] = fanSize.ToString(),
+                                ["FanCount"] = fanCount[fanSize].ToString(),
+                                ["MaxSlots"] = pcCaseFanSlotsCount[fanSize].ToString()
+                            }
                         });
                     }
                 }
                 else
                 {
-                    result.Messages.Add(new CompatibilityMessage
+                    result.FitnessScore = 0.0;
+                    result.Issues.Add(new CompatibilityIssue
                     {
-                        Type = CompatibilityMessageType.Problem,
-                        Message = $"Корпус ПК не підтримує вентилятори розміру {fanSize}."
+                        Severity = CompatibilitySeverity.Critical,
+                        Code = IssueCodes.FanCaseSlotsInsufficient,
+                        Parameters = new()
+                        {
+                            ["CaseName"] = pcCase.Name ?? "",
+                            ["FanSize"] = fanSize.ToString(),
+                            ["FanCount"] = fanCount[fanSize].ToString(),
+                            ["MaxSlots"] = "0"
+                        }
                     });
                 }
             }

@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using PcBuilder.SharedKernel;
 using PcBuilder.SharedKernel.Filtering;
 using PcBuilder.SharedKernel.Persistence;
 using PcBuilds.Application.Dtos;
@@ -8,7 +9,7 @@ using PcBuilds.Domain.Entities;
 
 namespace PcBuilds.Application.Handlers
 {
-    public class GetPublicBuildsQueryHandler : IRequestHandler<GetPublicBuildsQuery, PagedResponse<PcBuildGalleryDto>>
+    public class GetPublicBuildsQueryHandler : IRequestHandler<GetPublicBuildsQuery, Result<PagedResponse<PcBuildGalleryDto>>>
     {
         private readonly IApplicationDbContext _context;
 
@@ -17,7 +18,7 @@ namespace PcBuilds.Application.Handlers
             _context = context;
         }
 
-        public async Task<PagedResponse<PcBuildGalleryDto>> Handle(GetPublicBuildsQuery request, CancellationToken cancellationToken)
+        public async Task<Result<PagedResponse<PcBuildGalleryDto>>> Handle(GetPublicBuildsQuery request, CancellationToken cancellationToken)
         {
             var parameters = request.Parameters;
 
@@ -26,7 +27,6 @@ namespace PcBuilds.Application.Handlers
                 .Include(b => b.User)
                 .AsQueryable();
 
-            // Search
             if (!string.IsNullOrWhiteSpace(parameters.SearchQuery))
             {
                 var search = parameters.SearchQuery.ToLower();
@@ -35,7 +35,6 @@ namespace PcBuilds.Application.Handlers
                     (b.Description != null && b.Description.ToLower().Contains(search)));
             }
 
-            // Price range filter
             if (parameters.Filters.TryGetValue("price_range", out var priceRange) && priceRange.Length >= 2)
             {
                 if (decimal.TryParse(priceRange[0], out var minPrice))
@@ -46,7 +45,6 @@ namespace PcBuilds.Application.Handlers
 
             var totalCount = await query.CountAsync(cancellationToken);
 
-            // Sorting
             query = (parameters.OrderBy?.ToLower()) switch
             {
                 "price" => parameters.Ascending
@@ -85,11 +83,11 @@ namespace PcBuilds.Application.Handlers
                         b.PcBuild_Ssds.Count +
                         b.PcBuild_Hdds.Count +
                         b.PcBuild_Fans.Count,
-                    CommentCount = b.Comments.Count
+                    CommentCount = b.Reviews.Count
                 })
                 .ToListAsync(cancellationToken);
 
-            return new PagedResponse<PcBuildGalleryDto>(builds, totalCount, parameters);
+            return Result.Success(new PagedResponse<PcBuildGalleryDto>(builds, totalCount, parameters));
         }
     }
 }

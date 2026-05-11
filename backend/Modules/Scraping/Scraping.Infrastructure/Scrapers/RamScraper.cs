@@ -23,7 +23,7 @@ namespace Scraping.Infrastructure.Scrapers
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
 
-            var ram = new Ram();
+            var ram = new Ram { HotlineUrl = url };
             var stores = new List<Store>();
             var offers = new List<ProductOffer>();
 
@@ -67,8 +67,23 @@ namespace Scraping.Infrastructure.Scrapers
                                 ram.Brand = value ?? string.Empty;
                                 break;
                             case "Тип":
-                                ram.Type = value ?? string.Empty;
-                                break;
+                                {
+                                    string loweredValue;
+                                    if (!string.IsNullOrWhiteSpace(value))
+                                    {
+                                        loweredValue = value.ToLower();
+                                    }
+                                    else
+                                    {
+                                        return new ScrapingResult<Ram>(null, new List<Store>(), new List<ProductOffer>());
+                                    }
+                                    if(loweredValue == "ddr3l" || loweredValue == "ddr" || loweredValue == "ddr2")
+                                    {
+                                        return new ScrapingResult<Ram>(null, new List<Store>(), new List<ProductOffer>());
+                                    }
+                                    ram.Type = value ?? string.Empty;
+                                    break;
+                                }
                             case "Ефективна частота, МГц":
                                 {
                                     var frequencyMatch = Regex.Match(value, @"\d+");
@@ -122,8 +137,14 @@ namespace Scraping.Infrastructure.Scrapers
                                     ram.Expo = false;
                                 break;
                             case "Буферизація":
-                                ram.Bufferization = value ?? string.Empty;
-                                break;
+                                {
+                                    if (!string.IsNullOrWhiteSpace(value))
+                                    {
+                                        string newValue = value.ToLower();
+                                        ram.Bufferization = char.ToUpper(newValue[0]) + newValue.Substring(1);
+                                    }
+                                    break;
+                                }
                             case "Колір":
                                 {
                                     if (string.IsNullOrEmpty(value))
@@ -253,8 +274,7 @@ namespace Scraping.Infrastructure.Scrapers
                         Console.WriteLine($"Error scraping offer: {ex.Message}");
                     }
                 }
-                var avgPrice = offers.Any() ? offers.Average(p => p.Price) : 0;
-                ram.AveragePrice = (decimal)avgPrice;
+                ram.AveragePrice = offers.Any() ? Math.Round(offers.Average(p => p.Price), 0) : 0;
                 ram.OffersCount = offers.Count;
             }
 
@@ -274,7 +294,6 @@ namespace Scraping.Infrastructure.Scrapers
         {
             int basePowerPerModule = type.ToUpper() switch
             {
-                "DDR2" => 2,
                 "DDR3" => 2,
                 "DDR4" => 3,
                 "DDR5" => 4,

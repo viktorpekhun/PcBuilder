@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Components.Domain.Entities
 {
-    public class Motherboard
+    public class Motherboard : IHasAveragePrice
     {
         public Guid Id { get; set; }
 
@@ -45,6 +45,10 @@ namespace Components.Domain.Entities
 
         [Url]
         public string? FactoryLink { get; set; }
+
+        [Url]
+        public string? HotlineUrl { get; set; }
+
         public decimal? AveragePrice { get; set; }
         public int? OffersCount { get; set; }
 

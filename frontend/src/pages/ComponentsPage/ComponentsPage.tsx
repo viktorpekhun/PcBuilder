@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
 import { componentService, parsePagination } from "../../api/component.service";
-import type { ComponentType, ComponentListMap, IResourceParameters } from "../../types/component.types";
+import type { ComponentType, ComponentListMap, IPartialBuildIds, IResourceParameters } from "../../types/component.types";
 import type { FilterConfig } from '../../components/FilterPanel/filterConfigs';
 import { filterConfigs } from '../../components/FilterPanel/filterConfigs';
 import { componentSpecConfigs } from "./componentSpecsConfigs";
@@ -13,6 +13,35 @@ import styles from './ComponentsPage.module.css';
 type RangeValue = { min: number; max: number };
 type FilterValues = Record<string, string[] | RangeValue>;
 
+const PREFILTER_KEY = 'compat_prefilter_enabled';
+
+function readPartialBuildIds(): IPartialBuildIds {
+    try {
+        const raw = localStorage.getItem('selectedComponents');
+        if (!raw) return {};
+        const sel = JSON.parse(raw) as {
+            cpu?: { componentId?: string } | null;
+            gpu?: { componentId?: string } | null;
+            motherboard?: { componentId?: string } | null;
+            powerSupply?: { componentId?: string } | null;
+            cpuCooler?: { componentId?: string } | null;
+            pcCase?: { componentId?: string } | null;
+            rams?: { componentId?: string }[];
+        };
+        const ids: IPartialBuildIds = {};
+        if (sel.cpu?.componentId)         ids.cpuId         = sel.cpu.componentId;
+        if (sel.gpu?.componentId)         ids.gpuId         = sel.gpu.componentId;
+        if (sel.motherboard?.componentId) ids.motherboardId = sel.motherboard.componentId;
+        if (sel.powerSupply?.componentId) ids.powerSupplyId = sel.powerSupply.componentId;
+        if (sel.cpuCooler?.componentId)   ids.cpuCoolerId   = sel.cpuCooler.componentId;
+        if (sel.pcCase?.componentId)      ids.pcCaseId      = sel.pcCase.componentId;
+        if (sel.rams?.[0]?.componentId)   ids.ramId         = sel.rams[0].componentId;
+        return ids;
+    } catch {
+        return {};
+    }
+}
+
 function ComponentsPage() {
     const { type } = useParams<{ type: string }>();
     const navigate = useNavigate();
@@ -22,6 +51,12 @@ function ComponentsPage() {
     const [filters, setFilters] = useState<FilterValues>({});
     const [searchQuery, setSearchQuery] = useState('');
     const firstLoadDone = useRef(false);
+    const skipNextPageEffect = useRef(false);
+    const currentPageRef = useRef(1);
+    const [prefilterEnabled, setPrefilterEnabled] = useState<boolean>(() => {
+        const stored = localStorage.getItem(PREFILTER_KEY);
+        return stored === null ? true : stored === 'true';
+    });
 
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -63,11 +98,13 @@ function ComponentsPage() {
         return apiFilters;
     }, [filterConfig.filters]);
 
-    const fetchComponents = useCallback(async (customFilters: FilterValues, page = 1, query: string | null = null) => {
+    const fetchComponents = useCallback(async (customFilters: FilterValues, page = 1, query: string | null = null, prefilter = prefilterEnabled) => {
         try {
             setLoading(true);
 
             const searchToUse = query !== null ? query : searchQuery;
+            const ids = readPartialBuildIds();
+            const hasPartialBuild = Object.keys(ids).length > 0;
 
             const params: IResourceParameters = {
                 pageNumber: page,
@@ -76,6 +113,7 @@ function ComponentsPage() {
                 ascending: sortDirection === 'asc',
                 searchQuery: searchToUse.trim(),
                 filters: buildApiFilters(customFilters),
+                ...(prefilter && hasPartialBuild ? { prefilter: true, partialBuild: ids } : {}),
             };
 
             const response = await componentService.getAll(type as ComponentType, params);
@@ -99,7 +137,7 @@ function ComponentsPage() {
             setLoading(false);
             firstLoadDone.current = true;
         }
-    }, [type, buildApiFilters, pageSize, sortField, sortDirection, searchQuery]);
+    }, [type, buildApiFilters, pageSize, sortField, sortDirection, searchQuery, prefilterEnabled]);
 
     const handleSortChange = (field: string) => {
         if (field === sortField) {
@@ -119,9 +157,13 @@ function ComponentsPage() {
         fetchComponents({}, 1, '');
     }, [type]);
 
+    // Keep currentPageRef in sync
+    useEffect(() => { currentPageRef.current = currentPage; }, [currentPage]);
+
     // Filters / sort change
     useEffect(() => {
         if (!firstLoadDone.current) return;
+        skipNextPageEffect.current = currentPageRef.current !== 1;
         setCurrentPage(1);
         fetchComponents(filters, 1, searchQuery);
     }, [filters, sortField, sortDirection]);
@@ -129,15 +171,18 @@ function ComponentsPage() {
     // Page change
     useEffect(() => {
         if (!firstLoadDone.current) return;
-        if (currentPage > 1) {
-            fetchComponents(filters, currentPage, searchQuery);
+        if (skipNextPageEffect.current) {
+            skipNextPageEffect.current = false;
+            return;
         }
+        fetchComponents(filters, currentPage, searchQuery);
     }, [currentPage]);
 
     // Debounced search
     useEffect(() => {
         if (!firstLoadDone.current) return;
         const timer = setTimeout(() => {
+            skipNextPageEffect.current = currentPageRef.current !== 1;
             setCurrentPage(1);
             fetchComponents(filters, 1, searchQuery);
         }, 400);
@@ -147,6 +192,14 @@ function ComponentsPage() {
     const handleFilterChange = useCallback((newFilters: FilterValues) => {
         setFilters(newFilters);
     }, []);
+
+    const handlePrefilterChange = useCallback((enabled: boolean) => {
+        setPrefilterEnabled(enabled);
+        localStorage.setItem(PREFILTER_KEY, String(enabled));
+        skipNextPageEffect.current = currentPageRef.current !== 1;
+        setCurrentPage(1);
+        fetchComponents(filters, 1, searchQuery, enabled);
+    }, [filters, searchQuery, fetchComponents]);
 
     if (loading && !firstLoadDone.current) return <div>Loading {type} components...</div>;
     if (error) return <div>{error}</div>;
@@ -168,6 +221,8 @@ function ComponentsPage() {
                 <FilterPanel
                     config={filterConfig}
                     onFilterChange={handleFilterChange}
+                    showPrefilterToggle={true}
+                    onPrefilterChange={handlePrefilterChange}
                 />
 
                 <div className={styles['table-container']}>
@@ -210,6 +265,7 @@ function ComponentsPage() {
                                             src={component.photoUrl}
                                             alt={component.name}
                                             className={styles['componentImage']}
+                                            loading="lazy"
                                         />
                                     ) : (
                                         <div className={styles['no-image']}>No image</div>

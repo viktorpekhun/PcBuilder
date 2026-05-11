@@ -4,7 +4,7 @@ import { profileService } from '../../api/profile.service';
 import { Button } from '../../components/Button/Button';
 import useAuth from '../../hooks/useAuth';
 import useLogout from '../../hooks/useLogout';
-import type { IProfileResponse } from '../../types/profile.types';
+import type { IProfileResponse, IUserBanStatus } from '../../types/profile.types';
 import styles from './ProfilePage.module.css';
 
 type Tab = 'profile' | 'security' | 'account';
@@ -156,6 +156,89 @@ function AccountOverviewCard({ profile }: { profile: IProfileResponse }) {
     );
 }
 
+// ─── Bans panel ──────────────────────────────────────────────────────────────
+
+function BansPanel() {
+    const [banStatus, setBanStatus] = useState<IUserBanStatus | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        profileService.getBans()
+            .then(r => setBanStatus(r.data))
+            .catch(() => {})
+            .finally(() => setLoading(false));
+    }, []);
+
+    if (loading || !banStatus) return null;
+
+    const hasBans = banStatus.isCommentBanned || banStatus.isPostBanned;
+    const hasWarnings = banStatus.recentWarnings.length > 0;
+    if (!hasBans && !hasWarnings) return null;
+
+    const formatBanRemaining = (dateStr: string) => {
+        const diff = new Date(dateStr).getTime() - Date.now();
+        if (diff <= 0) return 'завершується';
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const days = Math.floor(hours / 24);
+        if (days > 0) return `${days} дн. ${hours % 24} год.`;
+        const minutes = Math.floor((diff / (1000 * 60)) % 60);
+        return `${hours} год. ${minutes} хв.`;
+    };
+
+    const formatDate = (dateStr: string) =>
+        new Date(dateStr).toLocaleDateString('uk-UA', {
+            day: 'numeric', month: 'short', year: 'numeric',
+        });
+
+    return (
+        <div className={styles['bans-card']}>
+            <p className={styles['bans-title']}>Обмеження акаунта</p>
+
+            {hasBans && (
+                <div className={styles['bans-active']}>
+                    {banStatus.isCommentBanned && banStatus.commentBanUntil && (
+                        <div className={styles['ban-item']}>
+                            <span className={styles['ban-badge-red']}>Бан коментарів</span>
+                            <span className={styles['ban-remaining']}>
+                                Залишилось: {formatBanRemaining(banStatus.commentBanUntil)}
+                            </span>
+                        </div>
+                    )}
+                    {banStatus.isPostBanned && banStatus.postBanUntil && (
+                        <div className={styles['ban-item']}>
+                            <span className={styles['ban-badge-red']}>Бан публікацій</span>
+                            <span className={styles['ban-remaining']}>
+                                Залишилось: {formatBanRemaining(banStatus.postBanUntil)}
+                            </span>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {hasWarnings && (
+                <div className={styles['warnings-section']}>
+                    <p className={styles['warnings-label']}>
+                        Попередження за останні 180 днів ({banStatus.recentWarnings.length})
+                    </p>
+                    <ul className={styles['warnings-list']}>
+                        {banStatus.recentWarnings.map(w => (
+                            <li key={w.id} className={styles['warning-item']}>
+                                <div className={styles['warning-header']}>
+                                    <span className={w.banType === 'Comment' ? styles['ban-badge-amber'] : styles['ban-badge-amber']}>
+                                        {w.banType === 'Comment' ? 'Коментарі' : 'Публікації'}
+                                    </span>
+                                    <span className={styles['warning-date']}>{formatDate(w.issuedAt)}</span>
+                                </div>
+                                <p className={styles['warning-reason']}>{w.reason}</p>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+        </div>
+    );
+}
+
 // ─── Tab: Profile ─────────────────────────────────────────────────────────────
 
 function ProfileTab({ profile, onUpdate }: { profile: IProfileResponse; onUpdate: (p: IProfileResponse) => void }) {
@@ -210,6 +293,8 @@ function ProfileTab({ profile, onUpdate }: { profile: IProfileResponse; onUpdate
 
     return (
         <>
+            <BansPanel />
+
             <CompletenessCard profile={profile} />
 
             <AccountOverviewCard profile={profile} />

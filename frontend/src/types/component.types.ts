@@ -15,6 +15,16 @@ export interface IPagination {
     hasPrevious: boolean;
 }
 
+export interface IPartialBuildIds {
+    cpuId?: string;
+    gpuId?: string;
+    motherboardId?: string;
+    ramId?: string;
+    cpuCoolerId?: string;
+    pcCaseId?: string;
+    powerSupplyId?: string;
+}
+
 export interface IResourceParameters {
     pageNumber?: number;
     pageSize?: number;
@@ -22,6 +32,8 @@ export interface IResourceParameters {
     ascending?: boolean;
     searchQuery?: string;
     filters?: Record<string, string[]>;
+    prefilter?: boolean;
+    partialBuild?: IPartialBuildIds;
 }
 
 export type IFilterOptions = Record<string, string[]>;
@@ -388,6 +400,12 @@ export interface ComponentListMap {
     Ssd: ISsdList;
     Hdd: IHddList;
     Fan: IFanList;
+}
+
+export interface IPriceHistoryPoint {
+    date: string;
+    averagePrice: number;
+    offersCount: number;
 }
 
 export interface ComponentDetailMap {

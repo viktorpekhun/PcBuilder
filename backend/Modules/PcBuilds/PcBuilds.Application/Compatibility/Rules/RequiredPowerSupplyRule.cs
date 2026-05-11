@@ -1,106 +1,107 @@
-﻿using Components.Domain.Entities;
-using PcBuilds.Domain.Entities;
+using Components.Domain.Entities;
 using PcBuilder.SharedKernel.Enums;
+using PcBuilds.Application.Compatibility.Internal;
+using PcBuilds.Domain.Entities;
 
 namespace PcBuilds.Application.Compatibility.Rules
 {
     public class RequiredPowerSupplyRule : ICompatibilityRule
     {
-        public string Name => "Required Power Supply Rule";
+        public string Name => "RequiredPowerSupply";
+
         public CompatibilityResult Check(PcBuild pcBuild)
         {
             var result = new CompatibilityResult();
             var powerSupply = pcBuild.PowerSupply;
+
             if (powerSupply == null)
-            {
                 return result;
-            }
-            var cpu = pcBuild.Cpu;
-            var gpu = pcBuild.Gpu;
-            var motherboard = pcBuild.Motherboard;
-            var cpuCooler = pcBuild.CpuCooler;
-            var pcBuild_Rams = pcBuild.PcBuild_Rams;
-            var pcBuild_Ssds = pcBuild.PcBuild_Ssds;
-            var pcBuild_Hdds = pcBuild.PcBuild_Hdds;
-            var pcBuild_Fans = pcBuild.PcBuild_Fans;
 
             int summaryPower = 0;
-            if (cpu != null)
+
+            if (pcBuild.Cpu != null)
+                summaryPower += (int)pcBuild.Cpu.Tdp;
+
+            if (pcBuild.Gpu != null)
             {
-                summaryPower += (int)cpu.Tdp;
+                if (pcBuild.Gpu.Wattage != null && pcBuild.Gpu.Wattage > 0)
+                    summaryPower += (int)pcBuild.Gpu.Wattage;
+                else if (pcBuild.Gpu.PsuReccomended != null && pcBuild.Gpu.PsuReccomended > 0)
+                    summaryPower += (int)(pcBuild.Gpu.PsuReccomended * 0.45);
             }
-            if (gpu != null)
+
+            if (pcBuild.Motherboard != null)
+                summaryPower += (int)pcBuild.Motherboard.Wattage;
+
+            if (pcBuild.CpuCooler != null)
+                summaryPower += (int)pcBuild.CpuCooler.Wattage;
+
+            foreach (var pcBuild_Ram in pcBuild.PcBuild_Rams)
             {
-                if (gpu.Wattage != null && gpu.Wattage > 0)
-                {
-                    summaryPower += (int)gpu.Wattage;
-                }
-                else if (gpu.PsuReccomended != null && gpu.PsuReccomended > 0)
-                {
-                    int estimatedGpuWattage = (int)(gpu.PsuReccomended * 0.45);
-                    summaryPower += estimatedGpuWattage;
-                }
+                if (pcBuild_Ram.Ram != null)
+                    summaryPower += (int)pcBuild_Ram.Ram.Wattage * (int)pcBuild_Ram.Ram.ModuleQuantity * pcBuild_Ram.Quantity;
             }
-            if (motherboard != null)
+
+            foreach (var pcBuild_Ssd in pcBuild.PcBuild_Ssds)
             {
-                summaryPower += (int)motherboard.Wattage;
+                if (pcBuild_Ssd.Ssd != null)
+                    summaryPower += (int)pcBuild_Ssd.Ssd.Wattage * pcBuild_Ssd.Quantity;
             }
-            if (cpuCooler != null)
+
+            foreach (var pcBuild_Hdd in pcBuild.PcBuild_Hdds)
             {
-                summaryPower += (int)cpuCooler.Wattage;
+                if (pcBuild_Hdd.Hdd != null)
+                    summaryPower += (int)pcBuild_Hdd.Hdd.Wattage * pcBuild_Hdd.Quantity;
             }
-            if (pcBuild_Rams != null)
+
+            foreach (var pcBuild_Fan in pcBuild.PcBuild_Fans)
             {
-                foreach (var pcBuild_Ram in pcBuild_Rams)
-                {
-                    var ram = pcBuild_Ram.Ram;
-                    if (ram != null)
-                    {
-                        summaryPower += (int)ram.Wattage*(int)ram.ModuleQuantity*pcBuild_Ram.Quantity;
-                    }
-                }
+                if (pcBuild_Fan.Fan != null)
+                    summaryPower += (int)pcBuild_Fan.Fan.Wattage * (int)pcBuild_Fan.Fan.ModuleCount * pcBuild_Fan.Quantity;
             }
-            if (pcBuild_Ssds != null)
-            {
-                foreach (var pcBuild_Ssd in pcBuild_Ssds)
-                {
-                    var ssd = pcBuild_Ssd.Ssd;
-                    if (ssd != null)
-                    {
-                        summaryPower += (int)ssd.Wattage * pcBuild_Ssd.Quantity;
-                    }
-                }
-            }
-            if (pcBuild_Hdds != null)
-            {
-                foreach (var pcBuild_Hdd in pcBuild_Hdds)
-                {
-                    var hdd = pcBuild_Hdd.Hdd;
-                    if (hdd != null)
-                    {
-                        summaryPower += (int)hdd.Wattage * pcBuild_Hdd.Quantity;
-                    }
-                }
-            }
-            if (pcBuild_Fans != null)
-            {
-                foreach (var pcBuild_Fan in pcBuild_Fans)
-                {
-                    var fan = pcBuild_Fan.Fan;
-                    if (fan != null)
-                    {
-                        summaryPower += (int)fan.Wattage * (int)fan.ModuleCount * pcBuild_Fan.Quantity;
-                    }
-                }
-            }
+
             summaryPower += 150;
 
-            if (summaryPower > powerSupply.Wattage)
+            var loadPct = (double)summaryPower / powerSupply.Wattage;
+
+            result.FitnessScore = loadPct switch
             {
-                result.Messages.Add(new CompatibilityMessage
+                > 1.0 => 0.0,
+                >= 0.5 and <= 0.8 => 1.0,
+                >= 0.4 and < 0.5 => FitnessMath.Lerp(0.85, 1.0, (loadPct - 0.4) / 0.1),
+                >= 0.3 and < 0.4 => FitnessMath.Lerp(0.6, 0.85, (loadPct - 0.3) / 0.1),
+                < 0.3 => 0.4,
+                > 0.8 and <= 0.95 => FitnessMath.Lerp(1.0, 0.7, (loadPct - 0.8) / 0.15),
+                > 0.95 => FitnessMath.Lerp(0.7, 0.0, (loadPct - 0.95) / 0.05),
+                _ => 1.0
+            };
+
+            if (loadPct > 1.0)
+            {
+                result.Issues.Add(new CompatibilityIssue
                 {
-                    Type = CompatibilityMessageType.Problem,
-                    Message = $"Потужність Блоку живлення ({powerSupply.Wattage} Вт) недостатня для живлення всіх компонентів системи ({summaryPower} Вт)."
+                    Severity = CompatibilitySeverity.Critical,
+                    Code = IssueCodes.PsuInsufficient,
+                    Parameters = new()
+                    {
+                        ["SystemWattage"] = summaryPower.ToString(),
+                        ["PsuWattage"] = powerSupply.Wattage.ToString(),
+                        ["LoadPercentage"] = (loadPct * 100).ToString("F0")
+                    }
+                });
+            }
+            else if (loadPct < 0.4)
+            {
+                result.Issues.Add(new CompatibilityIssue
+                {
+                    Severity = CompatibilitySeverity.Info,
+                    Code = IssueCodes.PsuOverkill,
+                    Parameters = new()
+                    {
+                        ["SystemWattage"] = summaryPower.ToString(),
+                        ["PsuWattage"] = powerSupply.Wattage.ToString(),
+                        ["LoadPercentage"] = (loadPct * 100).ToString("F0")
+                    }
                 });
             }
 

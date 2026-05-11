@@ -13,9 +13,15 @@ namespace PcBuilds.Application.Compatibility
 
         public List<CompatibilityResult> CheckAll(PcBuild pcBuild)
         {
-            return _rules.Select(rule => rule.Check(pcBuild))
-                 .Where(result => result.Messages.Any())
-                 .ToList();
+            return _rules
+                .Select(rule =>
+                {
+                    var result = rule.Check(pcBuild);
+                    result.RuleName = rule.Name;
+                    return result;
+                })
+                .Where(result => result.Issues.Any())
+                .ToList();
         }
     }
 }

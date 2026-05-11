@@ -1,5 +1,5 @@
 import { axiosPrivate } from './axios';
-import type { IProfileResponse, IUpdateProfileRequest, IChangePasswordRequest, ISetPasswordRequest } from '../types/profile.types';
+import type { IProfileResponse, IUpdateProfileRequest, IChangePasswordRequest, ISetPasswordRequest, IUserBanStatus } from '../types/profile.types';
 
 const PATH = '/Profile';
 
@@ -26,4 +26,7 @@ export const profileService = {
 
     deleteAccount: () =>
         axiosPrivate.delete(PATH),
+
+    getBans: () =>
+        axiosPrivate.get<IUserBanStatus>(`${PATH}/bans`),
 };

@@ -1,35 +1,48 @@
 using Components.Domain.Entities;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PcBuilder.Api.Models;
 using PcBuilder.Api.Services;
 using PcBuilder.Contracts.Messages;
 using Scraping.Application.Commands;
 using Scraping.Infrastructure.Handlers;
+using Scraping.Infrastructure.Scrapers.PassMark;
 
 namespace PcBuilder.Api.Controllers
 {
     [Route("api/scraper")]
     [ApiController]
-    //[Authorize]
-    //[EnableRateLimiting("scraper")]
+    //[Authorize(Roles = "Admin")]
     public class ScraperController : ControllerBase
     {
         private readonly IRabbitMqPublisher _publisher;
         private readonly IScrapeJobTracker _tracker;
         private readonly ISender _sender;
+        private readonly PassMarkUpdateJobHandler _passMarkHandler;
 
-        public ScraperController(IRabbitMqPublisher publisher, IScrapeJobTracker tracker, ISender sender)
+        public ScraperController(IRabbitMqPublisher publisher, IScrapeJobTracker tracker, ISender sender, PassMarkUpdateJobHandler passMarkHandler)
         {
             _publisher = publisher;
             _tracker = tracker;
             _sender = sender;
+            _passMarkHandler = passMarkHandler;
         }
 
         [HttpGet("jobs")]
         public IActionResult GetAllJobs()
         {
             return Ok(_tracker.GetAllStatuses());
+        }
+
+        [HttpGet("jobs/latest")]
+        public IActionResult GetLatestJobPerType()
+        {
+            var latest = _tracker.GetAllStatuses()
+                .GroupBy(j => j.ComponentType)
+                .Select(g => g.OrderByDescending(j => j.QueuedAt).First())
+                .ToList();
+            return Ok(latest);
         }
 
         [HttpGet("jobs/{jobId:guid}")]
@@ -53,6 +66,13 @@ namespace PcBuilder.Api.Controllers
             await _publisher.PublishAsync("scrape-cancellations", new ScrapeJobCancelMessage(jobId), cancellationToken);
 
             return Ok(new { jobId, status = "Cancelling" });
+        }
+
+        [HttpPost("correct/gpu-models")]
+        public async Task<IActionResult> CorrectGpuModels(CancellationToken cancellationToken)
+        {
+            await _sender.Send(new CorrectGpuModelsCommand(), cancellationToken);
+            return Ok();
         }
 
         [HttpPost("translate/pc-case")]
@@ -168,6 +188,83 @@ namespace PcBuilder.Api.Controllers
         public async Task<IActionResult> ScrapeFans(CancellationToken cancellationToken)
             => await EnqueueCategoryAsync("https://hotline.ua/ua/computer/kulery-i-radiatory/1569/", "Fan", nameof(Fan), cancellationToken);
 
+        [HttpPost("passmark/preview")]
+        public async Task<IActionResult> PreviewPassMark(CancellationToken cancellationToken)
+        {
+            var result = await _passMarkHandler.PreviewAsync(cancellationToken);
+            return Ok(result);
+        }
+
+        [HttpPost("passmark")]
+        public async Task<IActionResult> UpdatePassMark(CancellationToken cancellationToken)
+        {
+            const string componentType = "PassMark";
+
+            if (_tracker.HasActiveJob(componentType))
+                return Conflict("A PassMark update job is already running or queued.");
+
+            var jobId = Guid.NewGuid();
+            var message = new ScrapeJobMessage(jobId, string.Empty, componentType, string.Empty, "PassMarkUpdate", null, false);
+
+            _tracker.TrackJob(new ScrapeJobStatus
+            {
+                JobId = jobId,
+                ComponentType = componentType,
+                Kind = "PassMarkUpdate",
+                State = "Queued",
+                QueuedAt = DateTime.UtcNow
+            });
+
+            await _publisher.PublishAsync("scrape-jobs", message, cancellationToken);
+
+            return Accepted($"/api/scraper/jobs/{jobId}", new { jobId, status = "Queued", kind = "PassMarkUpdate" });
+        }
+
+        private static readonly Dictionary<string, string> PriceEntityMap = new()
+        {
+            ["Cpu"] = nameof(Cpu),
+            ["Gpu"] = nameof(Gpu),
+            ["Motherboard"] = nameof(Motherboard),
+            ["CpuCooler"] = nameof(CpuCooler),
+            ["PcCase"] = nameof(PcCase),
+            ["PowerSupply"] = nameof(PowerSupply),
+            ["Ram"] = nameof(Ram),
+            ["Ssd"] = nameof(Ssd),
+            ["Hdd"] = nameof(Hdd),
+            ["Fan"] = nameof(Fan),
+        };
+
+        [HttpPost("prices/{componentType}")]
+        public async Task<IActionResult> UpdatePrices(string componentType, CancellationToken cancellationToken)
+        {
+            if (!PriceEntityMap.TryGetValue(componentType, out var entityTypeName))
+                return BadRequest($"Unknown component type: {componentType}");
+
+            return await EnqueuePriceUpdateAsync(componentType, entityTypeName, cancellationToken);
+        }
+
+        private async Task<IActionResult> EnqueuePriceUpdateAsync(string componentType, string entityTypeName, CancellationToken ct)
+        {
+            if (_tracker.HasActiveJob(componentType))
+                return Conflict($"A scrape job for {componentType} is already running or queued.");
+
+            var jobId = Guid.NewGuid();
+            var message = new ScrapeJobMessage(jobId, string.Empty, componentType, entityTypeName, "PriceUpdate", null, false);
+
+            _tracker.TrackJob(new ScrapeJobStatus
+            {
+                JobId = jobId,
+                ComponentType = componentType,
+                Kind = "PriceUpdate",
+                State = "Queued",
+                QueuedAt = DateTime.UtcNow
+            });
+
+            await _publisher.PublishAsync("scrape-jobs", message, ct);
+
+            return Accepted($"/api/scraper/jobs/{jobId}", new { jobId, status = "Queued", componentType, kind = "PriceUpdate" });
+        }
+
         private async Task<IActionResult> EnqueueCategoryAsync(string url, string componentType, string entityTypeName, CancellationToken ct, bool correctGpuModels = false)
         {
             if (_tracker.HasActiveJob(componentType))
@@ -180,6 +277,7 @@ namespace PcBuilder.Api.Controllers
             {
                 JobId = jobId,
                 ComponentType = componentType,
+                Kind = "Category",
                 State = "Queued",
                 QueuedAt = DateTime.UtcNow
             });
@@ -198,6 +296,7 @@ namespace PcBuilder.Api.Controllers
             {
                 JobId = jobId,
                 ComponentType = componentType,
+                Kind = "SingleComponent",
                 State = "Queued",
                 QueuedAt = DateTime.UtcNow
             });

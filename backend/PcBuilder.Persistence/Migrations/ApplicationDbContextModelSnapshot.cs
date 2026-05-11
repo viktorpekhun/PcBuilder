@@ -168,6 +168,9 @@ namespace PcBuilder.Persistence.Migrations
                     b.Property<string>("FactoryLink")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("HotlineUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IntegratedGraphics")
                         .HasColumnType("bit");
 
@@ -181,6 +184,11 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.Property<int?>("OffersCount")
                         .HasColumnType("int");
+
+                    b.Property<int>("PassMarkScore")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<string>("PhotoUrl")
                         .HasColumnType("nvarchar(max)");
@@ -201,6 +209,8 @@ namespace PcBuilder.Persistence.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PassMarkScore");
 
                     b.ToTable("Cpus");
                 });
@@ -234,6 +244,9 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.Property<double?>("Height")
                         .HasColumnType("float");
+
+                    b.Property<string>("HotlineUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<double?>("Length")
                         .HasColumnType("float");
@@ -337,7 +350,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("MotherboardId");
 
-                    b.ToTable("CpuPowerConnectors");
+                    b.ToTable("MotherboardCpuPowerConnectors", (string)null);
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Fan", b =>
@@ -363,6 +376,9 @@ namespace PcBuilder.Persistence.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("FactoryLink")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HotlineUrl")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("MaxSpeed")
@@ -446,6 +462,9 @@ namespace PcBuilder.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("HotlineUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("MaxFrequency")
                         .HasColumnType("int");
 
@@ -469,6 +488,11 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.Property<int?>("OffersCount")
                         .HasColumnType("int");
+
+                    b.Property<int>("PassMarkScore")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<int?>("PcleLane")
                         .HasColumnType("int");
@@ -495,6 +519,8 @@ namespace PcBuilder.Persistence.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PassMarkScore");
 
                     b.ToTable("Gpus");
                 });
@@ -546,6 +572,9 @@ namespace PcBuilder.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FormFactor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HotlineUrl")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Interface")
@@ -607,7 +636,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("MotherboardId");
 
-                    b.ToTable("InnerPorts");
+                    b.ToTable("MotherboardInnerPorts", (string)null);
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.M2Slot", b =>
@@ -632,7 +661,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("MotherboardId");
 
-                    b.ToTable("M2Slots");
+                    b.ToTable("MotherboardM2Slots", (string)null);
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Motherboard", b =>
@@ -689,6 +718,9 @@ namespace PcBuilder.Persistence.Migrations
                     b.Property<string>("FormFactor")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("HotlineUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -764,6 +796,9 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.Property<bool>("HasMicrophone")
                         .HasColumnType("bit");
+
+                    b.Property<string>("HotlineUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<double?>("MaxCpuCoolerHeight")
                         .HasColumnType("float");
@@ -879,7 +914,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("MotherboardId");
 
-                    b.ToTable("PcleSlots");
+                    b.ToTable("MotherboardPcleSlots", (string)null);
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.PowerSupply", b =>
@@ -917,6 +952,9 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.Property<bool>("HasApcf")
                         .HasColumnType("bit");
+
+                    b.Property<string>("HotlineUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("InputMaxVoltage")
                         .HasColumnType("int");
@@ -986,6 +1024,76 @@ namespace PcBuilder.Persistence.Migrations
                     b.ToTable("PowerSupplyPowerConnectors");
                 });
 
+            modelBuilder.Entity("Components.Domain.Entities.PriceAlertSubscription", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ComponentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ComponentType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("InitialPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("LastNotifiedPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("ThresholdPercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComponentId", "ComponentType");
+
+                    b.HasIndex("UserId", "ComponentId", "ComponentType")
+                        .IsUnique();
+
+                    b.ToTable("PriceAlertSubscriptions");
+                });
+
+            modelBuilder.Entity("Components.Domain.Entities.PriceHistoryEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("AveragePrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("ComponentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ComponentType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OffersCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("SnapshotDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComponentId", "ComponentType", "SnapshotDate")
+                        .IsUnique();
+
+                    b.ToTable("PriceHistoryEntries");
+                });
+
             modelBuilder.Entity("Components.Domain.Entities.ProductOffer", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1052,6 +1160,9 @@ namespace PcBuilder.Persistence.Migrations
                     b.Property<int>("Frequency")
                         .HasColumnType("int");
 
+                    b.Property<string>("HotlineUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("ModuleQuantity")
                         .HasColumnType("int");
 
@@ -1110,7 +1221,7 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.HasIndex("MotherboardId");
 
-                    b.ToTable("RearPorts");
+                    b.ToTable("MotherboardRearPorts", (string)null);
                 });
 
             modelBuilder.Entity("Components.Domain.Entities.Ssd", b =>
@@ -1140,6 +1251,9 @@ namespace PcBuilder.Persistence.Migrations
                     b.Property<string>("FormFactor")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("HotlineUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Interface")
                         .HasMaxLength(300)
@@ -1217,7 +1331,97 @@ namespace PcBuilder.Persistence.Migrations
                     b.ToTable("Stores");
                 });
 
-            modelBuilder.Entity("PcBuilds.Domain.Entities.Comment", b =>
+            modelBuilder.Entity("Moderation.Domain.Entities.Report", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AdminResolutionNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ReportType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("ReportedEntityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ReportedUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ReporterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ResolvedByAdminId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReportedUserId");
+
+                    b.HasIndex("ResolvedByAdminId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("ReporterId", "ReportType", "ReportedEntityId");
+
+                    b.ToTable("Reports");
+                });
+
+            modelBuilder.Entity("Moderation.Domain.Entities.Warning", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BanType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("IssuedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("IssuedByAdminId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IssuedByAdminId");
+
+                    b.HasIndex("UserId", "IssuedAt");
+
+                    b.ToTable("Warnings");
+                });
+
+            modelBuilder.Entity("Notifications.Domain.Entities.Notification", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1226,27 +1430,84 @@ namespace PcBuilder.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("PcBuildId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<bool>("IsRead")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
-                    b.Property<string>("Text")
+                    b.Property<string>("Payload")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PcBuildId");
+                    b.HasIndex("UserId", "CreatedAt");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId", "IsRead");
 
-                    b.ToTable("Comments");
+                    b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("PcBuilder.Persistence.Data.Entities.ScrapeJob", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ComponentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("ItemsScraped")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasDefaultValue("Category");
+
+                    b.Property<DateTime>("QueuedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int?>("TotalItems")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QueuedAt");
+
+                    b.HasIndex("ComponentType", "State");
+
+                    b.ToTable("ScrapeJobs");
                 });
 
             modelBuilder.Entity("PcBuilds.Domain.Entities.PcBuild", b =>
@@ -1891,13 +2152,38 @@ namespace PcBuilder.Persistence.Migrations
                     b.Navigation("Motherboard");
                 });
 
-            modelBuilder.Entity("PcBuilds.Domain.Entities.Comment", b =>
+            modelBuilder.Entity("Moderation.Domain.Entities.Report", b =>
                 {
-                    b.HasOne("PcBuilds.Domain.Entities.PcBuild", "PcBuild")
-                        .WithMany("Comments")
-                        .HasForeignKey("PcBuildId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                    b.HasOne("Auth.Domain.Entities.User", "ReportedUser")
+                        .WithMany()
+                        .HasForeignKey("ReportedUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("Auth.Domain.Entities.User", "Reporter")
+                        .WithMany()
+                        .HasForeignKey("ReporterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Auth.Domain.Entities.User", "ResolvedByAdmin")
+                        .WithMany()
+                        .HasForeignKey("ResolvedByAdminId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ReportedUser");
+
+                    b.Navigation("Reporter");
+
+                    b.Navigation("ResolvedByAdmin");
+                });
+
+            modelBuilder.Entity("Moderation.Domain.Entities.Warning", b =>
+                {
+                    b.HasOne("Auth.Domain.Entities.User", "IssuedByAdmin")
+                        .WithMany()
+                        .HasForeignKey("IssuedByAdminId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Auth.Domain.Entities.User", "User")
                         .WithMany()
@@ -1905,9 +2191,18 @@ namespace PcBuilder.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("PcBuild");
+                    b.Navigation("IssuedByAdmin");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Notifications.Domain.Entities.Notification", b =>
+                {
+                    b.HasOne("Auth.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("PcBuilds.Domain.Entities.PcBuild", b =>
@@ -2169,8 +2464,6 @@ namespace PcBuilder.Persistence.Migrations
 
             modelBuilder.Entity("PcBuilds.Domain.Entities.PcBuild", b =>
                 {
-                    b.Navigation("Comments");
-
                     b.Navigation("PcBuild_Fans");
 
                     b.Navigation("PcBuild_Hdds");

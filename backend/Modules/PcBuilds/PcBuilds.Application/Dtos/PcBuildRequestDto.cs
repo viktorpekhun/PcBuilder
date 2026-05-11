@@ -8,6 +8,7 @@ namespace PcBuilds.Application.Dtos
         public bool IsPublished { get; set; }
         public DateTime? PublishedAt { get; set; }
         public decimal Price { get; set; }
+        public decimal AverageRating { get; set; }
         public Guid UserId { get; set; }
         public string Username { get; set; } = string.Empty;
         public string? AvatarUrl { get; set; }

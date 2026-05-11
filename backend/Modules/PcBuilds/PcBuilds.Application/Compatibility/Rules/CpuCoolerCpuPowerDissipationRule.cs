@@ -1,12 +1,12 @@
-﻿using Components.Domain.Entities;
-using PcBuilds.Domain.Entities;
+using Components.Domain.Entities;
 using PcBuilder.SharedKernel.Enums;
+using PcBuilds.Domain.Entities;
 
 namespace PcBuilds.Application.Compatibility.Rules
 {
     public class CpuCoolerCpuPowerDissipationRule : ICompatibilityRule
     {
-        public string Name => "CPU Cooler and CPU Power Dissipation Compatibility";
+        public string Name => "CoolerTdp";
 
         public CompatibilityResult Check(PcBuild pcBuild)
         {
@@ -15,26 +15,34 @@ namespace PcBuilds.Application.Compatibility.Rules
             var cpu = pcBuild.Cpu;
 
             if (cpu == null || cpuCooler == null)
-            {
                 return result;
-            }
 
-            if (cpuCooler?.MaxPowerDissipation == null || cpu?.Tdp == null)
+            if (cpuCooler.MaxPowerDissipation == null || cpu.Tdp == null)
             {
-                result.Messages.Add(new CompatibilityMessage
+                result.FitnessScore = 0.7;
+                result.Issues.Add(new CompatibilityIssue
                 {
-                    Type = CompatibilityMessageType.Warning,
-                    Message = "Неможливо перевірити сумісність кулера CPU та CPU — недостатньо даних."
+                    Severity = CompatibilitySeverity.Warning,
+                    Code = IssueCodes.CoolerTdpDataMissing,
+                    Parameters = new() { ["CoolerName"] = cpuCooler.Name ?? "", ["CpuName"] = cpu.Name ?? "" }
                 });
                 return result;
             }
 
             if (cpuCooler.MaxPowerDissipation < cpu.Tdp)
             {
-                result.Messages.Add(new CompatibilityMessage
+                result.FitnessScore = 0.0;
+                result.Issues.Add(new CompatibilityIssue
                 {
-                    Type = CompatibilityMessageType.Problem,
-                    Message = $"Максимальна потужність розсіювання кулера CPU ({cpuCooler.MaxPowerDissipation} Вт) менша за TDP CPU ({cpu.Tdp} Вт)."
+                    Severity = CompatibilitySeverity.Critical,
+                    Code = IssueCodes.CoolerTdpInsufficient,
+                    Parameters = new()
+                    {
+                        ["CoolerName"] = cpuCooler.Name ?? "",
+                        ["CoolerTdp"] = cpuCooler.MaxPowerDissipation.ToString()!,
+                        ["CpuName"] = cpu.Name ?? "",
+                        ["CpuTdp"] = cpu.Tdp.ToString()!
+                    }
                 });
             }
 

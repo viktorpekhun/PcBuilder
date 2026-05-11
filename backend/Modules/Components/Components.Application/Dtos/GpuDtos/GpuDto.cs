@@ -24,6 +24,7 @@ namespace Components.Application.Dtos.GpuDtos
         public double? SizeHeight { get; set; }
         public int? Wattage { get; set; }
         public int? PsuReccomended { get; set; }
+        public int PassMarkScore { get; set; }
         public string? FactoryLink { get; set; }
         public decimal? AveragePrice { get; set; }
         public int? OffersCount { get; set; }

@@ -16,6 +16,7 @@ using Components.Application.Dtos;
         public int? Threads { get; set; }
         public string? Techprocess { get; set; }
         public int? Tdp { get; set; }
+        public int PassMarkScore { get; set; }
         public bool IntegratedGraphics { get; set; }
         public string? Complectation { get; set; }
         public string? FactoryLink { get; set; }

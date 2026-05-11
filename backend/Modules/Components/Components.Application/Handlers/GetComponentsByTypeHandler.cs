@@ -10,6 +10,8 @@ using Components.Application.Dtos.PcCaseDtos;
 using Components.Application.Dtos.PowerSupplyDtos;
 using Components.Application.Dtos.RamDtos;
 using Components.Application.Dtos.SsdDtos;
+using Components.Application.PreFilter;
+using Components.Application.Queries;
 using Components.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +19,6 @@ using PcBuilder.SharedKernel;
 using PcBuilder.SharedKernel.Enums;
 using PcBuilder.SharedKernel.Filtering;
 using PcBuilder.SharedKernel.Persistence;
-using Components.Application.Queries;
 
 namespace Components.Application.Handlers
 {
@@ -25,30 +26,68 @@ namespace Components.Application.Handlers
     {
         private readonly IApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly IComponentQueryPreFilter? _preFilter;
 
-        public GetComponentsByTypeHandler(IApplicationDbContext context, IMapper mapper)
+        public GetComponentsByTypeHandler(
+            IApplicationDbContext context,
+            IMapper mapper,
+            IComponentQueryPreFilter? preFilter = null)
         {
             _context = context;
             _mapper = mapper;
+            _preFilter = preFilter;
         }
 
         public async Task<Result<PagedResponse<object>>> Handle(GetComponentsByTypeQuery request, CancellationToken cancellationToken)
         {
+            PartialBuildContext? partialCtx = null;
+            if (request.ApplyCompatibilityPrefilter && _preFilter != null && request.PartialBuildIds != null)
+                partialCtx = await BuildPartialContext(request.PartialBuildIds, cancellationToken);
+
             (IEnumerable<object> componentEntities, int totalCount) = request.ComponentType switch
             {
-                ComponentType.Cpu => await GetFilteredComponentsAndCount<Cpu>(request.Parameters),
-                ComponentType.Gpu => await GetFilteredComponentsAndCount<Gpu>(request.Parameters, q => q.Include(g => g.GpuPowerConnectors)),
-                ComponentType.Motherboard => await GetFilteredComponentsAndCount<Motherboard>(request.Parameters, q => q
-                    .Include(m => m.CpuPowerConnectors).Include(m => m.PcleSlots).Include(m => m.M2Slots)
-                    .Include(m => m.RearPorts).Include(m => m.InnerPorts)),
-                ComponentType.Ram => await GetFilteredComponentsAndCount<Ram>(request.Parameters),
-                ComponentType.CpuCooler => await GetFilteredComponentsAndCount<CpuCooler>(request.Parameters, q => q.Include(c => c.CpuCoolerSockets)),
-                ComponentType.PcCase => await GetFilteredComponentsAndCount<PcCase>(request.Parameters, q => q
-                    .Include(c => c.PcCaseFormFactors).Include(c => c.PcCaseFanLocations)),
-                ComponentType.PowerSupply => await GetFilteredComponentsAndCount<PowerSupply>(request.Parameters, q => q.Include(p => p.PowerSupplyPowerConnectors)),
+                ComponentType.Cpu => await GetFilteredComponentsAndCount<Cpu>(
+                    request.Parameters,
+                    preFilter: partialCtx != null ? q => _preFilter!.FilterCpus(q, partialCtx) : null),
+
+                ComponentType.Gpu => await GetFilteredComponentsAndCount<Gpu>(
+                    request.Parameters,
+                    include: q => q.Include(g => g.GpuPowerConnectors),
+                    preFilter: partialCtx != null ? q => _preFilter!.FilterGpus(q, partialCtx) : null),
+
+                ComponentType.Motherboard => await GetFilteredComponentsAndCount<Motherboard>(
+                    request.Parameters,
+                    include: q => q.Include(m => m.CpuPowerConnectors).Include(m => m.PcleSlots)
+                                   .Include(m => m.M2Slots).Include(m => m.RearPorts).Include(m => m.InnerPorts),
+                    preFilter: partialCtx != null ? q => _preFilter!.FilterMotherboards(q, partialCtx) : null),
+
+                ComponentType.Ram => await GetFilteredComponentsAndCount<Ram>(
+                    request.Parameters,
+                    preFilter: partialCtx != null ? q => _preFilter!.FilterRams(q, partialCtx) : null),
+
+                ComponentType.CpuCooler => await GetFilteredComponentsAndCount<CpuCooler>(
+                    request.Parameters,
+                    include: q => q.Include(c => c.CpuCoolerSockets),
+                    preFilter: partialCtx != null ? q => _preFilter!.FilterCoolers(q, partialCtx) : null),
+
+                ComponentType.PcCase => await GetFilteredComponentsAndCount<PcCase>(
+                    request.Parameters,
+                    include: q => q.Include(c => c.PcCaseFormFactors).Include(c => c.PcCaseFanLocations),
+                    preFilter: partialCtx != null ? q => _preFilter!.FilterCases(q, partialCtx) : null),
+
+                // PSU: SQL filter is a no-op; ApplyInMemoryPsuRules is for autobuilder use only.
+                ComponentType.PowerSupply => await GetFilteredComponentsAndCount<PowerSupply>(
+                    request.Parameters,
+                    include: q => q.Include(p => p.PowerSupplyPowerConnectors),
+                    preFilter: partialCtx != null ? q => _preFilter!.FilterPowerSupplies(q, partialCtx) : null),
+
                 ComponentType.Ssd => await GetFilteredComponentsAndCount<Ssd>(request.Parameters),
                 ComponentType.Hdd => await GetFilteredComponentsAndCount<Hdd>(request.Parameters),
-                ComponentType.Fan => await GetFilteredComponentsAndCount<Fan>(request.Parameters),
+
+                ComponentType.Fan => await GetFilteredComponentsAndCount<Fan>(
+                    request.Parameters,
+                    preFilter: partialCtx != null ? q => _preFilter!.FilterFans(q, partialCtx) : null),
+
                 _ => (Enumerable.Empty<object>(), 0)
             };
 
@@ -80,13 +119,64 @@ namespace Components.Application.Handlers
 
         private async Task<(IEnumerable<object>, int)> GetFilteredComponentsAndCount<T>(
             ResourceParameters parameters,
-            Func<IQueryable<T>, IQueryable<T>>? include = null) where T : class
+            Func<IQueryable<T>, IQueryable<T>>? include = null,
+            Func<IQueryable<T>, IQueryable<T>>? preFilter = null) where T : class
         {
-            var result = await _context.Set<T>()
-                .AsQueryable()
-                .FilterAndPageAsync(parameters, include: include);
+            var query = _context.Set<T>().AsQueryable();
 
+            if (preFilter != null)
+                query = preFilter(query);
+
+            var result = await query.FilterAndPageAsync(parameters, include: include);
             return (result.items.Cast<object>(), result.totalCount);
+        }
+
+        private async Task<PartialBuildContext> BuildPartialContext(
+            PartialBuildIds ids,
+            CancellationToken ct)
+        {
+            Cpu? cpu = ids.CpuId.HasValue
+                ? await _context.Set<Cpu>().FirstOrDefaultAsync(c => c.Id == ids.CpuId.Value, ct)
+                : null;
+
+            Gpu? gpu = ids.GpuId.HasValue
+                ? await _context.Set<Gpu>()
+                    .Include(g => g.GpuPowerConnectors)
+                    .FirstOrDefaultAsync(g => g.Id == ids.GpuId.Value, ct)
+                : null;
+
+            Motherboard? mb = ids.MotherboardId.HasValue
+                ? await _context.Set<Motherboard>()
+                    .Include(m => m.CpuPowerConnectors)
+                    .Include(m => m.PcleSlots)
+                    .Include(m => m.M2Slots)
+                    .FirstOrDefaultAsync(m => m.Id == ids.MotherboardId.Value, ct)
+                : null;
+
+            Ram? ram = ids.RamId.HasValue
+                ? await _context.Set<Ram>().FirstOrDefaultAsync(r => r.Id == ids.RamId.Value, ct)
+                : null;
+
+            CpuCooler? cooler = ids.CpuCoolerId.HasValue
+                ? await _context.Set<CpuCooler>()
+                    .Include(c => c.CpuCoolerSockets)
+                    .FirstOrDefaultAsync(c => c.Id == ids.CpuCoolerId.Value, ct)
+                : null;
+
+            PcCase? pcCase = ids.PcCaseId.HasValue
+                ? await _context.Set<PcCase>()
+                    .Include(c => c.PcCaseFormFactors)
+                    .Include(c => c.PcCaseFanLocations)
+                    .FirstOrDefaultAsync(c => c.Id == ids.PcCaseId.Value, ct)
+                : null;
+
+            PowerSupply? psu = ids.PowerSupplyId.HasValue
+                ? await _context.Set<PowerSupply>()
+                    .Include(p => p.PowerSupplyPowerConnectors)
+                    .FirstOrDefaultAsync(p => p.Id == ids.PowerSupplyId.Value, ct)
+                : null;
+
+            return new PartialBuildContext(cpu, gpu, mb, ram, cooler, pcCase, psu);
         }
     }
 }

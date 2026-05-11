@@ -63,6 +63,30 @@
     color: #374151;
 }
 
+.rating-row {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-bottom: 8px;
+}
+
+.star-filled {
+    color: #f59e0b;
+    font-size: 18px;
+}
+
+.star-empty {
+    color: #d1d5db;
+    font-size: 18px;
+}
+
+.rating-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #6b7280;
+    margin-left: 6px;
+}
+
 .published-date {
     color: #9ca3af;
     font-size: 13px;
@@ -73,6 +97,28 @@
     flex-direction: column;
     align-items: flex-end;
     gap: 12px;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.report-build-btn {
+    background: none;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    color: #6b7280;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 6px 12px;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.report-build-btn:hover {
+    color: #ef4444;
+    border-color: #ef4444;
 }
 
 .header-price {

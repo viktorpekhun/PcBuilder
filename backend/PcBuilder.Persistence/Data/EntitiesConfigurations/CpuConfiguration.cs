@@ -31,5 +31,10 @@ public class CpuConfiguration : IEntityTypeConfiguration<Cpu>
 
         builder.Property(c => c.AveragePrice)
             .HasPrecision(18, 2);
+
+        builder.Property(c => c.PassMarkScore)
+            .HasDefaultValue(0);
+
+        builder.HasIndex(c => c.PassMarkScore);
     }
 }

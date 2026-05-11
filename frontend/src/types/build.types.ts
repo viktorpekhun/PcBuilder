@@ -37,22 +37,25 @@ export type IComponentsCompatibility = Pick<
     "cpuId" | "gpuId" | "motherboardId" | "cpuCoolerId" | "powerSupplyId" | "pcCaseId" | "rams" | "ssds" | "hdds" | "fans"
 >;
 
-export type CompatibilityMessageType = "Problem" | "Warning";
+export type CompatibilitySeverity = "Critical" | "Warning" | "Info";
 
-export interface ICompatibilityMessage {
-    type: CompatibilityMessageType;
-    message: string;
+export interface ICompatibilityIssue {
+    severity: CompatibilitySeverity;
+    code: string;
+    parameters: Record<string, string>;
 }
 
 export interface ICompatibilityResult {
-    isCompatible: boolean;
-    messages: ICompatibilityMessage[];
+    ruleName: string;
+    fitnessScore: number;
+    isStrictlyCompatible: boolean;
+    issues: ICompatibilityIssue[];
 }
 
-export interface ICompatibilityResponse {
-    compatible: boolean;
-    hasWarnings: boolean;
-    results: ICompatibilityResult[];
+export interface IBuildCompatibilityReport {
+    isStrictlyCompatible: boolean;
+    overallFitnessScore: number;
+    ruleResults: ICompatibilityResult[];
 }
 
 // --- Build list (user-builds) ---
@@ -94,6 +97,7 @@ export interface IPcBuildRequest {
     isPublished: boolean;
     publishedAt?: string;
     price: number;
+    averageRating?: number;
     userId: string;
     username?: string;
     avatarUrl?: string;
@@ -116,4 +120,44 @@ export interface IPcBuildRequest {
 export interface IApiResponse {
     success: boolean;
     message: string;
+}
+
+// --- Auto-builder ---
+
+export type UsageScenario = 'Gaming' | 'Office' | 'ContentCreation' | 'Workstation' | 'Budget';
+
+export interface IAutoBuildRequest {
+    budget: number;
+    preferredUse: UsageScenario;
+    isStrictBudget: boolean;
+    isFutureProof?: boolean;
+    preferredFormFactor?: string;
+}
+
+export interface ISelectedComponentInfo {
+    id: string;
+    name: string;
+    averagePrice?: number;
+}
+
+export interface IAutoBuildComponents {
+    cpu?: ISelectedComponentInfo;
+    gpu?: ISelectedComponentInfo;
+    motherboard?: ISelectedComponentInfo;
+    cpuCooler?: ISelectedComponentInfo;
+    powerSupply?: ISelectedComponentInfo;
+    pcCase?: ISelectedComponentInfo;
+    ram?: ISelectedComponentInfo;
+    ramQuantity: number;
+    ssd?: ISelectedComponentInfo;
+    ssdQuantity: number;
+    hdd?: ISelectedComponentInfo;
+    hddQuantity: number;
+    fan?: ISelectedComponentInfo;
+    fanQuantity: number;
+}
+
+export interface IAutoBuildResult {
+    totalPrice: number;
+    components: IAutoBuildComponents;
 }
