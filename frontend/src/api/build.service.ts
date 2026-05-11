@@ -1,6 +1,8 @@
 import axios, { axiosPrivate } from "./axios";
 import type {
     IApiResponse,
+    IAutoBuildRequest,
+    IAutoBuildResult,
     IBuildCompatibilityReport,
     IComponentsCompatibility,
     IPcBuildInput,
@@ -20,4 +22,5 @@ export const buildService = {
     publishBuild: (id: string, isPublished: boolean) => axiosPrivate.put<IApiResponse>(`${PATH}/${id}/publish`, { isPublished }),
     getPublicBuildById: (id: string) => axios.get<IPcBuildRequest>(`${PATH}/${id}`),
     cloneBuild: (id: string) => axiosPrivate.post<{ success: boolean; buildId: string }>(`${PATH}/${id}/clone`),
+    autoBuild: (data: IAutoBuildRequest) => axios.post<IAutoBuildResult>(`${PATH}/auto`, data),
 }

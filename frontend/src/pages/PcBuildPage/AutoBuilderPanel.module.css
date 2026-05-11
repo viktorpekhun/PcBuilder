@@ -1,0 +1,370 @@
+/* Overlay behind the panel */
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 999;
+}
+
+/* Drawer panel */
+.panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: 400px;
+    background: #fff;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.18);
+    z-index: 1000;
+    transform: translateX(100%);
+    transition: transform 0.28s ease;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.panel.open {
+    transform: translateX(0);
+}
+
+/* Header */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: #262B31;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.title {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+.closeBtn {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+    opacity: 0.8;
+    transition: opacity 0.15s;
+}
+
+.closeBtn:hover {
+    opacity: 1;
+}
+
+/* Scrollable body */
+.body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* Field label */
+.fieldLabel {
+    font-size: 13px;
+    font-weight: 600;
+    color: #444;
+    margin-bottom: -8px;
+}
+
+/* Budget input */
+.budgetInput {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.budgetInput:focus {
+    border-color: #262B31;
+}
+
+.budgetInput:disabled {
+    background: #f5f5f5;
+    color: #999;
+}
+
+/* Scenario cards grid */
+.scenarioGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.scenarioCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 6px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    background: #fafafa;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    font-size: 12px;
+    color: #444;
+    font-weight: 500;
+}
+
+.scenarioCard:hover:not(:disabled) {
+    border-color: #aaa;
+    background: #f0f0f0;
+}
+
+.scenarioCard:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.scenarioSelected {
+    border-color: #262B31;
+    background: #f0f2f4;
+    color: #262B31;
+}
+
+.scenarioIcon {
+    color: #555;
+    display: flex;
+}
+
+.scenarioSelected .scenarioIcon {
+    color: #262B31;
+}
+
+.scenarioLabel {
+    text-align: center;
+    line-height: 1.2;
+}
+
+/* Toggles */
+.toggleRow {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.toggleLabel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #262B31;
+    cursor: pointer;
+}
+
+.toggleLabel input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: #262B31;
+}
+
+.toggleHint {
+    font-size: 11px;
+    color: #888;
+    padding-left: 24px;
+}
+
+/* Extra params toggle button */
+.extraToggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: none;
+    border: none;
+    border-top: 1px solid #eee;
+    padding: 10px 0 0;
+    font-size: 13px;
+    color: #555;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.extraToggle:hover {
+    color: #262B31;
+}
+
+.extraToggle:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+/* Extra section */
+.extraSection {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 4px 0;
+}
+
+/* Form-factor chips */
+.chipRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.chip {
+    padding: 5px 12px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    background: #fafafa;
+    font-size: 12px;
+    font-weight: 500;
+    color: #555;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.chip:hover:not(:disabled) {
+    border-color: #999;
+    background: #f0f0f0;
+}
+
+.chip:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.chipSelected {
+    border-color: #262B31;
+    background: #262B31;
+    color: #fff;
+}
+
+/* Inline error message */
+.errorMsg {
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: #b91c1c;
+    line-height: 1.4;
+}
+
+/* --- Result state --- */
+
+.formSummaryChip {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    background: #f4f6f8;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #444;
+}
+
+.chipDot {
+    color: #bbb;
+    font-size: 10px;
+}
+
+/* Component list */
+.resultList {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.resultRow {
+    display: grid;
+    grid-template-columns: 130px 1fr auto;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    font-size: 13px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.resultRow:last-child {
+    border-bottom: none;
+}
+
+.resultRow:nth-child(even) {
+    background: #f9f9f9;
+}
+
+.resultType {
+    font-size: 12px;
+    color: #666;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.resultName {
+    color: #1a1a1a;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.resultPrice {
+    color: #43a047;
+    font-weight: 600;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* Total row */
+.resultTotal {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 4px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #262B31;
+    border-top: 2px solid #e5e7eb;
+    margin-top: -1px;
+}
+
+.totalPrice {
+    color: #43a047;
+    font-size: 16px;
+}
+
+/* Overwrite warning */
+.overwriteWarning {
+    background: #fffbeb;
+    border: 1px solid #fbbf24;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #92400e;
+}
+
+/* Result action buttons */
+.resultActions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 4px;
+}

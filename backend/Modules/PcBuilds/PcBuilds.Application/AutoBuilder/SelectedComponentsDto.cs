@@ -1,22 +1,20 @@
 namespace PcBuilds.Application.AutoBuilder
 {
-    /// <summary>
-    /// IDs of the specific components the autobuilder picked for each slot.
-    /// The build itself is not persisted; this lets the caller resolve full component data on demand.
-    /// </summary>
+    public record SelectedComponentInfo(Guid Id, string Name, decimal? AveragePrice);
+
     public record SelectedComponentsDto(
-        Guid? CpuId,
-        Guid? GpuId,
-        Guid? MotherboardId,
-        Guid? CpuCoolerId,
-        Guid? PowerSupplyId,
-        Guid? PcCaseId,
-        Guid? RamId,
+        SelectedComponentInfo? Cpu,
+        SelectedComponentInfo? Gpu,
+        SelectedComponentInfo? Motherboard,
+        SelectedComponentInfo? CpuCooler,
+        SelectedComponentInfo? PowerSupply,
+        SelectedComponentInfo? PcCase,
+        SelectedComponentInfo? Ram,
         int RamQuantity,
-        Guid? SsdId,
+        SelectedComponentInfo? Ssd,
         int SsdQuantity,
-        Guid? HddId,
+        SelectedComponentInfo? Hdd,
         int HddQuantity,
-        Guid? FanId,
+        SelectedComponentInfo? Fan,
         int FanQuantity);
 }

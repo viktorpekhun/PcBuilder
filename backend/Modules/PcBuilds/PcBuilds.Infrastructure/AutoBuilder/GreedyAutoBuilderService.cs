@@ -181,21 +181,24 @@ namespace PcBuilds.Infrastructure.AutoBuilder
             var hdd = build.PcBuild_Hdds.FirstOrDefault();
             var fan = build.PcBuild_Fans.FirstOrDefault();
 
+            static SelectedComponentInfo? Info(Guid? id, string? name, decimal? price) =>
+                id is null ? null : new SelectedComponentInfo(id.Value, name ?? string.Empty, price);
+
             return new SelectedComponentsDto(
-                CpuId:          build.CpuId,
-                GpuId:          build.GpuId,
-                MotherboardId:  build.MotherboardId,
-                CpuCoolerId:    build.CpuCoolerId,
-                PowerSupplyId:  build.PowerSupplyId,
-                PcCaseId:       build.PcCaseId,
-                RamId:          ram?.RamId,
-                RamQuantity:    ram?.Quantity ?? 0,
-                SsdId:          ssd?.SsdId,
-                SsdQuantity:    ssd?.Quantity ?? 0,
-                HddId:          hdd?.HddId,
-                HddQuantity:    hdd?.Quantity ?? 0,
-                FanId:          fan?.FanId,
-                FanQuantity:    fan?.Quantity ?? 0);
+                Cpu:          Info(build.CpuId,         build.Cpu?.Name,         build.Cpu?.AveragePrice),
+                Gpu:          Info(build.GpuId,         build.Gpu?.Name,         build.Gpu?.AveragePrice),
+                Motherboard:  Info(build.MotherboardId,  build.Motherboard?.Name,  build.Motherboard?.AveragePrice),
+                CpuCooler:    Info(build.CpuCoolerId,    build.CpuCooler?.Name,    build.CpuCooler?.AveragePrice),
+                PowerSupply:  Info(build.PowerSupplyId,  build.PowerSupply?.Name,  build.PowerSupply?.AveragePrice),
+                PcCase:       Info(build.PcCaseId,       build.PcCase?.Name,       build.PcCase?.AveragePrice),
+                Ram:          Info(ram?.RamId,           ram?.Ram?.Name,           ram?.Ram?.AveragePrice),
+                RamQuantity:  ram?.Quantity ?? 0,
+                Ssd:          Info(ssd?.SsdId,           ssd?.Ssd?.Name,           ssd?.Ssd?.AveragePrice),
+                SsdQuantity:  ssd?.Quantity ?? 0,
+                Hdd:          Info(hdd?.HddId,           hdd?.Hdd?.Name,           hdd?.Hdd?.AveragePrice),
+                HddQuantity:  hdd?.Quantity ?? 0,
+                Fan:          Info(fan?.FanId,           fan?.Fan?.Name,           fan?.Fan?.AveragePrice),
+                FanQuantity:  fan?.Quantity ?? 0);
         }
 
         private static decimal ComputePrice(PcBuild build)

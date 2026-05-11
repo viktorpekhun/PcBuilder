@@ -275,3 +275,57 @@ a.selected-component:hover {
     color: #808386;
     font-size: 14px;
 }
+
+/* Empty-state auto-builder CTA (shown when build is fully empty) */
+.autobuilder-empty-cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f8fafc;
+}
+
+.autobuilder-empty-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.autobuilder-empty-text strong {
+    font-size: 14px;
+    color: #262B31;
+}
+
+.autobuilder-empty-text span {
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.4;
+}
+
+/* Floating pill button (shown when build has any components) */
+.autobuilder-fab {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: #262B31;
+    color: #fff;
+    border: none;
+    border-radius: 28px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    z-index: 900;
+    transition: background 0.15s, box-shadow 0.15s;
+}
+
+.autobuilder-fab:hover {
+    background: #3a4149;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}

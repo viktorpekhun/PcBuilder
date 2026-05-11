@@ -121,3 +121,43 @@ export interface IApiResponse {
     success: boolean;
     message: string;
 }
+
+// --- Auto-builder ---
+
+export type UsageScenario = 'Gaming' | 'Office' | 'ContentCreation' | 'Workstation' | 'Budget';
+
+export interface IAutoBuildRequest {
+    budget: number;
+    preferredUse: UsageScenario;
+    isStrictBudget: boolean;
+    isFutureProof?: boolean;
+    preferredFormFactor?: string;
+}
+
+export interface ISelectedComponentInfo {
+    id: string;
+    name: string;
+    averagePrice?: number;
+}
+
+export interface IAutoBuildComponents {
+    cpu?: ISelectedComponentInfo;
+    gpu?: ISelectedComponentInfo;
+    motherboard?: ISelectedComponentInfo;
+    cpuCooler?: ISelectedComponentInfo;
+    powerSupply?: ISelectedComponentInfo;
+    pcCase?: ISelectedComponentInfo;
+    ram?: ISelectedComponentInfo;
+    ramQuantity: number;
+    ssd?: ISelectedComponentInfo;
+    ssdQuantity: number;
+    hdd?: ISelectedComponentInfo;
+    hddQuantity: number;
+    fan?: ISelectedComponentInfo;
+    fanQuantity: number;
+}
+
+export interface IAutoBuildResult {
+    totalPrice: number;
+    components: IAutoBuildComponents;
+}
