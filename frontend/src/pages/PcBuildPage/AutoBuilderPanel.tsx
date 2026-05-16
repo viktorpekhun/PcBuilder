@@ -1,7 +1,6 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { buildService } from '../../api/build.service';
 import type { IAutoBuildComponents, IAutoBuildResult, UsageScenario } from '../../types/build.types';
-import { Button } from '../../components/Button/Button';
 import styles from './AutoBuilderPanel.module.css';
 
 // --- Icons ---
@@ -26,7 +25,7 @@ const ChevronUp = () => (
 
 // --- Scenario definitions ---
 
-type ScenarioConfig = { value: UsageScenario; label: string; icon: JSX.Element };
+type ScenarioConfig = { value: UsageScenario; label: string; icon: ReactNode };
 
 const SCENARIOS: ScenarioConfig[] = [
     {
@@ -226,12 +225,12 @@ export default function AutoBuilderPanel({ isOpen, hasExistingComponents, onClos
                             )}
 
                             <div className={styles.resultActions}>
-                                <Button variant="primary" size="md" onClick={handleApply}>
-                                    Застосувати
-                                </Button>
-                                <Button variant="outline-secondary" size="md" onClick={handleReset}>
+                                <button className={`${styles.btn} ${styles.btnPri}`} onClick={handleApply}>
+                                    ✓ Застосувати
+                                </button>
+                                <button className={styles.btn} onClick={handleReset}>
                                     Спробувати знову
-                                </Button>
+                                </button>
                             </div>
                         </>
                     ) : (
@@ -325,14 +324,13 @@ export default function AutoBuilderPanel({ isOpen, hasExistingComponents, onClos
 
                             {error && <div className={styles.errorMsg}>{error}</div>}
 
-                            <Button
-                                variant="primary"
-                                size="md"
+                            <button
+                                className={`${styles.btn} ${styles.btnPri}`}
                                 onClick={handleGenerate}
                                 disabled={isLoading}
                             >
-                                {isLoading ? 'Підбираємо компоненти...' : 'Згенерувати збірку'}
-                            </Button>
+                                {isLoading ? 'Підбираємо компоненти...' : '⚙ Згенерувати збірку'}
+                            </button>
                         </>
                     )}
                 </div>

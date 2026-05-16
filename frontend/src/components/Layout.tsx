@@ -1,24 +1,25 @@
 import { Outlet } from "react-router-dom";
-import Navbar from "./Navbar/Navbar";
-import Footer from "./Footer/Footer";
+import Sidebar from "./Sidebar/Sidebar";
+import Topbar from "./Topbar/Topbar";
 import EmailVerificationBanner from "./EmailVerificationBanner/EmailVerificationBanner";
 import useAuth from "../hooks/useAuth";
+import styles from "./Layout.module.css";
 
 const Layout = () => {
     const { auth } = useAuth();
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', width: '100%', minHeight: '100vh' }}>
-            <Navbar/>
-            {auth?.accessToken && auth?.emailVerified === false && (
-                <EmailVerificationBanner />
-            )}
-            <div className="content-wrapper">
+        <div className={styles.app}>
+            <Topbar />
+            <Sidebar />
+            <main className={styles.main}>
+                {auth?.accessToken && auth?.emailVerified === false && (
+                    <EmailVerificationBanner />
+                )}
                 <Outlet />
-            </div>
-            <Footer/>
+            </main>
         </div>
-    )
-}
+    );
+};
 
 export default Layout;

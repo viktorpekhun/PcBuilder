@@ -1,0 +1,17 @@
+.app {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    grid-template-rows: 48px 1fr;
+    background: var(--bg-0);
+    color: var(--fg-0);
+}
+
+.main {
+    grid-row: 2 / -1;
+    grid-column: 2 / -1;
+    min-width: 0;
+    min-height: calc(100vh - 48px);
+    display: flex;
+    flex-direction: column;
+}

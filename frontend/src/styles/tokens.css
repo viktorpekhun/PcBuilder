@@ -1,0 +1,281 @@
+/* ============================================================
+   PcBuilder Design System — colors_and_type.css
+   Tool-first / utilitarian / dark / mono-accented
+   ============================================================ */
+
+/* ---- FONTS ---- */
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+
+:root {
+  /* ── COLORS ─────────────────────────────────────────────── */
+
+  /* surfaces (dark, neutral, slightly cool) */
+  --bg-0:  #08080A;   /* page background — near-black */
+  --bg-1:  #0F0F12;   /* panel / card */
+  --bg-2:  #16161A;   /* raised surface */
+  --bg-3:  #1E1E23;   /* interactive hover */
+  --bg-4:  #2A2A30;   /* pressed / selected wash */
+
+  /* borders (solid, hairline, no shadow) */
+  --bd-0:  #1F1F24;   /* dividers (subtle) */
+  --bd-1:  #2E2E36;   /* default border */
+  --bd-2:  #44444E;   /* emphasized border */
+  --bd-3:  #6B6B76;   /* focus / strong border */
+
+  /* foreground (text) */
+  --fg-0:  #ECECEE;   /* primary text */
+  --fg-1:  #A6A6AE;   /* secondary text */
+  --fg-2:  #70707A;   /* tertiary / labels */
+  --fg-3:  #4A4A52;   /* disabled / hints */
+
+  /* signal — single muted lime accent (calmer than neon, still terminal) */
+  --acc:       #AECF55;   /* primary accent */
+  --acc-soft:  #232C13;   /* solid wash for selected rows / backgrounds */
+  --acc-dim:   #84A23F;   /* hover/active variants */
+  --acc-ink:   #08080A;   /* foreground on solid acc bg */
+
+  /* semantic */
+  --ok:    #7AE07A;
+  --warn:  #F5B43A;
+  --err:   #FF5C5C;
+  --info:  #6FB1FC;
+
+  /* semantic washes (solid, dark — no transparency tricks) */
+  --ok-soft:   #16261A;
+  --warn-soft: #2A1F0A;
+  --err-soft:  #2A1212;
+  --info-soft: #112030;
+
+  /* ── TYPE ───────────────────────────────────────────────── */
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* base scale (rooted at 14px — data-dense) */
+  --fs-3xs: 10px;
+  --fs-2xs: 11px;
+  --fs-xs:  12px;
+  --fs-sm:  13px;
+  --fs-md:  14px;   /* body */
+  --fs-lg:  16px;
+  --fs-xl:  20px;
+  --fs-2xl: 26px;
+  --fs-3xl: 34px;
+  --fs-4xl: 48px;
+  --fs-5xl: 64px;
+
+  /* weights */
+  --fw-regular: 400;
+  --fw-medium:  500;
+  --fw-semi:    600;
+  --fw-bold:    700;
+
+  /* line-heights (tight — utilitarian) */
+  --lh-tight:   1.15;
+  --lh-snug:    1.3;
+  --lh-normal:  1.5;
+
+  /* tracking */
+  --tr-tight:   -0.01em;
+  --tr-normal:  0;
+  --tr-wide:    0.04em;
+  --tr-wider:   0.08em;
+  --tr-widest:  0.14em;   /* used on mono ALL-CAPS labels */
+
+  /* ── SPACING (4-base, terse) ────────────────────────────── */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  20px;
+  --sp-6:  24px;
+  --sp-8:  32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+  --sp-20: 80px;
+  --sp-24: 96px;
+
+  /* ── RADII (essentially zero — square is the brand) ─────── */
+  --r-0:   0;
+  --r-1:   1px;
+  --r-2:   2px;          /* the only radius allowed on inputs/buttons */
+  --r-pill: 999px;       /* RESERVED for tag/dot only — avoid otherwise */
+
+  /* ── BORDERS ────────────────────────────────────────────── */
+  --bw-1: 1px;
+  --bw-2: 2px;           /* focus ring */
+
+  /* ── MOTION (snappy, no easing-bounce) ──────────────────── */
+  --dur-1: 80ms;
+  --dur-2: 140ms;
+  --ease-out: cubic-bezier(.2,.6,.2,1);
+}
+
+/* ============================================================
+   SEMANTIC ELEMENTS — apply tokens to actual tags
+   ============================================================ */
+
+html, body {
+  background: var(--bg-0);
+  color: var(--fg-0);
+  font-family: var(--font-sans);
+  font-size: var(--fs-md);
+  line-height: var(--lh-normal);
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Display / hero — used sparingly */
+.t-display {
+  font-family: var(--font-sans);
+  font-size: var(--fs-5xl);
+  font-weight: var(--fw-semi);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tr-tight);
+}
+
+h1, .t-h1 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-3xl);
+  font-weight: var(--fw-semi);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tr-tight);
+  margin: 0;
+}
+
+h2, .t-h2 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-semi);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tr-tight);
+  margin: 0;
+}
+
+h3, .t-h3 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-snug);
+  margin: 0;
+}
+
+h4, .t-h4 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-snug);
+  margin: 0;
+}
+
+p, .t-body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-md);
+  line-height: var(--lh-normal);
+  color: var(--fg-1);
+  margin: 0;
+}
+
+/* The signature voice: ALL-CAPS mono labels, like a hardware spec sheet */
+.t-label,
+.t-eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--tr-widest);
+  text-transform: uppercase;
+  color: var(--fg-2);
+}
+
+/* Mono runs — data, prices, model numbers, paths */
+.t-mono,
+code, kbd, samp {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  letter-spacing: 0;
+  color: var(--fg-0);
+}
+
+.t-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--fw-medium);
+}
+
+/* Path / breadcrumb — utilitarian "$ cd /components/cpu" feel */
+.t-path {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--fg-2);
+}
+.t-path .sep { color: var(--fg-3); padding: 0 4px; }
+.t-path .seg:last-child { color: var(--fg-0); }
+
+/* Inline kbd chip */
+kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  border: 1px solid var(--bd-1);
+  background: var(--bg-2);
+  border-radius: var(--r-2);
+  font-size: var(--fs-2xs);
+  color: var(--fg-1);
+  line-height: 1;
+}
+
+/* Selection */
+::selection { background: var(--acc); color: var(--acc-ink); }
+
+/* ============================================================
+   IMAGERY — component photos / build covers / user avatars
+   Square, hairline-bordered, desaturated, dark-matted.
+   ============================================================ */
+
+.img {
+  display: block;
+  background: var(--bg-2);
+  border: 1px solid var(--bd-1);
+  object-fit: cover;
+  filter: saturate(0.7) brightness(0.92);
+}
+.img.square { aspect-ratio: 1 / 1; }
+.img.cover  { aspect-ratio: 16 / 9; }
+.img.thumb  { width: 32px; height: 32px; }
+
+/* Placeholder shown while no image is set — graph-paper square, slot-glyph centered. */
+.img-empty {
+  background-color: var(--bg-1);
+  background-image:
+    linear-gradient(to right, var(--bd-0) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--bd-0) 1px, transparent 1px);
+  background-size: 16px 16px;
+  border: 1px solid var(--bd-1);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  letter-spacing: var(--tr-widest);
+  color: var(--fg-3);
+  text-transform: uppercase;
+}
+
+/* Avatar — square (default brand voice). Pass class .round for the rare rounded variant. */
+.avatar {
+  width: 28px; height: 28px;
+  border: 1px solid var(--bd-1);
+  background: var(--bg-2);
+  color: var(--fg-0);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+.avatar img { width: 100%; height: 100%; object-fit: cover; filter: saturate(0.85); }
+
+/* Scrollbar — keep it terse */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg-0); }
+::-webkit-scrollbar-thumb { background: var(--bd-1); border: 2px solid var(--bg-0); }
+::-webkit-scrollbar-thumb:hover { background: var(--bd-2); }
