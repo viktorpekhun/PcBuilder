@@ -2,19 +2,9 @@ import { Link } from "react-router-dom";
 import styles from "./PcBuildPage.module.css";
 import type { ComponentDataState, MultiKey, SingleKey } from "./types";
 import { MULTI_TYPES, SINGLE_TYPES } from "./types";
-
-const SLOT_TAG: Record<SingleKey | MultiKey, string> = {
-    cpu: "CPU",
-    gpu: "GPU",
-    motherboard: "M/B",
-    rams: "RAM",
-    ssds: "SSD",
-    hdds: "HDD",
-    powerSupply: "PSU",
-    cpuCooler: "CLR",
-    pcCase: "CSE",
-    fans: "FAN",
-};
+import { getRowSpec } from "./rowSpecs";
+import RowAlertButton from "./RowAlertButton";
+import { SLOT_TAG } from "./constants";
 
 const MORE_LABEL: Record<MultiKey, string> = {
     rams: "Додати ще модуль RAM",
@@ -26,6 +16,8 @@ const MORE_LABEL: Record<MultiKey, string> = {
 interface PartsTableProps {
     componentData: ComponentDataState;
     loading: boolean;
+    selectedRow: string | null;
+    onSelectRow: (id: string | null) => void;
     onRemoveSingle: (key: SingleKey) => void;
     onRemoveMulti: (key: MultiKey, componentId: string) => void;
     onAdjustQty: (key: MultiKey, componentId: string, change: number) => void;
@@ -53,8 +45,13 @@ function slotHint(slot: SingleKey | MultiKey): string {
 
 export default function PartsTable({
     componentData, loading,
+    selectedRow, onSelectRow,
     onRemoveSingle, onRemoveMulti, onAdjustQty,
 }: PartsTableProps) {
+    const toggleSelect = (id: string) => {
+        onSelectRow(selectedRow === id ? null : id);
+    };
+
     return (
         <div className={styles.parts}>
             <div className={styles.partsHead}>
@@ -68,7 +65,7 @@ export default function PartsTable({
             </div>
 
             {/* Single components */}
-            {SINGLE_TYPES.map(({ key, urlType, label, buttonLabel }) => {
+            {SINGLE_TYPES.map(({ key, urlType, apiType, label, buttonLabel }) => {
                 const data = componentData[key];
                 const tag = SLOT_TAG[key];
 
@@ -110,21 +107,49 @@ export default function PartsTable({
                 }
 
                 const offerPrice = data.selectedOffer?.price ?? data.averagePrice ?? 0;
+                const rowId = key;
+                const isSelected = selectedRow === rowId;
 
                 return (
-                    <div key={key} className={styles.rowSlot}>
+                    <div
+                        key={key}
+                        className={`${styles.rowSlot} ${isSelected ? styles.rowSlotSel : ""}`}
+                        onClick={() => toggleSelect(rowId)}
+                    >
                         <div className={styles.slotTag}>[{tag}]</div>
                         <Link to={`/components/${urlType}/${data.id}`} className={styles.thumbMat}>
                             {data.photoUrl
                                 ? <img src={data.photoUrl} alt={data.name} />
                                 : <span className={styles.thumbPh}>{tag}</span>}
                         </Link>
-                        <Link to={`/components/${urlType}/${data.id}`} style={{ minWidth: 0, textDecoration: "none", color: "inherit" }}>
-                            <div className={styles.rowName} title={data.name}>{data.name}</div>
-                            <div className={styles.rowSpec}>
-                                <span>{label}</span>
+                        <div style={{ minWidth: 0 }}>
+                            <Link to={`/components/${urlType}/${data.id}`} style={{ minWidth: 0, textDecoration: "none", color: "inherit", display: "block" }}>
+                                <div className={styles.rowName} title={data.name}>{data.name}</div>
+                                <div className={styles.rowSpec}>
+                                    {(() => {
+                                        const specs = getRowSpec(key, data as unknown as Record<string, unknown>);
+                                        if (specs.length === 0) return <span>{label}</span>;
+                                        return specs.map((s, idx) => (
+                                            <span key={idx} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                                                {idx > 0 && <span className={styles.dot}>/</span>}
+                                                <span>{s}</span>
+                                            </span>
+                                        ));
+                                    })()}
+                                </div>
+                            </Link>
+                            <div className={styles.rowTools}>
+                                <Link
+                                    to={`/components/${urlType}`}
+                                    className={styles.rowToolBtn}
+                                    onClick={(e) => e.stopPropagation()}
+                                    title="Браузер сумісних альтернатив"
+                                >
+                                    <span className={styles.toolGly}>⇋</span> ALT
+                                </Link>
+                                <RowAlertButton componentId={data.id} componentType={apiType} />
                             </div>
-                        </Link>
+                        </div>
                         <div className={styles.rowStore}>
                             {data.selectedOffer?.storeName && (
                                 <>
@@ -140,7 +165,7 @@ export default function PartsTable({
                         <button
                             className={styles.rowX}
                             title="Видалити"
-                            onClick={(e) => { e.preventDefault(); onRemoveSingle(key); }}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRemoveSingle(key); }}
                         >
                             ×
                         </button>
@@ -149,7 +174,7 @@ export default function PartsTable({
             })}
 
             {/* Multi components */}
-            {MULTI_TYPES.map(({ key, urlType, label, buttonLabel }) => {
+            {MULTI_TYPES.map(({ key, urlType, apiType, label, buttonLabel }) => {
                 const items = componentData[key];
                 const tag = SLOT_TAG[key];
 
@@ -183,8 +208,14 @@ export default function PartsTable({
                     <div key={key}>
                         {items.map((item, i) => {
                             const subtotal = item.price * item.quantity;
+                            const rowId = `${key}:${item.componentId}`;
+                            const isSelected = selectedRow === rowId;
                             return (
-                                <div key={item.componentId} className={styles.rowSlot}>
+                                <div
+                                    key={item.componentId}
+                                    className={`${styles.rowSlot} ${isSelected ? styles.rowSlotSel : ""}`}
+                                    onClick={() => toggleSelect(rowId)}
+                                >
                                     <div>
                                         <div className={styles.slotTag}>[{tag}]</div>
                                         {total > 1 && (
@@ -196,15 +227,37 @@ export default function PartsTable({
                                             ? <img src={item.component.photoUrl} alt={item.component.name} />
                                             : <span className={styles.thumbPh}>{tag}</span>}
                                     </Link>
-                                    <Link to={`/components/${urlType}/${item.componentId}`} style={{ minWidth: 0, textDecoration: "none", color: "inherit" }}>
-                                        <div className={styles.rowName} title={item.component.name}>
-                                            {item.component.name}
-                                            {item.quantity > 1 && <span className={styles.rowQty}>× {item.quantity}</span>}
+                                    <div style={{ minWidth: 0 }}>
+                                        <Link to={`/components/${urlType}/${item.componentId}`} style={{ minWidth: 0, textDecoration: "none", color: "inherit", display: "block" }}>
+                                            <div className={styles.rowName} title={item.component.name}>
+                                                {item.component.name}
+                                                {item.quantity > 1 && <span className={styles.rowQty}>× {item.quantity}</span>}
+                                            </div>
+                                            <div className={styles.rowSpec}>
+                                                {(() => {
+                                                    const specs = getRowSpec(key, item.component as unknown as Record<string, unknown>);
+                                                    if (specs.length === 0) return <span>{label}</span>;
+                                                    return specs.map((s, idx) => (
+                                                        <span key={idx} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                                                            {idx > 0 && <span className={styles.dot}>/</span>}
+                                                            <span>{s}</span>
+                                                        </span>
+                                                    ));
+                                                })()}
+                                            </div>
+                                        </Link>
+                                        <div className={styles.rowTools}>
+                                            <Link
+                                                to={`/components/${urlType}`}
+                                                className={styles.rowToolBtn}
+                                                onClick={(e) => e.stopPropagation()}
+                                                title="Браузер сумісних альтернатив"
+                                            >
+                                                <span className={styles.toolGly}>⇋</span> ALT
+                                            </Link>
+                                            <RowAlertButton componentId={item.componentId} componentType={apiType} />
                                         </div>
-                                        <div className={styles.rowSpec}>
-                                            <span>{label}</span>
-                                        </div>
-                                    </Link>
+                                    </div>
                                     <div className={styles.rowStore}>
                                         {item.storeName && (
                                             <>
@@ -216,17 +269,17 @@ export default function PartsTable({
                                     <div className={styles.rowPrice}>
                                         <span className={styles.ccy}>₴</span>{fmt(subtotal)}
                                     </div>
-                                    <div className={styles.qtyControl}>
+                                    <div className={styles.qtyControl} onClick={(e) => e.stopPropagation()}>
                                         <button className={styles.qtyBtn}
-                                            onClick={() => onAdjustQty(key, item.componentId, 1)}>▲</button>
+                                            onClick={(e) => { e.stopPropagation(); onAdjustQty(key, item.componentId, 1); }}>▲</button>
                                         <span className={styles.qtyDisplay}>{item.quantity}</span>
                                         <button className={styles.qtyBtn}
-                                            onClick={() => onAdjustQty(key, item.componentId, -1)}>▼</button>
+                                            onClick={(e) => { e.stopPropagation(); onAdjustQty(key, item.componentId, -1); }}>▼</button>
                                     </div>
                                     <button
                                         className={styles.rowX}
                                         title="Видалити"
-                                        onClick={() => onRemoveMulti(key, item.componentId)}
+                                        onClick={(e) => { e.stopPropagation(); onRemoveMulti(key, item.componentId); }}
                                     >
                                         ×
                                     </button>

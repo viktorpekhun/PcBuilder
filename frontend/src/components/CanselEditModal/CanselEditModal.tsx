@@ -6,17 +6,29 @@ interface CancelEditModalProps {
     isOpen: boolean;
     onCancel: () => void;
     onConfirm: () => void;
+    title?: string;
+    body?: string;
+    warning?: string;
+    cancelLabel?: string;
+    confirmLabel?: string;
 }
 
-function CancelEditModal({ isOpen, onCancel, onConfirm }: CancelEditModalProps) {
+function CancelEditModal({
+    isOpen, onCancel, onConfirm,
+    title = "Скасувати редагування?",
+    body = "Ви впевнені що хочете скасувати редагування?",
+    warning = "Будь які не збережені зміни буде втрачено.",
+    cancelLabel = "Продовжити Редагування",
+    confirmLabel = "Вийти Без Збереження",
+}: CancelEditModalProps) {
     if (!isOpen) return null;
 
     return (
         <div className={styles.modalOverlay}>
             <div className={styles.modalContent}>
-                <h2>Скасувати редагування?</h2>
-                <p>Ви впевнені що хочете скасувати редагування?</p>
-                <p className={styles.warningText}>Будь які не збережені зміни буде втрачено.</p>
+                <h2>{title}</h2>
+                <p>{body}</p>
+                <p className={styles.warningText}>{warning}</p>
 
                 <div className={styles.buttonGroup}>
                     <Button
@@ -24,14 +36,14 @@ function CancelEditModal({ isOpen, onCancel, onConfirm }: CancelEditModalProps) 
                         size='md'
                         onClick={onCancel}
                     >
-                        Продовжити Редагування
+                        {cancelLabel}
                     </Button>
                     <Button
                         variant='danger'
                         size='md'
                         onClick={onConfirm}
                     >
-                        Вийти Без Збереження
+                        {confirmLabel}
                     </Button>
                 </div>
             </div>

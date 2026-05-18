@@ -1,81 +1,16 @@
 import { Fragment } from "react";
 import styles from "./PcBuildPage.module.css";
-import type { ComponentDataState, MultiKey, SingleKey } from "./types";
+import type { ComponentDataState } from "./types";
+import { usePowerStats } from "./hooks";
+import { BAR_COLORS } from "./constants";
 
 interface PowerCardProps {
     componentData: ComponentDataState;
 }
 
-const SLOT_TAG: Record<SingleKey | MultiKey, string> = {
-    cpu: "CPU", gpu: "GPU", motherboard: "M/B",
-    rams: "RAM", ssds: "SSD", hdds: "HDD",
-    powerSupply: "PSU", cpuCooler: "CLR", pcCase: "CSE", fans: "FAN",
-};
-
-const BAR_COLORS = ["#AECF55", "#D9A441", "#6CA0DC", "#9C7CB5", "#5FB58A", "#B86D6D", "#A8A8B2"];
-
-interface SlotPower {
-    slot: SingleKey | MultiKey;
-    label: string;
-    watts: number;
-}
-
-function computeSlotPower(componentData: ComponentDataState): SlotPower[] {
-    const out: SlotPower[] = [];
-
-    // CPU — tdp
-    if (componentData.cpu) {
-        const w = Number((componentData.cpu as unknown as { tdp?: number }).tdp ?? 0);
-        if (w > 0) out.push({ slot: "cpu", label: SLOT_TAG.cpu, watts: w });
-    }
-
-    // GPU, motherboard, cpuCooler — wattage
-    (["gpu", "motherboard", "cpuCooler"] as const).forEach((k) => {
-        const c = componentData[k];
-        if (!c) return;
-        const w = Number((c as unknown as { wattage?: number }).wattage ?? 0);
-        if (w > 0) out.push({ slot: k, label: SLOT_TAG[k], watts: w });
-    });
-
-    // RAM with module multiplier
-    let ramW = 0;
-    for (const item of componentData.rams) {
-        const w = Number((item.component as unknown as { wattage?: number }).wattage ?? 0);
-        const modules = Number((item.component as unknown as { moduleQuantity?: number }).moduleQuantity ?? 1);
-        ramW += w * item.quantity * modules;
-    }
-    if (ramW > 0) out.push({ slot: "rams", label: SLOT_TAG.rams, watts: ramW });
-
-    // SSD, HDD
-    (["ssds", "hdds"] as const).forEach((k) => {
-        let w = 0;
-        for (const item of componentData[k]) {
-            const wEach = Number((item.component as unknown as { wattage?: number }).wattage ?? 0);
-            w += wEach * item.quantity;
-        }
-        if (w > 0) out.push({ slot: k, label: SLOT_TAG[k], watts: w });
-    });
-
-    // Fans
-    let fanW = 0;
-    for (const item of componentData.fans) {
-        const w = Number((item.component as unknown as { wattage?: number }).wattage ?? 0);
-        const modules = Number((item.component as unknown as { moduleCount?: number }).moduleCount ?? 1);
-        fanW += w * item.quantity * modules;
-    }
-    if (fanW > 0) out.push({ slot: "fans", label: SLOT_TAG.fans, watts: fanW });
-
-    return out;
-}
-
 export default function PowerCard({ componentData }: PowerCardProps) {
-    const slots = computeSlotPower(componentData);
-    const totalDraw = slots.reduce((a, s) => a + s.watts, 0);
-    const psu = Number((componentData.powerSupply as unknown as { wattage?: number } | null)?.wattage ?? 0);
+    const { slots, totalDraw, psu, loadPct, headroom, kind } = usePowerStats(componentData);
 
-    const loadPct = psu ? (totalDraw / psu) * 100 : 0;
-    const kind: "ok" | "warn" | "err" = loadPct > 95 ? "err" : loadPct > 80 ? "warn" : "ok";
-    const headroom = psu - totalDraw;
     const fillClass =
         kind === "ok" ? styles.gaugeFillOk :
         kind === "warn" ? styles.gaugeFillWarn :
@@ -125,6 +60,21 @@ export default function PowerCard({ componentData }: PowerCardProps) {
                                 <span>{psu} W</span>
                             </div>
                         </div>
+
+                        {slots.length > 0 && totalDraw > 0 && (
+                            <div className={styles.pbar}>
+                                {slots.map((s, i) => (
+                                    <span
+                                        key={s.slot}
+                                        style={{
+                                            width: `${(s.watts / totalDraw) * 100}%`,
+                                            background: BAR_COLORS[i % BAR_COLORS.length],
+                                        }}
+                                        title={`${s.label} · ${s.watts} W`}
+                                    />
+                                ))}
+                            </div>
+                        )}
 
                         {slots.length > 0 && (
                             <div className={styles.breakdown}>

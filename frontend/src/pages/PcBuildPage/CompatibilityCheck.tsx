@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { buildService } from "../../api/build.service";
 import type { IBuildCompatibilityReport, ICompatibilityIssue, IComponentsCompatibility } from "../../types/build.types";
 import type { ComponentDataState, SingleKey, MultiKey } from "./types";
 import { formatIssue } from "../../utils/compatibilityMessages";
+import { deriveDesignRows, type DesignRowKind } from "./compatRows";
 
 import styles from "./CompatibilityCheck.module.css";
 
@@ -23,13 +24,29 @@ const MULTI_WATTAGE: { key: MultiKey; field: string; multiplierField?: string }[
 interface CompatibilityCheckProps {
     selectedComponentIds: IComponentsCompatibility;
     componentData: ComponentDataState;
+    onCounts?: (counts: { criticalCount: number; warningCount: number; firstCriticalMessage: string | null }) => void;
 }
 
-function CompatibilityCheck({ selectedComponentIds, componentData }: CompatibilityCheckProps) {
+const GLYPH: Record<DesignRowKind, string> = {
+    ok: "✓",
+    warn: "!",
+    fail: "×",
+    skip: "○",
+};
+
+const KIND_CLASS: Record<DesignRowKind, string | undefined> = {
+    ok: styles.rowOk,
+    warn: styles.rowWarn,
+    fail: styles.rowFail,
+    skip: styles.rowSkip,
+};
+
+function CompatibilityCheck({ selectedComponentIds, componentData, onCounts }: CompatibilityCheckProps) {
     const [results, setResults] = useState<IBuildCompatibilityReport | null>(null);
     const [loading, setLoading] = useState(false);
     const [, setError] = useState<string | null>(null);
     const [totalWattage, setTotalWattage] = useState(0);
+    const [detailsOpen, setDetailsOpen] = useState(false);
 
     const hasComponents = Object.values(selectedComponentIds).some(
         v => v !== undefined && (Array.isArray(v) ? v.length > 0 : true)
@@ -84,12 +101,19 @@ function CompatibilityCheck({ selectedComponentIds, componentData }: Compatibili
     const criticalCount = allIssues.filter(i => i.severity === "Critical").length;
     const warningCount = allIssues.filter(i => i.severity === "Warning").length;
 
+    const firstCritical = allIssues.find(i => i.severity === "Critical");
+    const firstCriticalMessage = firstCritical ? formatIssue(firstCritical) : null;
+
+    useEffect(() => {
+        onCounts?.({ criticalCount, warningCount, firstCriticalMessage });
+    }, [criticalCount, warningCount, firstCriticalMessage, onCounts]);
+
     const isStrict = results?.isStrictlyCompatible ?? false;
     const hasWarnings = warningCount > 0;
 
-    const overallKind: "ok" | "warn" | "err" | "skip" =
+    const overallKind: DesignRowKind =
         !hasComponents ? "skip" :
-        !isStrict ? "err" :
+        !isStrict ? "fail" :
         hasWarnings ? "warn" :
         "ok";
 
@@ -103,25 +127,17 @@ function CompatibilityCheck({ selectedComponentIds, componentData }: Compatibili
     const overallPill =
         overallKind === "ok" ? styles.pillOk :
         overallKind === "warn" ? styles.pillWarn :
-        overallKind === "err" ? styles.pillErr :
+        overallKind === "fail" ? styles.pillErr :
         styles.pillDim;
-
-    const statusText =
-        !hasComponents ? "Компоненти не вибрано" :
-        loading ? "Перевірка сумісності..." :
-        !isStrict ? "Виявлено несумісні компоненти" :
-        hasWarnings ? "Виявлено потенційні проблеми" :
-        "Всі компоненти сумісні";
-
-    const statusClass =
-        overallKind === "ok" ? styles.statusOk :
-        overallKind === "warn" ? styles.statusWarn :
-        overallKind === "err" ? styles.statusErr :
-        styles.statusWarn;
 
     const psuWattage = componentData.powerSupply
         ? Number((componentData.powerSupply as unknown as { wattage?: number }).wattage ?? 0)
         : 0;
+
+    const designRows = useMemo(
+        () => deriveDesignRows(results, componentData),
+        [results, componentData]
+    );
 
     return (
         <div className={styles.compat}>
@@ -145,39 +161,46 @@ function CompatibilityCheck({ selectedComponentIds, componentData }: Compatibili
                 </div>
             </div>
 
-            <div className={`${styles.statusRow} ${statusClass}`}>
-                {overallKind === "ok" ? "✓" : overallKind === "err" ? "×" : overallKind === "warn" ? "!" : "○"}
-                <span>{statusText}</span>
+            <div className={styles.rows}>
+                {designRows.map(row => (
+                    <div key={row.id} className={`${styles.row} ${KIND_CLASS[row.kind]}`}>
+                        <span className={styles.rowGlyph}>{GLYPH[row.kind]}</span>
+                        <span className={styles.rowLabel}>{row.label}</span>
+                        <span className={styles.rowValue}>{row.value}</span>
+                    </div>
+                ))}
             </div>
 
             {hasComponents && allIssues.length > 0 && (
-                <ul className={styles.messages}>
-                    {allIssues.map((issue, i) => {
-                        const cls = issue.severity === "Critical" ? styles.messageErr
-                            : issue.severity === "Warning" ? styles.messageWarn
-                            : styles.messageInfo;
-                        const gly = issue.severity === "Critical" ? "×"
-                            : issue.severity === "Warning" ? "!"
-                            : "○";
-                        return (
-                            <li key={i} className={`${styles.message} ${cls}`}>
-                                <span className={styles.messageGly}>{gly}</span>
-                                <span className={styles.messageText}>{formatIssue(issue)}</span>
-                            </li>
-                        );
-                    })}
-                </ul>
-            )}
-
-            {!hasComponents && (
-                <ul className={styles.messages}>
-                    <li className={`${styles.message} ${styles.messageWarn}`}>
-                        <span className={styles.messageGly}>○</span>
-                        <span className={styles.messageText}>
-                            Додайте компоненти до збірки для перевірки сумісності
-                        </span>
-                    </li>
-                </ul>
+                <>
+                    <button
+                        type="button"
+                        className={styles.detailsToggle}
+                        onClick={() => setDetailsOpen(o => !o)}
+                        aria-expanded={detailsOpen}
+                    >
+                        <span className={`${styles.detailsCaret} ${detailsOpen ? styles.detailsCaretOpen : ""}`}>▸</span>
+                        DETAILS · {allIssues.length} ISSUE{allIssues.length === 1 ? "" : "S"}
+                    </button>
+                    {detailsOpen && (
+                        <ul className={styles.messages}>
+                            {allIssues.map((issue, i) => {
+                                const cls = issue.severity === "Critical" ? styles.messageErr
+                                    : issue.severity === "Warning" ? styles.messageWarn
+                                    : styles.messageInfo;
+                                const gly = issue.severity === "Critical" ? "×"
+                                    : issue.severity === "Warning" ? "!"
+                                    : "○";
+                                return (
+                                    <li key={i} className={`${styles.message} ${cls}`}>
+                                        <span className={styles.messageGly}>{gly}</span>
+                                        <span className={styles.messageText}>{formatIssue(issue)}</span>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    )}
+                </>
             )}
         </div>
     );

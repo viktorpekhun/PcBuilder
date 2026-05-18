@@ -252,6 +252,7 @@ function UserBuildsPage() {
         localStorage.setItem('editingBuild', JSON.stringify({
             id: selectedBuild.id,
             name: selectedBuild.name,
+            isPublished: selectedBuild.isPublished,
             ...(selectedBuild.description && { description: selectedBuild.description }),
         }));
         navigate('/');

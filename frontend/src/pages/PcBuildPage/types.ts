@@ -99,6 +99,7 @@ export interface EditingBuild {
     id: string;
     name: string;
     description?: string;
+    isPublished?: boolean;
 }
 
 // --- Save modal state ---

@@ -1,13 +1,11 @@
 .rail {
     grid-row: 2 / -1;
     border-right: 1px solid var(--bd-1);
-    padding: 14px 0 100px;
-    min-height: calc(100vh - 48px);
+    padding: 14px 0 16px;
+    height: 100%;
     background: var(--bg-0);
-    position: sticky;
-    top: 48px;
     align-self: stretch;
-    overflow-y: auto;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
 }
