@@ -1,4 +1,6 @@
+using Components.Application.CollectionFilters;
 using Components.Application.Mappers;
+using Components.Infrastructure.CollectionFilters;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Components.Infrastructure
@@ -11,6 +13,8 @@ namespace Components.Infrastructure
                 typeof(Components.Application.Queries.GetComponentsByTypeQuery).Assembly));
 
             services.AddAutoMapper(typeof(ComponentMappingProfile));
+
+            services.AddScoped<IPowerSupplyCollectionFilterService, PowerSupplyCollectionFilterService>();
 
             return services;
         }

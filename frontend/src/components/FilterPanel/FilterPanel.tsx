@@ -31,7 +31,7 @@ const FilterPanel = ({ config, onFilterChange, onPrefilterChange, showPrefilterT
     const [isLoading, setIsLoading] = useState(false);
     const isInitialMount = useRef(true);
     const previousConfigType = useRef<string | null>(null);
-    const prevFiltersRef = useRef<string | null>(null);
+    const prevFiltersRef = useRef<string>('{}');
     const initialRangeValuesRef = useRef<Record<string, RangeValue>>({});
     const [expandedFilters, setExpandedFilters] = useState<Record<string, boolean>>({});
     const [prefilterEnabled, setPrefilterEnabled] = useState<boolean>(() => {

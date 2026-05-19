@@ -460,6 +460,24 @@ export const filterConfigs: Record<string, FilterConfig> = {
                 },
                 property: "isModular",
                 dynamic: false
+            },
+            {
+                id: "cpuConnectorPins",
+                label: "Підключення CPU (пінів)",
+                type: "checkbox",
+                options: [],
+                formatOptionLabel: (value: string) => `${value} pin`,
+                property: "cpuConnectorPins",
+                dynamic: true
+            },
+            {
+                id: "gpuConnectorPins",
+                label: "Підключення GPU (пінів)",
+                type: "checkbox",
+                options: [],
+                formatOptionLabel: (value: string) => `${value} pin`,
+                property: "gpuConnectorPins",
+                dynamic: true
             }
         ]
     },
