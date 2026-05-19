@@ -247,7 +247,7 @@ export default function AutoBuilderPanel({ isOpen, hasExistingComponents, onClos
                                 onChange={e => setForm(f => ({ ...f, budget: e.target.value }))}
                             />
 
-                            <label className={styles.fieldLabel}>Сценарій використання</label>
+                            <label className={styles.fieldLabel}>Призначення</label>
                             <div className={styles.scenarioGrid}>
                                 {SCENARIOS.map(s => (
                                     <button
@@ -283,7 +283,7 @@ export default function AutoBuilderPanel({ isOpen, hasExistingComponents, onClos
                                         disabled={isLoading}
                                         onChange={e => setForm(f => ({ ...f, isFutureProof: e.target.checked }))}
                                     />
-                                    На майбутнє
+                                    З можливітю апгрейду
                                 </label>
                                 <span className={styles.toggleHint}>Оптимізувати для апгрейду</span>
                             </div>

@@ -163,6 +163,7 @@
 .toggleLabel {
     display: flex;
     align-items: center;
+    justify-content: flex-start;
     gap: 8px;
     font-family: var(--font-mono);
     font-size: 12px;

@@ -250,24 +250,75 @@ export const componentSpecConfigs: Record<string, SpecConfig[]> = {
         },
     ],
     ram: [
-        { key: 'capacity', label: 'Capacity', unit: 'GB' },
-        { key: 'speed', label: 'Speed', unit: 'MHz' },
-        { key: 'type', label: 'Type', unit: '' }
+        { key: 'brand', label: 'Бренд', unit: '' },
+        { key: 'type', label: '', unit: '' },
+        {
+            keys: ['moduleQuantity', 'capacity'],
+            label: "Пам'ять",
+            format: (values) => {
+                if (values.moduleQuantity && values.capacity) {
+                    return `${values.moduleQuantity}x${values.capacity}`;
+                } else if (values.capacity) {
+                    return `${values.capacity}`;
+                }
+                return '';
+            },
+            unit: 'Гб'
+        },
+        { key: 'frequency', label: 'Частота', unit: 'МГц' },
+        { key: 'timings', label: 'Таймінги', unit: '' },
+        { key: 'voltage', label: 'Напруга', unit: 'В' },
     ],
     ssd: [
-        { key: 'capacity', label: 'Capacity', unit: 'GB' },
-        { key: 'speed', label: 'Speed', unit: 'MHz' },
-        { key: 'type', label: 'Type', unit: '' }
+        { key: 'brand', label: 'Бренд', unit: '' },
+        { key: 'capacity', label: 'Обʼєм', unit: 'Гб' },
+        { key: 'interface', label: 'Інтерфейс', unit: '' },
+        { key: 'formFactor', label: 'Форм-фактор', unit: '' },
+        { key: 'nandType', label: 'NAND', unit: '' },
+        {
+            keys: ['maxReadSpeed', 'maxWriteSpeed'],
+            label: 'Швидкість читання/запису',
+            format: (values) => {
+                if (values.maxReadSpeed && values.maxWriteSpeed) {
+                    return `${values.maxReadSpeed} / ${values.maxWriteSpeed}`;
+                } else if (values.maxReadSpeed) {
+                    return `${values.maxReadSpeed}`;
+                } else if (values.maxWriteSpeed) {
+                    return `${values.maxWriteSpeed}`;
+                }
+                return '';
+            },
+            unit: 'Мб/с'
+        },
     ],
     hdd: [
-        { key: 'capacity', label: 'Capacity', unit: 'GB' },
-        { key: 'speed', label: 'Speed', unit: 'MHz' },
-        { key: 'type', label: 'Type', unit: '' }
+        { key: 'brand', label: 'Бренд', unit: '' },
+        { key: 'capacity', label: 'Обʼєм', unit: 'Гб' },
+        { key: 'interface', label: 'Інтерфейс', unit: '' },
+        { key: 'formFactor', label: 'Форм-фактор', unit: '' },
+        { key: 'spindleSpeed', label: 'Швидкість обертання', unit: 'об/хв' },
+        { key: 'cache', label: 'Кеш', unit: 'Мб' },
+        { key: 'writingTechnology', label: 'Технологія запису', unit: '' },
     ],
     fan: [
-        { key: 'capacity', label: 'Capacity', unit: 'GB' },
-        { key: 'speed', label: 'Speed', unit: 'MHz' },
-        { key: 'type', label: 'Type', unit: '' }
+        { key: 'brand', label: 'Бренд', unit: '' },
+        { key: 'moduleCount', label: 'К-сть вентиляторів', unit: '' },
+        { key: 'connector', label: 'Конектор', unit: '' },
+        {
+            keys: ['minSpeed', 'maxSpeed'],
+            label: 'Швидкість',
+            format: (values) => {
+                if (values.minSpeed && values.maxSpeed) {
+                    return `${values.minSpeed}-${values.maxSpeed}`;
+                } else if (values.maxSpeed) {
+                    return `до ${values.maxSpeed}`;
+                }
+                return '';
+            },
+            unit: 'об/хв'
+        },
+        { key: 'noiseLevelDb', label: 'Рівень шуму', unit: 'дБ' },
+        { key: 'sizeLength', label: 'Розмір', unit: 'мм' },
     ],
     default: [
         { key: 'spec1', label: 'Spec 1', unit: '' },

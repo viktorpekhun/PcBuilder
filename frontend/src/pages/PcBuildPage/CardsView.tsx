@@ -4,6 +4,7 @@ import styles from "./PcBuildPage.module.css";
 import type { ComponentDataState, MultiKey, SingleKey } from "./types";
 import { MULTI_TYPES, SINGLE_TYPES } from "./types";
 import { SLOT_TAG } from "./constants";
+import RowAlertButton from "./RowAlertButton";
 
 const MORE_LABEL: Record<MultiKey, string> = {
     rams: "Додати ще модуль RAM",
@@ -26,7 +27,7 @@ interface CardsViewProps {
 export default function CardsView({ componentData, onRemoveSingle, onRemoveMulti }: CardsViewProps) {
     return (
         <div className={styles.cardsGrid}>
-            {SINGLE_TYPES.map(({ key, urlType, label, buttonLabel }) => {
+            {SINGLE_TYPES.map(({ key, urlType, apiType, label, buttonLabel }) => {
                 const data = componentData[key];
                 const tag = SLOT_TAG[key];
 
@@ -63,6 +64,16 @@ export default function CardsView({ componentData, onRemoveSingle, onRemoveMulti
                                 </div>
                                 <div className={styles.ccInfo}>
                                     <div className={styles.ccName} title={data.name}>{data.name}</div>
+                                    <div className={styles.ccTools}>
+                                        <Link
+                                            to={`/components/${urlType}`}
+                                            className={styles.rowToolBtn}
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <span className={styles.toolGly}>⇋</span> ALT
+                                        </Link>
+                                        <RowAlertButton componentId={data.id} componentType={apiType} />
+                                    </div>
                                 </div>
                             </div>
                         </Link>
@@ -78,7 +89,7 @@ export default function CardsView({ componentData, onRemoveSingle, onRemoveMulti
                 );
             })}
 
-            {MULTI_TYPES.map(({ key, urlType, label, buttonLabel }) => {
+            {MULTI_TYPES.map(({ key, urlType, apiType, label, buttonLabel }) => {
                 const items = componentData[key];
                 const tag = SLOT_TAG[key];
 
@@ -117,6 +128,16 @@ export default function CardsView({ componentData, onRemoveSingle, onRemoveMulti
                                         </div>
                                         <div className={styles.ccInfo}>
                                             <div className={styles.ccName} title={item.component.name}>{item.component.name}</div>
+                                            <div className={styles.ccTools}>
+                                                <Link
+                                                    to={`/components/${urlType}`}
+                                                    className={styles.rowToolBtn}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <span className={styles.toolGly}>⇋</span> ALT
+                                                </Link>
+                                                <RowAlertButton componentId={item.componentId} componentType={apiType} />
+                                            </div>
                                         </div>
                                     </div>
                                 </Link>

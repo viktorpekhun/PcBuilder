@@ -9,7 +9,19 @@
     align-items: center;
     gap: 6px;
     height: 28px;
-    padding: 0px;
+    max-height: 28px;
+    overflow: hidden;
+    padding: 0 8px;
+    border:  1px solid var(--bd-1);
+    transition: border-color 80ms;
+}
+
+.inputRow:hover{
+    border:  1px solid var(--bd-2);
+}
+
+.inputRow:focus-within {
+    border-color: var(--acc);
 }
 
 .inputRow:focus-within .icon {
@@ -24,11 +36,12 @@
     transition: color 80ms;
 }
 
-.searchInput {
+.searchInput.searchInput {
     all: unset;
     display: block;
     flex: 1;
     min-width: 0;
+    height: 100%;
     background: transparent;
     border: none;
     outline: none;
