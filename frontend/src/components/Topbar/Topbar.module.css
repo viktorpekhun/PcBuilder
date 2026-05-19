@@ -44,6 +44,26 @@
     padding: 0 4px;
 }
 
+.path .seg {
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.path .seg:hover {
+    color: var(--acc);
+    text-decoration: underline;
+}
+
+.path .segStatic {
+    cursor: default;
+}
+
+.path .segStatic:hover {
+    color: inherit;
+    text-decoration: none;
+}
+
 .path .seg:last-child {
     color: var(--fg-0);
 }
