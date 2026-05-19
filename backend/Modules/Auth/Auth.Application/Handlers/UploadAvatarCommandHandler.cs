@@ -27,8 +27,8 @@ namespace Auth.Application.Handlers
             if (user == null)
                 return Result<string>.Failure(new Error("NotFound", "User not found.", 404));
 
-            var relativePath = await _fileStorage.SaveAvatarAsync(request.UserId, request.Data, request.Extension, cancellationToken);
-            user.AvatarUrl = $"{request.BaseUrl}{relativePath}";
+            var avatarUrl = await _fileStorage.SaveAvatarAsync(request.UserId, request.Data, cancellationToken);
+            user.AvatarUrl = avatarUrl;
 
             _context.Set<User>().Update(user);
             await _context.SaveChangesAsync(cancellationToken);

@@ -61,7 +61,8 @@ namespace Scraping.Infrastructure.Services
             var translationMap = new Dictionary<string, string>();
             for (int i = 0; i < textsToTranslate.Count; i++)
             {
-                translationMap[textsToTranslate[i]] = translations[i];
+                if (!string.IsNullOrEmpty(translations[i]))
+                    translationMap[textsToTranslate[i]] = translations[i];
             }
 
             foreach (var pc in pcCases)
@@ -131,7 +132,8 @@ namespace Scraping.Infrastructure.Services
             var translationMap = new Dictionary<string, string>();
             for (int i = 0; i < textsToTranslate.Count; i++)
             {
-                translationMap[textsToTranslate[i]] = translations[i];
+                if (!string.IsNullOrEmpty(translations[i]))
+                    translationMap[textsToTranslate[i]] = translations[i];
             }
 
             foreach (var fan in fans)
@@ -181,7 +183,8 @@ namespace Scraping.Infrastructure.Services
             var translationMap = new Dictionary<string, string>();
             for (int i = 0; i < textsToTranslate.Count; i++)
             {
-                translationMap[textsToTranslate[i]] = translations[i];
+                if (!string.IsNullOrEmpty(translations[i]))
+                    translationMap[textsToTranslate[i]] = translations[i];
             }
 
             foreach (var ps in powerSupplies)
@@ -223,7 +226,8 @@ namespace Scraping.Infrastructure.Services
             var translationMap = new Dictionary<string, string>();
             for (int i = 0; i < textsToTranslate.Count; i++)
             {
-                translationMap[textsToTranslate[i]] = translations[i];
+                if (!string.IsNullOrEmpty(translations[i]))
+                    translationMap[textsToTranslate[i]] = translations[i];
             }
 
             foreach (var ram in rams)
@@ -264,7 +268,8 @@ namespace Scraping.Infrastructure.Services
             var translationMap = new Dictionary<string, string>();
             for (int i = 0; i < textsToTranslate.Count; i++)
             {
-                translationMap[textsToTranslate[i]] = translations[i];
+                if (!string.IsNullOrEmpty(translations[i]))
+                    translationMap[textsToTranslate[i]] = translations[i];
             }
 
             foreach (var cpuCooler in cpuCoolers)

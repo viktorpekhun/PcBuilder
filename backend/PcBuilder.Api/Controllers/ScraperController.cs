@@ -162,19 +162,34 @@ namespace PcBuilder.Api.Controllers
 
         [HttpPost("cpu-cooler")]
         public async Task<IActionResult> ScrapeCpuCoolers(CancellationToken cancellationToken)
-            => await EnqueueCategoryAsync("https://hotline.ua/ua/computer/kulery-i-radiatory/1570-3486-376753/", "CpuCooler", nameof(CpuCooler), cancellationToken);
-
+        {
+            var result = await EnqueueCategoryAsync("https://hotline.ua/ua/computer/kulery-i-radiatory/1570-3486-376753/", "CpuCooler", nameof(CpuCooler), cancellationToken);
+            await _sender.Send(new TranslateCpuCoolerFieldsCommand(), cancellationToken);
+            return Ok(result);
+        }
         [HttpPost("pc-case")]
         public async Task<IActionResult> ScrapePcCases(CancellationToken cancellationToken)
-            => await EnqueueCategoryAsync("https://hotline.ua/ua/computer/korpusa/", "PcCase", nameof(PcCase), cancellationToken);
+        {
+            var result = await EnqueueCategoryAsync("https://hotline.ua/ua/computer/korpusa/", "PcCase", nameof(PcCase), cancellationToken);
+            await _sender.Send(new TranslatePcCaseFieldsCommand(), cancellationToken);
+            return Ok(result);
+        }
 
         [HttpPost("power-supply")]
         public async Task<IActionResult> ScrapePowerSupplies(CancellationToken cancellationToken)
-            => await EnqueueCategoryAsync("https://hotline.ua/ua/computer/bloki-pitaniya/2573/", "PowerSupply", nameof(PowerSupply), cancellationToken);
-
+        {
+            var result = await EnqueueCategoryAsync("https://hotline.ua/ua/computer/bloki-pitaniya/2573/", "PowerSupply", nameof(PowerSupply), cancellationToken);
+            await _sender.Send(new TranslatePowerSupplyFieldsCommand(), cancellationToken);
+            return Ok(result);
+        }
+           
         [HttpPost("ram")]
         public async Task<IActionResult> ScrapeRams(CancellationToken cancellationToken)
-            => await EnqueueCategoryAsync("https://hotline.ua/ua/computer/moduli-pamyati-dlya-pk-i-noutbukov/3102/", "Ram", nameof(Ram), cancellationToken);
+        {
+            var result = await EnqueueCategoryAsync("https://hotline.ua/ua/computer/moduli-pamyati-dlya-pk-i-noutbukov/3102/", "Ram", nameof(Ram), cancellationToken);
+            await _sender.Send(new TranslateRamFieldsCommand(), cancellationToken);
+            return Ok(result);
+        }
 
         [HttpPost("ssd")]
         public async Task<IActionResult> ScrapeSsds(CancellationToken cancellationToken)
@@ -186,7 +201,11 @@ namespace PcBuilder.Api.Controllers
 
         [HttpPost("fan")]
         public async Task<IActionResult> ScrapeFans(CancellationToken cancellationToken)
-            => await EnqueueCategoryAsync("https://hotline.ua/ua/computer/kulery-i-radiatory/1569/", "Fan", nameof(Fan), cancellationToken);
+        {
+            var result = await EnqueueCategoryAsync("https://hotline.ua/ua/computer/kulery-i-radiatory/1569/", "Fan", nameof(Fan), cancellationToken);
+            await _sender.Send(new TranslateFanFieldsCommand(), cancellationToken);
+            return Ok(result);
+        }
 
         [HttpPost("passmark/preview")]
         public async Task<IActionResult> PreviewPassMark(CancellationToken cancellationToken)

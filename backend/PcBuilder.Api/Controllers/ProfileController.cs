@@ -65,19 +65,10 @@ namespace PcBuilder.Api.Controllers
             if (!allowedTypes.Contains(file.ContentType.ToLower()))
                 return BadRequest(new { Message = "Only JPEG, PNG, and WebP images are allowed." });
 
-            var extension = file.ContentType.ToLower() switch
-            {
-                "image/jpeg" => "jpg",
-                "image/png" => "png",
-                "image/webp" => "webp",
-                _ => "jpg"
-            };
-
             using var ms = new MemoryStream();
             await file.CopyToAsync(ms);
 
-            var baseUrl = $"{Request.Scheme}://{Request.Host}";
-            var result = await _mediator.Send(new UploadAvatarCommand(GetUserId(), ms.ToArray(), extension, baseUrl));
+            var result = await _mediator.Send(new UploadAvatarCommand(GetUserId(), ms.ToArray()));
             if (result.IsFailure)
                 return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
 

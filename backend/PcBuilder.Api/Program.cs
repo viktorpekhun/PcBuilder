@@ -16,6 +16,7 @@ using Scraping.Infrastructure;
 using Moderation.Infrastructure;
 using Notifications.Infrastructure;
 using MediatR;
+using PcBuilder.Api.Search;
 using PcBuilder.SharedKernel.Behaviors;
 using PcBuilder.SharedKernel.Caching;
 using PcBuilder.SharedKernel.Services;
@@ -46,6 +47,7 @@ builder.Services.AddPcBuildsModule();
 builder.Services.AddScrapingModule(builder.Configuration);
 builder.Services.AddModerationModule();
 builder.Services.AddNotificationsModule();
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(GlobalSearchQueryHandler).Assembly));
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 builder.Services.AddSignalR().AddJsonProtocol(o =>
 {

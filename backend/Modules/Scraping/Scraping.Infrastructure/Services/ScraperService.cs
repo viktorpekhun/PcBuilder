@@ -525,6 +525,14 @@ namespace Scraping.Infrastructure.Services
                                 //    existingLocalized.Uk = newLocalized.Uk;
                                 //    existingLocalized.En = newLocalized.En;
                                 //}
+                                else if (newValue is LocalizedString newLocalized
+                                    && property.GetValue(existingComponent) is LocalizedString existingLocalized
+                                    && !string.IsNullOrEmpty(existingLocalized.En)
+                                    && string.IsNullOrEmpty(newLocalized.En))
+                                {
+                                    newLocalized.En = existingLocalized.En;
+                                    property.SetValue(existingComponent, newLocalized);
+                                }
                                 else
                                 {
                                     property.SetValue(existingComponent, newValue);

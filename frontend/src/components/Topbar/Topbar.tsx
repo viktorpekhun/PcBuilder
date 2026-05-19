@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 import useLogout from "../../hooks/useLogout";
 import NotificationCenter from "../NotificationCenter/NotificationCenter";
+import GlobalSearch from "../GlobalSearch/GlobalSearch";
 import styles from "./Topbar.module.css";
 
 function pathSegments(pathname: string): string[] {
@@ -10,7 +11,7 @@ function pathSegments(pathname: string): string[] {
     return pathname.split("/").filter(Boolean);
 }
 
-function Avatar({ url, name }: { url?: string; name: string }) {
+function Avatar({ url, name }: { url?: string | undefined; name: string }) {
     if (url) {
         return (
             <span className={styles.avatar}>
@@ -63,6 +64,7 @@ export default function Topbar() {
             </span>
 
             <div className={styles.grow} />
+            <GlobalSearch />
 
             {auth?.username ? (
                 <>
