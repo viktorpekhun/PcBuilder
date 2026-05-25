@@ -192,7 +192,10 @@ app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 app.UseStaticFiles();
 
-app.UseHttpsRedirection();
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseCors("AllowFrontend");
 
@@ -204,7 +207,11 @@ app.UseAuthorization();
 app.MapHealthChecks("/health");
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
-app.MapFallbackToFile("/index.html");
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapFallbackToFile("/index.html");
+}
 
 app.Run();
 
