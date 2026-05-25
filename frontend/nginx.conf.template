@@ -21,16 +21,15 @@ server {
 
     # SignalR hub — needs WebSocket upgrade and long read timeout
     location /hubs/ {
-        set $upstream ${API_UPSTREAM};
-        set $upstream_host ${API_UPSTREAM_HOST};
-        proxy_pass $upstream$request_uri;
+        proxy_pass ${API_UPSTREAM}$request_uri;
         proxy_ssl_verify off;
         proxy_ssl_server_name on;
-        proxy_ssl_name $upstream_host;
+        proxy_ssl_name ${API_UPSTREAM_HOST};
+        proxy_ssl_protocols TLSv1.2 TLSv1.3;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection $connection_upgrade;
-        proxy_set_header Host $upstream_host;
+        proxy_set_header Host ${API_UPSTREAM_HOST};
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
@@ -41,14 +40,13 @@ server {
 
     # Backend API
     location /api/ {
-        set $upstream ${API_UPSTREAM};
-        set $upstream_host ${API_UPSTREAM_HOST};
-        proxy_pass $upstream$request_uri;
+        proxy_pass ${API_UPSTREAM}$request_uri;
         proxy_ssl_verify off;
         proxy_ssl_server_name on;
-        proxy_ssl_name $upstream_host;
+        proxy_ssl_name ${API_UPSTREAM_HOST};
+        proxy_ssl_protocols TLSv1.2 TLSv1.3;
         proxy_http_version 1.1;
-        proxy_set_header Host $upstream_host;
+        proxy_set_header Host ${API_UPSTREAM_HOST};
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
@@ -56,13 +54,12 @@ server {
 
     # ASP.NET health endpoint
     location = /health {
-        set $upstream ${API_UPSTREAM};
-        set $upstream_host ${API_UPSTREAM_HOST};
-        proxy_pass $upstream$request_uri;
+        proxy_pass ${API_UPSTREAM}$request_uri;
         proxy_ssl_verify off;
         proxy_ssl_server_name on;
-        proxy_ssl_name $upstream_host;
-        proxy_set_header Host $upstream_host;
+        proxy_ssl_name ${API_UPSTREAM_HOST};
+        proxy_ssl_protocols TLSv1.2 TLSv1.3;
+        proxy_set_header Host ${API_UPSTREAM_HOST};
     }
 
     # SPA fallback — let React Router handle client-side routes
