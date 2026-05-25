@@ -19,8 +19,9 @@ FROM nginx:alpine AS runtime
 # (like $http_upgrade, $host) pass through untouched.
 ENV NGINX_ENVSUBST_TEMPLATE_SUFFIX=.template \
     NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx/conf.d \
-    NGINX_ENVSUBST_FILTER='^API_UPSTREAM$' \
-    API_UPSTREAM=http://api:8080
+    NGINX_ENVSUBST_FILTER='^API_UPSTREAM(_HOST)?$' \
+    API_UPSTREAM=http://api:8080 \
+    API_UPSTREAM_HOST=api
 
 RUN rm /etc/nginx/conf.d/default.conf
 
