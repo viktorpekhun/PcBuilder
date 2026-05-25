@@ -1,4 +1,5 @@
 using AutoMapper;
+using Components.Application.CollectionFilters;
 using Components.Application.Dtos;
 using Components.Application.Dtos.CpuDtos;
 using Components.Application.Dtos.CpuCoolerDtos;
@@ -27,15 +28,18 @@ namespace Components.Application.Handlers
         private readonly IApplicationDbContext _context;
         private readonly IMapper _mapper;
         private readonly IComponentQueryPreFilter? _preFilter;
+        private readonly IPowerSupplyCollectionFilterService _psuCollectionFilter;
 
         public GetComponentsByTypeHandler(
             IApplicationDbContext context,
             IMapper mapper,
+            IPowerSupplyCollectionFilterService psuCollectionFilter,
             IComponentQueryPreFilter? preFilter = null)
         {
             _context = context;
             _mapper = mapper;
             _preFilter = preFilter;
+            _psuCollectionFilter = psuCollectionFilter;
         }
 
         public async Task<Result<PagedResponse<object>>> Handle(GetComponentsByTypeQuery request, CancellationToken cancellationToken)
@@ -75,10 +79,10 @@ namespace Components.Application.Handlers
                     include: q => q.Include(c => c.PcCaseFormFactors).Include(c => c.PcCaseFanLocations),
                     preFilter: partialCtx != null ? q => _preFilter!.FilterCases(q, partialCtx) : null),
 
-                // PSU: SQL filter is a no-op; ApplyInMemoryPsuRules is for autobuilder use only.
                 ComponentType.PowerSupply => await GetFilteredComponentsAndCount<PowerSupply>(
                     request.Parameters,
                     include: q => q.Include(p => p.PowerSupplyPowerConnectors),
+                    collectionFilter: q => _psuCollectionFilter.Apply(q, request.Parameters),
                     preFilter: partialCtx != null ? q => _preFilter!.FilterPowerSupplies(q, partialCtx) : null),
 
                 ComponentType.Ssd => await GetFilteredComponentsAndCount<Ssd>(request.Parameters),
@@ -120,12 +124,16 @@ namespace Components.Application.Handlers
         private async Task<(IEnumerable<object>, int)> GetFilteredComponentsAndCount<T>(
             ResourceParameters parameters,
             Func<IQueryable<T>, IQueryable<T>>? include = null,
+            Func<IQueryable<T>, IQueryable<T>>? collectionFilter = null,
             Func<IQueryable<T>, IQueryable<T>>? preFilter = null) where T : class
         {
             var query = _context.Set<T>().AsQueryable();
 
             if (preFilter != null)
                 query = preFilter(query);
+
+            if (collectionFilter != null)
+                query = collectionFilter(query);
 
             var result = await query.FilterAndPageAsync(parameters, include: include);
             return (result.items.Cast<object>(), result.totalCount);

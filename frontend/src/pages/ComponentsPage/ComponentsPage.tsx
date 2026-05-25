@@ -7,13 +7,25 @@ import { filterConfigs } from '../../components/FilterPanel/filterConfigs';
 import { componentSpecConfigs } from "./componentSpecsConfigs";
 import FilterPanel from '../../components/FilterPanel/FilterPanel';
 import { Pagination } from '../../components/Pagination/Pagination';
-import { Button } from '../../components/Button/Button';
 import styles from './ComponentsPage.module.css';
 
 type RangeValue = { min: number; max: number };
 type FilterValues = Record<string, string[] | RangeValue>;
 
 const PREFILTER_KEY = 'compat_prefilter_enabled';
+
+const TYPE_LABELS: Record<string, string> = {
+    cpu: 'CPU',
+    gpu: 'GPU',
+    motherboard: 'Motherboard',
+    ram: 'RAM',
+    ssd: 'SSD',
+    hdd: 'HDD',
+    powerSupply: 'Power Supply',
+    pcCase: 'Case',
+    cpuCooler: 'CPU Cooler',
+    fan: 'Fan',
+};
 
 function readPartialBuildIds(): IPartialBuildIds {
     try {
@@ -118,7 +130,6 @@ function ComponentsPage() {
 
             const response = await componentService.getAll(type as ComponentType, params);
             const pagination = parsePagination(response.headers as Record<string, string>);
-            console.log(response.data)
 
             if (pagination) {
                 setComponents(response.data);
@@ -201,23 +212,48 @@ function ComponentsPage() {
         fetchComponents(filters, 1, searchQuery, enabled);
     }, [filters, searchQuery, fetchComponents]);
 
-    if (loading && !firstLoadDone.current) return <div>Loading {type} components...</div>;
-    if (error) return <div>{error}</div>;
+    const sortOptions = [
+        { field: 'name', label: 'NAME' },
+        { field: 'averagePrice', label: 'PRICE' },
+        { field: 'offersCount', label: 'OFFERS' },
+    ];
+
+    const typeKey = type ?? '';
+    const typeLabel = TYPE_LABELS[typeKey] ?? typeKey.toUpperCase();
+
+    if (loading && !firstLoadDone.current) {
+        return <div className={styles.pageLoading}>LOADING {typeLabel.toUpperCase()}…</div>;
+    }
+    if (error) return <div className={styles.pageError}>{error}</div>;
 
     return (
-        <section className={styles['component-list']}>
-            <div className={styles['top-bar-content']}>
-                <div className={styles['search-container']}>
-                    <input
-                        type="text"
-                        placeholder="Пошук..."
-                        value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
-                        className={styles['search-input']}
-                    />
+        <section className={styles.page}>
+            <div className={styles.searchBar}>
+                <span className={styles.searchIcon}>⌕</span>
+                <input
+                    type="text"
+                    placeholder={`Search ${typeLabel.toLowerCase()}…`}
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className={styles.searchInput}
+                />
+            </div>
+
+            <div className={styles.titleRow}>
+                <div>
+                    <h1 className={styles.title}>{typeLabel}</h1>
+                    <div className={styles.meta}>
+                        <span>CATALOG · {totalResults} RESULTS</span>
+                    </div>
+                </div>
+                <div className={styles.metaRight}>
+                    <span>TYPE · {typeKey.toUpperCase()}</span>
+                    <span className={styles.metaSep}>·</span>
+                    <span>PAGE {currentPage} / {totalPages}</span>
                 </div>
             </div>
-            <div className={styles['content-container']}>
+
+            <div className={styles.grid}>
                 <FilterPanel
                     config={filterConfig}
                     onFilterChange={handleFilterChange}
@@ -225,155 +261,147 @@ function ComponentsPage() {
                     onPrefilterChange={handlePrefilterChange}
                 />
 
-                <div className={styles['table-container']}>
-                    <div className={styles['sorting-controls']}>
-                        <span className={styles['sorting-label']}>Сортувати за:</span>
-                        <div className={styles['sort-buttons']}>
-                            {[
-                                { field: 'name', label: 'Назвою' },
-                                { field: 'averagePrice', label: 'Ціною' },
-                                { field: 'offersCount', label: 'К-стю пропозицій' },
-                            ].map(({ field, label }) => (
-                                <button
-                                    key={field}
-                                    className={`${styles['sort-button']} ${sortField === field ? styles['active'] : ''}`}
-                                    onClick={() => handleSortChange(field)}
-                                >
-                                    {label}
-                                    {sortField === field && (
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor"
-                                             viewBox="0 0 16 16">
-                                            <path d={sortDirection === 'asc'
-                                                ? "M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5"
-                                                : "M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1"}/>
-                                        </svg>
-                                    )}
-                                </button>
-                            ))}
+                <div className={styles.results}>
+                    <div className={styles.toolbar}>
+                        <div className={styles.grow} />
+                        <span className={styles.toolbarLabel}>SORT</span>
+                        <div className={styles.sortGroup}>
+                            {sortOptions.map(({ field, label }) => {
+                                const isActive = sortField === field;
+                                return (
+                                    <span
+                                        key={field}
+                                        className={`${styles.sortSeg} ${isActive ? styles.sortSegOn : ''}`}
+                                        onClick={() => handleSortChange(field)}
+                                    >
+                                        {label}
+                                        {isActive && (
+                                            <span className={styles.sortArrow}>
+                                                {sortDirection === 'asc' ? '▲' : '▼'}
+                                            </span>
+                                        )}
+                                    </span>
+                                );
+                            })}
                         </div>
                     </div>
 
-                    <div className={styles['components-list']}>
-                        {components.map(component => (
-                            <div key={component.id} className={styles['component-card']}>
-                                <div
-                                    className={styles['component-image']}
-                                    onClick={() => navigate(`/components/${type}/${component.id}`)}
-                                >
-                                    {component.photoUrl ? (
-                                        <img
-                                            src={component.photoUrl}
-                                            alt={component.name}
-                                            className={styles['componentImage']}
-                                            loading="lazy"
-                                        />
-                                    ) : (
-                                        <div className={styles['no-image']}>No image</div>
-                                    )}
-                                </div>
-
-                                <div className={styles['component-info']}>
-                                    <div className={styles['component-title']}
-                                         onClick={() => navigate(`/components/${type}/${component.id}`)}>
-                                        {component.name}
-                                    </div>
-                                    <div className={styles['component-specs']}>
-                                        {(componentSpecConfigs[type ?? ''] ?? componentSpecConfigs['default'] ?? [])
-                                            .map((spec, index) => {
-                                                const comp = component;
-
-                                                if ('key' in spec) {
-                                                    const value = comp[spec.key];
-
-                                                    if (spec.isList) {
-                                                        if (Array.isArray(value) && value.length > 0) {
-                                                            const formattedItems = spec.formatList(
-                                                                value.map((item: Record<string, unknown>) => spec.formatItem(item))
-                                                            );
-                                                            return (
-                                                                <span key={spec.key} className={styles['spec-item']}>
-                                                                    {index > 0 && <span className={styles['spec-separator']}>&bull;</span>}
-                                                                    {spec.label && <span className={styles['spec-label']}>{spec.label}:</span>}
-                                                                    <span className={styles['spec-value']}>
-                                                                        {formattedItems}{spec.unit && ` ${spec.unit}`}
-                                                                    </span>
-                                                                </span>
-                                                            );
-                                                        }
-                                                        return null;
-                                                    }
-
-                                                    if (value == null || value === '') return null;
-
-                                                    return (
-                                                        <span key={spec.key} className={styles['spec-item']}>
-                                                            {index > 0 && <span className={styles['spec-separator']}>&bull;</span>}
-                                                            {spec.label && <span className={styles['spec-label']}>{spec.label}:</span>}
-                                                            <span className={styles['spec-value']}>
-                                                                {String(value)}{spec.unit && ` ${spec.unit}`}
-                                                            </span>
-                                                        </span>
-                                                    );
-                                                }
-
-                                                if ('keys' in spec) {
-                                                    const values: Record<string, unknown> = {};
-                                                    let hasValue = false;
-                                                    spec.keys.forEach((key) => {
-                                                        values[key] = comp[key];
-                                                        if (comp[key] != null && comp[key] !== '') hasValue = true;
-                                                    });
-                                                    if (!hasValue) return null;
-
-                                                    return (
-                                                        <span key={spec.keys.join('_')} className={styles['spec-item']}>
-                                                            {index > 0 && <span className={styles['spec-separator']}>&bull;</span>}
-                                                            {spec.label && <span className={styles['spec-label']}>{spec.label}:</span>}
-                                                            <span className={styles['spec-value']}>
-                                                                {spec.format(values)}{spec.unit && ` ${spec.unit}`}
-                                                            </span>
-                                                        </span>
-                                                    );
-                                                }
-                                                return null;
-                                            })
-                                            .filter(Boolean)
-                                        }
-                                    </div>
-                                </div>
-
-                                <div className={styles['component-price']}>
-                                    {component.averagePrice} грн
-                                </div>
-
-                                <div className={styles['component-actions']}>
-                                    <Button
-                                        variant='primary'
-                                        size='md'
-                                        onClick={() => navigate(`/components/${type}/${component.id}`)}
-                                    >
-                                        Деталі
-                                    </Button>
-                                    <p>Пропозицій: {component.offersCount}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {components.length === 0 && !loading && (
-                        <div className={styles['no-results']}>
+                    {components.length === 0 && !loading ? (
+                        <div className={styles.empty}>
                             No components match your filters. Try adjusting your criteria.
                         </div>
+                    ) : (
+                        <div className={styles.list}>
+                            {components.map(component => (
+                                <div
+                                    key={component.id}
+                                    className={styles.item}
+                                    onClick={() => navigate(`/components/${type}/${component.id}`)}
+                                >
+                                    <div className={styles.itemImg}>
+                                        {component.photoUrl ? (
+                                            <img
+                                                src={component.photoUrl}
+                                                alt={component.name}
+                                                loading="lazy"
+                                            />
+                                        ) : (
+                                            <span className={styles.itemImgPh}>—</span>
+                                        )}
+                                    </div>
+
+                                    <div className={styles.itemInfo}>
+                                        <div className={styles.itemName}>{component.name}</div>
+                                        <div className={styles.itemSpec}>
+                                            {(componentSpecConfigs[type ?? ''] ?? componentSpecConfigs['default'] ?? [])
+                                                .map((spec, index) => {
+                                                    const comp = component;
+
+                                                    if ('key' in spec) {
+                                                        const value = comp[spec.key];
+
+                                                        if (spec.isList) {
+                                                            if (Array.isArray(value) && value.length > 0) {
+                                                                const formattedItems = spec.formatList(
+                                                                    value.map((item: Record<string, unknown>) => spec.formatItem(item))
+                                                                );
+                                                                return (
+                                                                    <span key={spec.key} className={styles.specItem}>
+                                                                        {index > 0 && <span className={styles.specDot}>/</span>}
+                                                                        <span>
+                                                                            {spec.label && <span className={styles.specLabel}>{spec.label}: </span>}
+                                                                            {formattedItems}{spec.unit && ` ${spec.unit}`}
+                                                                        </span>
+                                                                    </span>
+                                                                );
+                                                            }
+                                                            return null;
+                                                        }
+
+                                                        if (value == null || value === '') return null;
+
+                                                        return (
+                                                            <span key={spec.key} className={styles.specItem}>
+                                                                {index > 0 && <span className={styles.specDot}>/</span>}
+                                                                <span>
+                                                                    {spec.label && <span className={styles.specLabel}>{spec.label}: </span>}
+                                                                    {String(value)}{spec.unit && ` ${spec.unit}`}
+                                                                </span>
+                                                            </span>
+                                                        );
+                                                    }
+
+                                                    if ('keys' in spec) {
+                                                        const values: Record<string, unknown> = {};
+                                                        let hasValue = false;
+                                                        spec.keys.forEach((key) => {
+                                                            values[key] = comp[key];
+                                                            if (comp[key] != null && comp[key] !== '') hasValue = true;
+                                                        });
+                                                        if (!hasValue) return null;
+
+                                                        return (
+                                                            <span key={spec.keys.join('_')} className={styles.specItem}>
+                                                                {index > 0 && <span className={styles.specDot}>/</span>}
+                                                                <span>
+                                                                    {spec.label && <span className={styles.specLabel}>{spec.label}: </span>}
+                                                                    {spec.format(values)}{spec.unit && ` ${spec.unit}`}
+                                                                </span>
+                                                            </span>
+                                                        );
+                                                    }
+                                                    return null;
+                                                })
+                                                .filter(Boolean)
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <div className={styles.itemPrice}>
+                                        <span className={styles.priceCcy}>₴</span>{component.averagePrice}
+                                        <div className={styles.offersLine}>{component.offersCount} OFFERS</div>
+                                    </div>
+
+                                    <div
+                                        className={styles.itemAct}
+                                        onClick={(e) => { e.stopPropagation(); navigate(`/components/${type}/${component.id}`); }}
+                                    >
+                                        DETAILS →
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     )}
+
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalResults={totalResults}
+                        pageSize={pageSize}
+                        onPageChange={(newPage) => setCurrentPage(newPage)}
+                    />
                 </div>
             </div>
-            <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                totalResults={totalResults}
-                pageSize={pageSize}
-                onPageChange={(newPage) => setCurrentPage(newPage)}
-            />
         </section>
     );
 }

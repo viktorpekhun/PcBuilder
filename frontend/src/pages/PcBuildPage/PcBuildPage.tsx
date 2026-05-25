@@ -1,63 +1,33 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
-import styles from './PcBuildPage.module.css';
-import buttonStyles from '../../components/Button/Button.module.css';
+import { useLocation, useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import styles from "./PcBuildPage.module.css";
 import { componentService } from "../../api/component.service";
 import useAuth from "../../hooks/useAuth";
 import { buildService } from "../../api/build.service";
 import SaveBuildModal from "../../components/SaveBuildModal/SaveBuildModal";
 import CancelEditModal from "../../components/CanselEditModal/CanselEditModal";
-import { Button } from "../../components/Button/Button";
 import Toast from "../../components/Toast/Toast";
 import CompatibilityCheck from "./CompatibilityCheck";
 import AutoBuilderPanel from "./AutoBuilderPanel";
+import PartsTable from "./PartsTable";
+import CardsView from "./CardsView";
+import JsonView from "./JsonView";
+import TotalCard from "./TotalCard";
+import PowerCard from "./PowerCard";
+import InlineBanners from "./InlineBanners";
+import { usePowerStats } from "./hooks";
 import type { IAutoBuildComponents, IComponentsCompatibility, IPcBuildInput } from "../../types/build.types";
 import type {
     SelectedComponents, ComponentDataState, EditingBuild,
     SaveModalState, ToastState, SingleComponentData, MultiComponentData,
-    MultiKey, SelectedOffer, SelectedMultiOffer,
+    MultiKey, SingleKey, SelectedOffer, SelectedMultiOffer,
 } from "./types";
 import {
     EMPTY_SELECTED, EMPTY_DATA,
     COMPONENT_TYPES, SINGLE_TYPES, MULTI_TYPES,
 } from "./types";
 
-// --- SVG icons ---
-
-const XIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-         fill="currentColor" className="bi bi-x" viewBox="0 0 16 16">
-        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
-    </svg>
-);
-
-const CaretUp = () => (
-    <svg xmlns="http://www.w3.org/2000/svg"
-         fill="currentColor" className="bi bi-caret-up-fill" viewBox="0 0 16 16">
-        <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
-    </svg>
-);
-
-const CaretDown = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-         fill="currentColor" className="bi bi-caret-down-fill" viewBox="0 0 16 16">
-        <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
-    </svg>
-);
-
-const WandIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
-        <path d="M9.5 2.672a.5.5 0 1 0 1 0V.843a.5.5 0 0 0-1 0zm4.5.035A.5.5 0 0 0 13.293 2L12 3.293a.5.5 0 1 0 .707.707zM7.293 4A.5.5 0 1 0 8 3.293L6.707 2A.5.5 0 0 0 6 2.707zm-.621 2.5a.5.5 0 1 0 0-1H4.843a.5.5 0 1 0 0 1zm8.485 0a.5.5 0 1 0 0-1h-1.829a.5.5 0 0 0 0 1zM13.293 10A.5.5 0 1 0 14 9.293L12.707 8a.5.5 0 1 0-.707.707zM9.5 11.157a.5.5 0 0 0 1 0V9.328a.5.5 0 0 0-1 0zm1.854-5.097a.5.5 0 0 0 0-.706l-.708-.708a.5.5 0 0 0-.707 0L8.646 5.94a.5.5 0 0 0 0 .707l.708.708a.5.5 0 0 0 .707 0l1.293-1.293zM3 7.5l-.364-.364a.5.5 0 0 0-.707.707l7.5 7.5a.5.5 0 0 0 .707-.707L5.175 9.68 3 7.5z"/>
-    </svg>
-);
-
-const PencilIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
-         className="bi bi-pencil-square" viewBox="0 0 16 16">
-        <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-        <path d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
-    </svg>
-);
+type ViewMode = "table" | "cards" | "json";
 
 function PcBuildPage() {
     const [selectedComponents, setSelectedComponents] = useState<SelectedComponents>({ ...EMPTY_SELECTED });
@@ -68,34 +38,41 @@ function PcBuildPage() {
     const [editingBuild, setEditingBuild] = useState<EditingBuild | null>(null);
     const [saveModal, setSaveModal] = useState<SaveModalState>({ isOpen: false });
     const [saveLoading, setSaveLoading] = useState(false);
-    const [toast, setToast] = useState<ToastState>({ visible: false, message: '', type: 'success' });
+    const [toast, setToast] = useState<ToastState>({ visible: false, message: "", type: "success" });
     const [autoPanelOpen, setAutoPanelOpen] = useState(false);
+    const [viewMode, setViewMode] = useState<ViewMode>("table");
+    const [draftName, setDraftName] = useState<string>("");
+    const [publishLoading, setPublishLoading] = useState(false);
+    const [criticalCount, setCriticalCount] = useState(0);
+    const [firstCriticalMessage, setFirstCriticalMessage] = useState<string | null>(null);
+    const [selectedRow, setSelectedRow] = useState<string | null>(null);
+    const [discardModal, setDiscardModal] = useState(false);
 
     const navigate = useNavigate();
     const location = useLocation();
     const isInitialMount = useRef(true);
     const { auth } = useAuth();
 
-    // Load editing build from localStorage
+    const handleCompatCounts = useCallback((counts: { criticalCount: number; warningCount: number; firstCriticalMessage: string | null }) => {
+        setCriticalCount(counts.criticalCount);
+        setFirstCriticalMessage(counts.firstCriticalMessage);
+    }, []);
+
+    // Load editing build
     useEffect(() => {
         try {
-            const raw = localStorage.getItem('editingBuild');
-            if (raw) {
-                const parsed = JSON.parse(raw) as EditingBuild;
-                setEditingBuild(parsed);
-            }
+            const raw = localStorage.getItem("editingBuild");
+            if (raw) setEditingBuild(JSON.parse(raw) as EditingBuild);
         } catch (err) {
             console.error("Error loading editing build data:", err);
         }
     }, []);
 
-    // Load saved component IDs from localStorage
+    // Load saved component IDs
     useEffect(() => {
         try {
-            const raw = localStorage.getItem('selectedComponents');
-            if (raw) {
-                setSelectedComponents(JSON.parse(raw) as SelectedComponents);
-            }
+            const raw = localStorage.getItem("selectedComponents");
+            if (raw) setSelectedComponents(JSON.parse(raw) as SelectedComponents);
         } catch (err) {
             console.error("Error loading components from localStorage:", err);
         } finally {
@@ -103,7 +80,30 @@ function PcBuildPage() {
         }
     }, []);
 
-    // Fetch component data whenever IDs change
+    // Load draft name
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem("composerDraftName");
+            if (raw) setDraftName(raw);
+        } catch (err) {
+            console.error("Error loading draft name:", err);
+        }
+    }, []);
+
+    // Persist draft name (debounced)
+    useEffect(() => {
+        const t = setTimeout(() => {
+            try {
+                if (draftName) localStorage.setItem("composerDraftName", draftName);
+                else localStorage.removeItem("composerDraftName");
+            } catch (err) {
+                console.error("Error saving draft name:", err);
+            }
+        }, 300);
+        return () => clearTimeout(t);
+    }, [draftName]);
+
+    // Fetch component data
     useEffect(() => {
         if (!initialLoadComplete) return;
 
@@ -167,64 +167,55 @@ function PcBuildPage() {
 
         fetchComponentData();
 
-        if (isInitialMount.current) {
-            isInitialMount.current = false;
-        }
+        if (isInitialMount.current) isInitialMount.current = false;
     }, [selectedComponents, initialLoadComplete]);
 
-    // Persist selectedComponents to localStorage
+    // Persist
     useEffect(() => {
         if (!initialLoadComplete) return;
         try {
-            localStorage.setItem('selectedComponents', JSON.stringify(selectedComponents));
+            localStorage.setItem("selectedComponents", JSON.stringify(selectedComponents));
         } catch (err) {
             console.error("Error saving components to localStorage:", err);
         }
     }, [selectedComponents, initialLoadComplete]);
 
-    // Clear editing state on logout
+    // Clear edit on logout
     useEffect(() => {
         if (!auth?.accessToken && editingBuild) {
-            localStorage.removeItem('editingBuild');
+            localStorage.removeItem("editingBuild");
             setEditingBuild(null);
         }
     }, [auth, editingBuild]);
 
-    if (loading && !initialLoadComplete) {
-        return <div className={styles['loading-component']}>Loading your build...</div>;
-    }
-
-    // --- Handlers ---
-
-    const removeComponent = (key: string) => {
-        setSelectedComponents(prev => ({ ...prev, [key]: null }));
-    };
-
-    const removeMultiComponent = (key: string, componentId: string) => {
-        setSelectedComponents(prev => ({
-            ...prev,
-            [key]: (prev[key as keyof SelectedComponents] as typeof prev.rams).filter(
-                item => item.componentId !== componentId
-            ),
-        }));
-    };
-
-    const adjustQuantity = (key: string, componentId: string, change: number) => {
-        setSelectedComponents(prev => {
-            const arr = [...(prev[key as keyof SelectedComponents] as typeof prev.rams)];
-            const index = arr.findIndex(item => item.componentId === componentId);
-            if (index === -1) return prev;
-
-            const newQuantity = arr[index]!.quantity + change;
-            if (newQuantity <= 0) {
-                return { ...prev, [key]: arr.filter(item => item.componentId !== componentId) };
+    // Lazy-fetch isPublished if entering edit mode without it
+    useEffect(() => {
+        if (!editingBuild?.id || editingBuild.isPublished !== undefined) return;
+        let cancelled = false;
+        (async () => {
+            try {
+                const { data } = await buildService.getBuildById(editingBuild.id);
+                if (cancelled) return;
+                setEditingBuild(prev => {
+                    if (!prev || prev.id !== editingBuild.id) return prev;
+                    const updated = { ...prev, isPublished: data.isPublished };
+                    try { localStorage.setItem("editingBuild", JSON.stringify(updated)); } catch { /* ignore */ }
+                    return updated;
+                });
+            } catch (err) {
+                console.error("Error fetching build isPublished:", err);
             }
-            arr[index] = { ...arr[index]!, quantity: newQuantity };
-            return { ...prev, [key]: arr };
-        });
-    };
+        })();
+        return () => { cancelled = true; };
+    }, [editingBuild?.id, editingBuild?.isPublished]);
 
-    const calculateTotalPrice = (): string => {
+    // --- Derived ---
+
+    const hasAnySelected = useMemo(() =>
+        Object.values(selectedComponents).some(v => v !== null && (Array.isArray(v) ? v.length > 0 : true)),
+        [selectedComponents]);
+
+    const totalPrice = useMemo(() => {
         let total = 0;
         for (const type of COMPONENT_TYPES) {
             if (!type.isMulti) {
@@ -236,7 +227,66 @@ function PcBuildPage() {
                 }
             }
         }
-        return total.toFixed(2);
+        return total;
+    }, [selectedComponents]);
+
+    const partCount = useMemo(() => {
+        let n = 0;
+        for (const type of COMPONENT_TYPES) {
+            if (!type.isMulti) {
+                if (selectedComponents[type.key]) n++;
+            } else {
+                n += selectedComponents[type.key].reduce((a, i) => a + i.quantity, 0);
+            }
+        }
+        return n;
+    }, [selectedComponents]);
+
+    const filledSlots = useMemo(() => {
+        let n = 0;
+        for (const type of COMPONENT_TYPES) {
+            if (!type.isMulti) {
+                if (selectedComponents[type.key]) n++;
+            } else {
+                if (selectedComponents[type.key].length > 0) n++;
+            }
+        }
+        return n;
+    }, [selectedComponents]);
+
+    const powerStats = usePowerStats(componentData);
+
+    if (loading && !initialLoadComplete) {
+        return <div className={styles.loading}>Завантаження збірки...</div>;
+    }
+
+    // --- Handlers ---
+
+    const removeSingle = (key: SingleKey) => {
+        setSelectedComponents(prev => ({ ...prev, [key]: null }));
+        if (selectedRow === key) setSelectedRow(null);
+    };
+
+    const removeMulti = (key: MultiKey, componentId: string) => {
+        setSelectedComponents(prev => ({
+            ...prev,
+            [key]: prev[key].filter(item => item.componentId !== componentId),
+        }));
+        if (selectedRow === `${key}:${componentId}`) setSelectedRow(null);
+    };
+
+    const adjustQty = (key: MultiKey, componentId: string, change: number) => {
+        setSelectedComponents(prev => {
+            const arr = [...prev[key]];
+            const index = arr.findIndex(item => item.componentId === componentId);
+            if (index === -1) return prev;
+            const newQuantity = arr[index]!.quantity + change;
+            if (newQuantity <= 0) {
+                return { ...prev, [key]: arr.filter(item => item.componentId !== componentId) };
+            }
+            arr[index] = { ...arr[index]!, quantity: newQuantity };
+            return { ...prev, [key]: arr };
+        });
     };
 
     const convertToCompatibilityFormat = (): IComponentsCompatibility => {
@@ -257,28 +307,20 @@ function PcBuildPage() {
 
     const requireAuth = (callback: () => void) => {
         if (!auth?.accessToken) {
-            navigate('/login', {
-                state: { from: location.pathname, message: 'Увійдіть щоб зберегти збірку.' },
+            navigate("/login", {
+                state: { from: location.pathname, message: "Увійдіть щоб зберегти збірку." },
             });
             return;
         }
         callback();
     };
 
-    const openSaveModal = () => requireAuth(() => {
-        setSaveModal({ isOpen: true });
-    });
-
-    const openSaveAsNewModal = () => requireAuth(() => {
-        setSaveModal({ isOpen: true, saveAsNew: true });
-    });
+    const openSaveModal = () => requireAuth(() => setSaveModal({ isOpen: true }));
+    const openSaveAsNewModal = () => requireAuth(() => setSaveModal({ isOpen: true, saveAsNew: true }));
 
     const handleSaveBuild = async (buildData: { name: string; description: string }) => {
-        const hasAny = Object.values(selectedComponents).some(
-            v => v !== null && (Array.isArray(v) ? v.length > 0 : true)
-        );
-        if (!hasAny) {
-            setToast({ visible: true, message: 'В збірці повинен бути хоча б один компонент.', type: 'error' });
+        if (!hasAnySelected) {
+            setToast({ visible: true, message: "В збірці повинен бути хоча б один компонент.", type: "error" });
             return;
         }
 
@@ -308,10 +350,10 @@ function PcBuildPage() {
                 ...(componentData.cpuCooler?.selectedOffer?.id && { cpuCoolerOfferId: componentData.cpuCooler.selectedOffer.id }),
                 ...(selectedComponents.pcCase && { pcCaseId: selectedComponents.pcCase.componentId }),
                 ...(componentData.pcCase?.selectedOffer?.id && { pcCaseOfferId: componentData.pcCase.selectedOffer.id }),
-                rams: multiPayload('rams'),
-                ssds: multiPayload('ssds'),
-                hdds: multiPayload('hdds'),
-                fans: multiPayload('fans'),
+                rams: multiPayload("rams"),
+                ssds: multiPayload("ssds"),
+                hdds: multiPayload("hdds"),
+                fans: multiPayload("fans"),
             };
 
             if (editingBuild?.id && !saveModal.saveAsNew) {
@@ -321,36 +363,75 @@ function PcBuildPage() {
             }
 
             if (editingBuild) {
-                localStorage.removeItem('editingBuild');
+                localStorage.removeItem("editingBuild");
                 setEditingBuild(null);
             }
 
+            localStorage.removeItem("composerDraftName");
+            setDraftName("");
+
             setSaveLoading(false);
-            setToast({ visible: true, message: 'Збірку успішно збережено!', type: 'success' });
+            setToast({ visible: true, message: "Збірку успішно збережено!", type: "success" });
             setSaveModal({ isOpen: false });
-            navigate('/user/builds', { state: { message: 'Збірку успішно збережено!' } });
+            navigate("/user/builds", { state: { message: "Збірку успішно збережено!" } });
         } catch (err: unknown) {
             setSaveLoading(false);
             const msg = (err as { response?: { data?: { message?: string } } })
-                ?.response?.data?.message || 'Не вдалося зберегти збірку. Будь ласка, спробуйте ще раз.';
-            setToast({ visible: true, message: msg, type: 'error' });
+                ?.response?.data?.message || "Не вдалося зберегти збірку. Будь ласка, спробуйте ще раз.";
+            setToast({ visible: true, message: msg, type: "error" });
+        }
+    };
+
+    const togglePublish = async () => {
+        if (!editingBuild?.id || publishLoading) return;
+        const newState = !(editingBuild.isPublished ?? false);
+        try {
+            setPublishLoading(true);
+            await buildService.publishBuild(editingBuild.id, newState);
+            setEditingBuild(prev => {
+                if (!prev) return prev;
+                const updated = { ...prev, isPublished: newState };
+                try { localStorage.setItem("editingBuild", JSON.stringify(updated)); } catch { /* ignore */ }
+                return updated;
+            });
+            setToast({
+                visible: true,
+                message: newState ? "Збірку опубліковано" : "Збірку знято з публікації",
+                type: "success",
+            });
+        } catch (err: unknown) {
+            const msg = (err as { response?: { data?: { message?: string } } })
+                ?.response?.data?.message || "Не вдалося змінити статус публікації.";
+            setToast({ visible: true, message: msg, type: "error" });
+        } finally {
+            setPublishLoading(false);
         }
     };
 
     const handleCancelEdit = () => {
-        localStorage.removeItem('editingBuild');
-        localStorage.removeItem('selectedComponents');
-        localStorage.removeItem('editComponents');
+        localStorage.removeItem("editingBuild");
+        localStorage.removeItem("selectedComponents");
+        localStorage.removeItem("editComponents");
         setEditingBuild(null);
-        navigate('/user/builds');
+        navigate("/user/builds");
+    };
+
+    const handleDiscardDraft = () => {
+        localStorage.removeItem("selectedComponents");
+        localStorage.removeItem("composerDraftName");
+        setSelectedComponents({ ...EMPTY_SELECTED });
+        setComponentData({ ...EMPTY_DATA });
+        setDraftName("");
+        setSelectedRow(null);
+        setDiscardModal(false);
     };
 
     const handleApplyAutoBuild = (components: IAutoBuildComponents) => {
         const makeOffer = (id: string, price: number): SelectedOffer => ({
-            componentId: id, offerId: '', price, storeName: '', storeLogoUrl: null, productOfferUrl: null,
+            componentId: id, offerId: "", price, storeName: "", storeLogoUrl: null, productOfferUrl: null,
         });
         const makeMultiOffer = (id: string, price: number, qty: number): SelectedMultiOffer => ({
-            componentId: id, offerId: '', price, quantity: qty, storeName: '', storeLogoUrl: null, productOfferUrl: null,
+            componentId: id, offerId: "", price, quantity: qty, storeName: "", storeLogoUrl: null, productOfferUrl: null,
         });
 
         setSelectedComponents({
@@ -372,93 +453,13 @@ function PcBuildPage() {
         setAutoPanelOpen(false);
     };
 
-    // --- Render helpers ---
-
-    const renderMultiRow = (key: MultiKey, buttonLabel: string, urlType: string) => {
-        const items = componentData[key];
-        return (
-            <tr key={key}>
-                <td>{COMPONENT_TYPES.find(t => t.key === key)!.label}</td>
-                <td className={styles['multi-components-info-container']}>
-                    <div className={styles['multi-components']}>
-                        {items.map((item, i) => (
-                            <div key={i} className={styles['multi-component-item']}>
-                                <Link to={`/components/${urlType}/${item.componentId}`} className={styles['selected-component']}>
-                                    {item.component.photoUrl && (
-                                        <img src={item.component.photoUrl} alt={item.component.name} width="50" />
-                                    )}
-                                    <div className={styles['component-name']}>{item.component.name}</div>
-                                </Link>
-                                <div className={styles['quantity-control']}>
-                                    <button className={styles['quantity-btn']}
-                                            onClick={() => adjustQuantity(key, item.componentId, 1)}>
-                                        <CaretUp />
-                                    </button>
-                                    <span className={styles['quantity-display']}>{item.quantity}</span>
-                                    <button className={styles['quantity-btn']}
-                                            onClick={() => adjustQuantity(key, item.componentId, -1)}>
-                                        <CaretDown />
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                        <Link
-                            to={`/components/${urlType}`}
-                            className={`${buttonStyles.button} ${buttonStyles['outline-primary']} ${buttonStyles.sm}`}
-                        >
-                            Додати {buttonLabel}
-                        </Link>
-                    </div>
-                </td>
-                <td className={styles['multi-components-info-container']}>
-                    {items.length > 0 && (
-                        <div className={styles['multi-info-container']}>
-                            {items.map((item, i) => (
-                                <div key={i} className={styles['component-price-item']}>
-                                    <div className={styles['store-info']}>
-                                        <span>{item.storeName}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </td>
-                <td className={styles['multi-components-info-container']}>
-                    {items.length > 0 && (
-                        <div className={styles['multi-info-container']}>
-                            {items.map((item, i) => (
-                                <div key={i} className={`${styles['component-price-item']} ${styles['price']}`}>
-                                    {item.price * item.quantity}
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </td>
-                <td className={styles['multi-components-info-container']}>
-                    {items.length > 0 && (
-                        <div className={styles['multi-info-container']}>
-                            {items.map((item, i) => (
-                                <div key={i} className={styles['component-price-item']}>
-                                    <Button onClick={() => removeMultiComponent(key, item.componentId)}
-                                            variant="outline-secondary" size="md">
-                                        <XIcon /> Прибрати
-                                    </Button>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </td>
-            </tr>
-        );
-    };
+    const TOTAL_SLOTS = COMPONENT_TYPES.length;
 
     return (
-        <section className={styles['build-components-page']}>
+        <section className={styles.page}>
             <AutoBuilderPanel
                 isOpen={autoPanelOpen}
-                hasExistingComponents={Object.values(selectedComponents).some(
-                    v => v !== null && (Array.isArray(v) ? v.length > 0 : true)
-                )}
+                hasExistingComponents={hasAnySelected}
                 onClose={() => setAutoPanelOpen(false)}
                 onApply={handleApplyAutoBuild}
             />
@@ -475,8 +476,8 @@ function PcBuildPage() {
                 onCancel={() => setSaveModal({ isOpen: false })}
                 onSave={handleSaveBuild}
                 isSaving={saveLoading}
-                initialName={editingBuild?.name || ''}
-                initialDescription={editingBuild?.description || ''}
+                initialName={(editingBuild && !saveModal.saveAsNew) ? editingBuild.name : (draftName || editingBuild?.name || "")}
+                initialDescription={editingBuild?.description || ""}
                 isEditing={!!editingBuild && !saveModal.saveAsNew}
             />
             <CancelEditModal
@@ -484,133 +485,265 @@ function PcBuildPage() {
                 onCancel={() => setCancelEditModal(false)}
                 onConfirm={handleCancelEdit}
             />
+            <CancelEditModal
+                isOpen={discardModal}
+                onCancel={() => setDiscardModal(false)}
+                onConfirm={handleDiscardDraft}
+                title="Скинути збірку?"
+                body="Усі вибрані компоненти та назва чернетки будуть видалені."
+                warning="Цю дію не можна скасувати."
+                cancelLabel="Залишити"
+                confirmLabel="Скинути"
+            />
 
-            {editingBuild && (
-                <div className={styles['edit-mode-banner']}>
-                    <div className={styles['banner-content']}>
-                        <PencilIcon />
-                        <span>Редагування збірки: <strong>{editingBuild.name}</strong></span>
-                    </div>
-                    <Button variant="outline-secondary" size="md"
-                            onClick={() => setCancelEditModal(true)}>
-                        Скасувати Редагування
-                    </Button>
-                </div>
-            )}
-
-            <div className={styles['build-components-container']}>
-                <div className={styles['build-components-section']}>
-                    {!Object.values(selectedComponents).some(v => v !== null && (Array.isArray(v) ? v.length > 0 : true)) && (
-                        <div className={styles['autobuilder-empty-cta']}>
-                            <div className={styles['autobuilder-empty-text']}>
-                                <strong>Починіть збирати свій ПК</strong>
-                                <span>Додайте компоненти вручну або дозвольте автопідбору зібрати оптимальну збірку за вашим бюджетом</span>
-                            </div>
-                            <Button variant="primary" size="md" onClick={() => setAutoPanelOpen(true)}>
-                                Автопідбір ПК
-                            </Button>
+            <div className={styles.colMain}>
+                {editingBuild && (
+                    <div className={styles.editBanner}>
+                        <div>
+                            <span className={styles.label}>EDITING · </span>
+                            <span className={styles.name}>{editingBuild.name}</span>
                         </div>
-                    )}
-                    <table className={styles['build-components-table']}>
-                        <thead>
-                        <tr>
-                            <th>Тип</th>
-                            <th>Компонент</th>
-                            <th>Продавець</th>
-                            <th>Ціна, грн</th>
-                            <th></th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {/* Single components */}
-                        {SINGLE_TYPES.map(({ key, label, buttonLabel, urlType }) => {
-                            const data = componentData[key];
-                            return (
-                                <tr key={key}>
-                                    <td>{label}</td>
-                                    <td>
-                                        {loading && selectedComponents[key] ? (
-                                            <div className={styles['loading-component']}>Завантаження компонента...</div>
-                                        ) : data ? (
-                                            <Link to={`/components/${urlType}/${data.id}`} className={styles['selected-component']}>
-                                                {data.photoUrl && (
-                                                    <img src={data.photoUrl} alt={data.name} width="50" />
-                                                )}
-                                                <div className={styles['component-name']}>{data.name}</div>
-                                            </Link>
-                                        ) : (
-                                            <Link
-                                                to={`/components/${urlType}`}
-                                                className={`${buttonStyles.button} ${buttonStyles['outline-primary']} ${buttonStyles.sm}`}
-                                            >
-                                                Додати {buttonLabel}
-                                            </Link>
-                                        )}
-                                    </td>
-                                    <td>
-                                        {data?.selectedOffer && (
-                                            <div className={styles['store-info']}>
-                                                <span>{data.selectedOffer.storeName}</span>
-                                            </div>
-                                        )}
-                                    </td>
-                                    <td className={styles['price']}>
-                                        {data?.selectedOffer?.price || data?.averagePrice || ""}
-                                    </td>
-                                    <td>
-                                        {data && (
-                                            <div className={styles['action-buttons']}>
-                                                <Button onClick={() => removeComponent(key)}
-                                                        variant="outline-secondary" size="sm">
-                                                    <XIcon /> Прибрати
-                                                </Button>
-                                            </div>
-                                        )}
-                                    </td>
-                                </tr>
-                            );
-                        })}
-
-                        {/* Multi components */}
-                        {MULTI_TYPES.map(({ key, buttonLabel, urlType }) =>
-                            renderMultiRow(key, buttonLabel, urlType)
-                        )}
-                        </tbody>
-                    </table>
-
-                    <div className={styles['total-price']}>
-                        <h3>Остаточна ціна: <span>{calculateTotalPrice()} грн</span></h3>
+                        <button className={styles.btn} onClick={() => setCancelEditModal(true)}>
+                            Скасувати редагування
+                        </button>
                     </div>
-                    <div className={styles['save-buttons-container']}>
+                )}
+
+                <div className={styles.titleRow}>
+                    <div style={{ minWidth: 0 }}>
+                        <div className={styles.eyebrow}>
+                            <span>BUILD · {editingBuild ? "EDITING" : "DRAFT"}</span>
+                            {auth?.username && (
+                                <>
+                                    <span className={styles.sep}>·</span>
+                                    <span className={styles.dim}>OWNER · @{auth.username}</span>
+                                </>
+                            )}
+                        </div>
+                        {editingBuild ? (
+                            <h1>{editingBuild.name}</h1>
+                        ) : (
+                            <input
+                                className={styles.titleInput}
+                                value={draftName}
+                                placeholder="untitled-build"
+                                onChange={(e) => setDraftName(e.target.value)}
+                                spellCheck={false}
+                                aria-label="Назва збірки"
+                            />
+                        )}
+                        <div className={styles.metaStrip}>
+                            <span>{filledSlots} / {TOTAL_SLOTS} SLOTS</span>
+                            <span className={styles.sep}>·</span>
+                            <span>{partCount} {partCount === 1 ? "PART" : "PARTS"}</span>
+                            <span className={styles.sep}>·</span>
+                            <span>{totalPrice.toLocaleString("uk-UA")} ₴</span>
+                        </div>
+                    </div>
+                    <div className={styles.titleActions}>
+                        <button className={styles.btn} onClick={() => setAutoPanelOpen(true)}>
+                            ⚙ Автопідбір
+                        </button>
                         {editingBuild ? (
                             <>
-                                <Button variant="primary" size="md" onClick={openSaveModal} disabled={saveLoading}>
-                                    {saveLoading ? 'Збереження...' : 'Оновити Збірку'}
-                                </Button>
-                                <Button variant="outline-secondary" size="md" onClick={openSaveAsNewModal} disabled={saveLoading}>
-                                    Зберегти Як Нову
-                                </Button>
+                                <button className={`${styles.btn} ${styles.btnPri}`}
+                                    onClick={openSaveModal} disabled={saveLoading}>
+                                    {saveLoading ? "Збереження..." : "✓ Оновити"}
+                                </button>
+                                <button className={styles.btn}
+                                    onClick={openSaveAsNewModal} disabled={saveLoading}>
+                                    Зберегти як нову
+                                </button>
                             </>
                         ) : (
-                            <Button variant="primary" size="md" onClick={openSaveModal} disabled={saveLoading}>
-                                {saveLoading ? 'Збереження...' : 'Зберегти Збірку'}
-                            </Button>
+                            <button className={`${styles.btn} ${styles.btnPri}`}
+                                onClick={openSaveModal} disabled={saveLoading}>
+                                {saveLoading ? "Збереження..." : "✓ Зберегти"}
+                            </button>
                         )}
                     </div>
                 </div>
 
-                <CompatibilityCheck
-                    selectedComponentIds={convertToCompatibilityFormat()}
-                    componentData={componentData}
+                <div className={styles.actbar}>
+                    <div className={styles.viewGroup}>
+                        <button
+                            className={`${styles.viewSeg} ${viewMode === "table" ? styles.viewSegOn : ""}`}
+                            onClick={() => setViewMode("table")}
+                        >Table</button>
+                        <button
+                            className={`${styles.viewSeg} ${viewMode === "cards" ? styles.viewSegOn : ""}`}
+                            onClick={() => setViewMode("cards")}
+                        >Cards</button>
+                        <button
+                            className={`${styles.viewSeg} ${viewMode === "json" ? styles.viewSegOn : ""}`}
+                            onClick={() => setViewMode("json")}
+                        >JSON</button>
+                    </div>
+                    <div className={styles.grow} />
+                    <span className={styles.stat}>
+                        <strong>{filledSlots}</strong>&nbsp;/&nbsp;{TOTAL_SLOTS} slots filled
+                    </span>
+                    <span className={styles.statSep}>·</span>
+                    <span className={styles.stat}>
+                        {!hasAnySelected
+                            ? <><span className={styles.statDim}>○</span>&nbsp;PENDING</>
+                            : <><span className={styles.statOk}>✓</span>&nbsp;ACTIVE</>}
+                    </span>
+                </div>
+
+                <InlineBanners
+                    criticalCount={criticalCount}
+                    loadPct={powerStats.loadPct}
+                    psu={powerStats.psu}
+                    firstCriticalMessage={firstCriticalMessage}
                 />
+
+                {!hasAnySelected && (
+                    <div className={styles.emptyCTA}>
+                        <div className={`${styles.emptyPanel} ${styles.emptyPanelFeatured}`}>
+                            <div className={styles.eh}>
+                                <span className={`${styles.emptyOrd} ${styles.emptyOrdFeatured}`}>01 ·</span>
+                                РЕКОМЕНДОВАНО
+                            </div>
+                            <h2>Запустити Автопідбір</h2>
+                            <p>Введіть бюджет та сценарій використання. Ми підберемо сумісні компоненти у межах вашого бюджету.</p>
+                            <button className={`${styles.btn} ${styles.btnPri}`}
+                                onClick={() => setAutoPanelOpen(true)}>
+                                ⚙ Відкрити Автопідбір
+                            </button>
+                        </div>
+                        <div className={styles.emptyPanel}>
+                            <div className={styles.eh}>
+                                <span className={styles.emptyOrd}>02 ·</span>
+                                ВРУЧНУ
+                            </div>
+                            <h2>Підібрати по одному</h2>
+                            <p>Почніть з процесора. Сумісність перевіряється на кожному кроці.</p>
+                            <button className={styles.btn} onClick={() => navigate("/components/cpu")}>
+                                ＋ Вибрати CPU →
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {viewMode === "table" && (
+                    <PartsTable
+                        componentData={componentData}
+                        loading={loading}
+                        selectedRow={selectedRow}
+                        onSelectRow={setSelectedRow}
+                        onRemoveSingle={removeSingle}
+                        onRemoveMulti={removeMulti}
+                        onAdjustQty={adjustQty}
+                    />
+                )}
+                {viewMode === "cards" && (
+                    <CardsView
+                        componentData={componentData}
+                        onRemoveSingle={removeSingle}
+                        onRemoveMulti={removeMulti}
+                    />
+                )}
+                {viewMode === "json" && (
+                    <JsonView componentData={componentData} />
+                )}
+
+                <div className={styles.colMainSpacer} />
+
+                <div className={styles.savebar}>
+                    <div className={styles.meta}>
+                        <span>BUILD&nbsp;&nbsp;<strong>{editingBuild?.name || draftName || "untitled"}</strong></span>
+                        <span className={styles.statSep}>·</span>
+                        <span>{filledSlots}/{TOTAL_SLOTS} SLOTS · {partCount} PARTS</span>
+                        <span className={styles.statSep}>·</span>
+                        <span>
+                            {!hasAnySelected
+                                ? <span className={styles.statDim}>○ PENDING</span>
+                                : <span className={styles.statOk}>✓ ACTIVE</span>}
+                        </span>
+                    </div>
+                    <div className={styles.grow} />
+                    {editingBuild ? (
+                        <>
+                            <button
+                                className={styles.btn}
+                                onClick={togglePublish}
+                                disabled={publishLoading || saveLoading || criticalCount > 0}
+                                title={criticalCount > 0 ? "Виправте конфлікти сумісності, щоб опублікувати" : undefined}
+                            >
+                                {publishLoading
+                                    ? "..."
+                                    : editingBuild.isPublished
+                                        ? "↩ Зняти з публікації"
+                                        : "↗ Опублікувати"}
+                            </button>
+                            <button className={`${styles.btn} ${styles.btnPri}`}
+                                onClick={openSaveModal} disabled={saveLoading}>
+                                {saveLoading ? "Збереження..." : "✓ Оновити"}
+                            </button>
+                            <button className={styles.btn}
+                                onClick={openSaveAsNewModal} disabled={saveLoading}>
+                                Зберегти як нову
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            {hasAnySelected && (
+                                <button
+                                    className={`${styles.btn} ${styles.btnDng}`}
+                                    onClick={() => setDiscardModal(true)}
+                                    title="Скинути всі компоненти"
+                                >
+                                    ⌫ Скинути
+                                </button>
+                            )}
+                            <button className={`${styles.btn} ${styles.btnPri}`}
+                                onClick={openSaveModal} disabled={saveLoading}>
+                                {saveLoading ? "Збереження..." : "✓ Зберегти"}
+                            </button>
+                        </>
+                    )}
+                </div>
             </div>
 
-            {Object.values(selectedComponents).some(v => v !== null && (Array.isArray(v) ? v.length > 0 : true)) && (
-                <button className={styles['autobuilder-fab']} onClick={() => setAutoPanelOpen(true)}>
-                    <WandIcon />
-                    <span>Автопідбір</span>
-                </button>
-            )}
+            <aside className={styles.colSide}>
+                <div className={styles.colSideScroll}>
+                    <TotalCard total={totalPrice} partCount={partCount} />
+                    <PowerCard componentData={componentData} />
+                    <CompatibilityCheck
+                        selectedComponentIds={convertToCompatibilityFormat()}
+                        componentData={componentData}
+                        onCounts={handleCompatCounts}
+                    />
+                </div>
+                {(() => {
+                    let cls = styles.sideFooterDim;
+                    let glyph = "○";
+                    let text = "Очікує компонентів";
+                    if (hasAnySelected) {
+                        if (criticalCount > 0) {
+                            cls = styles.sideFooterErr;
+                            glyph = "×";
+                            text = `${criticalCount} ${criticalCount === 1 ? "конфлікт" : "конфлікти"} сумісності`;
+                        } else if (firstCriticalMessage) {
+                            cls = styles.sideFooterWarn;
+                            glyph = "!";
+                            text = "Перевірте попередження";
+                        } else {
+                            cls = styles.sideFooterOk;
+                            glyph = "✓";
+                            text = "All systems ok";
+                        }
+                    }
+                    return (
+                        <div className={`${styles.sideFooter} ${cls}`}>
+                            <span className={styles.glyph}>{glyph}</span>
+                            <span>{text}</span>
+                        </div>
+                    );
+                })()}
+            </aside>
+
         </section>
     );
 }

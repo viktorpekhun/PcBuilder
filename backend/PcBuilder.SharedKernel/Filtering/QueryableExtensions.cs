@@ -18,23 +18,43 @@ namespace PcBuilder.SharedKernel.Filtering
             if (include != null)
                 query = include(query);
 
-            if (!string.IsNullOrWhiteSpace(parameters.SearchQuery))
-                query = query.ApplySearch(parameters.SearchQuery);
+            bool isFuzzySearch = !string.IsNullOrWhiteSpace(parameters.SearchQuery);
 
             if (parameters.Filters != null && parameters.Filters.Any())
                 query = query.ApplyFilters(parameters.Filters);
 
-            var totalCount = await query.CountAsync();
+            if (isFuzzySearch)
+            {
+                var nameProperty = typeof(T).GetProperty("Name", BindingFlags.Public | BindingFlags.Instance);
+                var candidates = await query.ToListAsync();
+                var ranked = FuzzySearchHelper.RankAndFilter(
+                    candidates,
+                    parameters.SearchQuery!,
+                    item => nameProperty?.GetValue(item) as string,
+                    minScore: 55);
 
-            if (!string.IsNullOrWhiteSpace(parameters.OrderBy))
-                query = query.ApplySort(parameters.OrderBy, parameters.Ascending);
+                var totalCount = ranked.Count;
+                var items = ranked
+                    .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                    .Take(parameters.PageSize)
+                    .ToList();
 
-            var items = await query
-                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
-                .Take(parameters.PageSize)
-                .ToListAsync();
+                return (items, totalCount);
+            }
+            else
+            {
+                var totalCount = await query.CountAsync();
 
-            return (items, totalCount);
+                if (!string.IsNullOrWhiteSpace(parameters.OrderBy))
+                    query = query.ApplySort(parameters.OrderBy, parameters.Ascending);
+
+                var items = await query
+                    .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                    .Take(parameters.PageSize)
+                    .ToListAsync();
+
+                return (items, totalCount);
+            }
         }
 
         public static IQueryable<T> Paginate<T>(this IQueryable<T> query, ResourceParameters parameters)

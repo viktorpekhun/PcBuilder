@@ -22,46 +22,73 @@ namespace PcBuilds.Application.Handlers
         {
             var parameters = request.Parameters;
 
-            var query = _context.Set<PcBuild>()
+            var baseQuery = _context.Set<PcBuild>()
                 .Where(b => b.IsPublished)
-                .Include(b => b.User)
                 .AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(parameters.SearchQuery))
-            {
-                var search = parameters.SearchQuery.ToLower();
-                query = query.Where(b =>
-                    b.Name.ToLower().Contains(search) ||
-                    (b.Description != null && b.Description.ToLower().Contains(search)));
-            }
 
             if (parameters.Filters.TryGetValue("price_range", out var priceRange) && priceRange.Length >= 2)
             {
                 if (decimal.TryParse(priceRange[0], out var minPrice))
-                    query = query.Where(b => b.Price >= minPrice);
+                    baseQuery = baseQuery.Where(b => b.Price >= minPrice);
                 if (decimal.TryParse(priceRange[1], out var maxPrice))
-                    query = query.Where(b => b.Price <= maxPrice);
+                    baseQuery = baseQuery.Where(b => b.Price <= maxPrice);
             }
 
-            var totalCount = await query.CountAsync(cancellationToken);
+            List<Guid> orderedIds;
+            int totalCount;
 
-            query = (parameters.OrderBy?.ToLower()) switch
+            if (!string.IsNullOrWhiteSpace(parameters.SearchQuery))
             {
-                "price" => parameters.Ascending
-                    ? query.OrderBy(b => b.Price)
-                    : query.OrderByDescending(b => b.Price),
-                "averagerating" => parameters.Ascending
-                    ? query.OrderBy(b => b.AverageRating)
-                    : query.OrderByDescending(b => b.AverageRating),
-                "name" => parameters.Ascending
-                    ? query.OrderBy(b => b.Name)
-                    : query.OrderByDescending(b => b.Name),
-                _ => query.OrderByDescending(b => b.PublishedAt)
-            };
+                var names = await baseQuery
+                    .Select(b => new { b.Id, b.Name, b.Description })
+                    .ToListAsync(cancellationToken);
 
-            var builds = await query
-                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
-                .Take(parameters.PageSize)
+                var ranked = FuzzySearchHelper.RankAndFilter(
+                    names,
+                    parameters.SearchQuery,
+                    x => $"{x.Name} {x.Description}",
+                    minScore: 55);
+
+                totalCount = ranked.Count;
+                orderedIds = ranked
+                    .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                    .Take(parameters.PageSize)
+                    .Select(x => x.Id)
+                    .ToList();
+            }
+            else
+            {
+                totalCount = await baseQuery.CountAsync(cancellationToken);
+
+                var sortedQuery = (parameters.OrderBy?.ToLower()) switch
+                {
+                    "price" => parameters.Ascending
+                        ? baseQuery.OrderBy(b => b.Price)
+                        : baseQuery.OrderByDescending(b => b.Price),
+                    "averagerating" => parameters.Ascending
+                        ? baseQuery.OrderBy(b => b.AverageRating)
+                        : baseQuery.OrderByDescending(b => b.AverageRating),
+                    "name" => parameters.Ascending
+                        ? baseQuery.OrderBy(b => b.Name)
+                        : baseQuery.OrderByDescending(b => b.Name),
+                    _ => baseQuery.OrderByDescending(b => b.PublishedAt)
+                };
+
+                orderedIds = await sortedQuery
+                    .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                    .Take(parameters.PageSize)
+                    .Select(b => b.Id)
+                    .ToListAsync(cancellationToken);
+            }
+
+            var builds = await _context.Set<PcBuild>()
+                .Where(b => orderedIds.Contains(b.Id))
+                .Include(b => b.User)
+                .Include(b => b.PcBuild_Rams)
+                .Include(b => b.PcBuild_Ssds)
+                .Include(b => b.PcBuild_Hdds)
+                .Include(b => b.PcBuild_Fans)
+                .Include(b => b.Reviews)
                 .Select(b => new PcBuildGalleryDto
                 {
                     Id = b.Id,
@@ -87,7 +114,12 @@ namespace PcBuilds.Application.Handlers
                 })
                 .ToListAsync(cancellationToken);
 
-            return Result.Success(new PagedResponse<PcBuildGalleryDto>(builds, totalCount, parameters));
+            // Restore the relevance order for fuzzy results (EF WHERE IN loses ordering)
+            var orderedBuilds = orderedIds
+                .Select(id => builds.First(b => b.Id == id))
+                .ToList();
+
+            return Result.Success(new PagedResponse<PcBuildGalleryDto>(orderedBuilds, totalCount, parameters));
         }
     }
 }

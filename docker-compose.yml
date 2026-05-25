@@ -66,8 +66,10 @@ services:
       AzureTranslator__Key: "${AZURE_TRANSLATOR_KEY:-}"
       AzureTranslator__Region: "${AZURE_TRANSLATOR_REGION:-}"
       Cors__AllowedOrigins__0: "http://localhost:5173"
+      Cors__AllowedOrigins__1: "http://localhost:8080"
       AzureStorage__ConnectionString: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UGW0s/Y9rSKRCjteAWISd/zFoE96vsAIZNgLQ==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
       AzureStorage__ContainerName: "component-images"
+      TextModeration__BaseUrl: "http://moderation:8001"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -96,6 +98,32 @@ services:
         condition: service_healthy
       azurite:
         condition: service_healthy
+
+  moderation:
+    build:
+      context: ./TextModerationApi
+      dockerfile: Dockerfile
+    container_name: pcbuilder-moderation
+    ports:
+      - "8001:8001"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_GOOGLE_CLIENT_ID: "${VITE_GOOGLE_CLIENT_ID:-}"
+    container_name: pcbuilder-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
 
 volumes:
   sqlserver_data:

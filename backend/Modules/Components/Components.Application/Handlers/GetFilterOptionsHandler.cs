@@ -202,7 +202,9 @@ namespace Components.Application.Handlers
                     }
                 case ComponentType.PowerSupply:
                     {
-                        var components = await _context.Set<PowerSupply>().ToListAsync(cancellationToken);
+                        var components = await _context.Set<PowerSupply>()
+                            .Include(p => p.PowerSupplyPowerConnectors)
+                            .ToListAsync(cancellationToken);
                         var brands = components.Select(c => c.Brand).Distinct().OrderBy(b => b).ToList();
                         result["brand"] = brands;
 
@@ -238,6 +240,24 @@ namespace Components.Application.Handlers
                                 sataCountMin?.ToString() ?? "0",
                                 sataCountMax?.ToString() ?? "20"
                             };
+
+                        result["cpuConnectorPins"] = components
+                            .SelectMany(p => p.PowerSupplyPowerConnectors)
+                            .Where(c => c.Type == "CPU")
+                            .Select(c => c.Pins + (c.AdditionalPins ?? 0))
+                            .Distinct()
+                            .OrderBy(p => p)
+                            .Select(p => p.ToString())
+                            .ToList();
+
+                        result["gpuConnectorPins"] = components
+                            .SelectMany(p => p.PowerSupplyPowerConnectors)
+                            .Where(c => c.Type == "GPU")
+                            .Select(c => c.Pins + (c.AdditionalPins ?? 0))
+                            .Distinct()
+                            .OrderBy(p => p)
+                            .Select(p => p.ToString())
+                            .ToList();
 
                         var averagePriceMin = components.Min(c => c.AveragePrice);
                         var averagePriceMax = components.Max(c => c.AveragePrice);

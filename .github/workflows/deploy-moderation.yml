@@ -1,0 +1,77 @@
+name: Deploy Moderation Model
+
+# Manual only — the 1.1 GB model is gitignored, so this is decoupled from
+# main-branch CI/CD. Run when the model is updated.
+#
+# Prerequisite: upload the model once to the blob container `models` under
+# the prefix matching `model_version`, e.g.
+#   stpcbuilder/models/v1/{config.json,model.safetensors,tokenizer.json,tokenizer_config.json}
+
+on:
+  workflow_dispatch:
+    inputs:
+      model_version:
+        description: Model version (must match blob prefix, e.g. v1, v2-finetuned)
+        required: true
+        default: v1
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-deploy:
+    name: Build & deploy moderation image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Download model from blob
+        run: |
+          mkdir -p TextModerationApi/model/final
+          az storage blob download-batch \
+            --account-name ${{ secrets.STORAGE_ACCOUNT_NAME }} \
+            --source models \
+            --pattern "${{ inputs.model_version }}/*" \
+            --destination TextModerationApi/model/final \
+            --auth-mode login
+
+          # Flatten — blob prefix becomes a subfolder; move files up one level.
+          shopt -s dotglob
+          mv TextModerationApi/model/final/${{ inputs.model_version }}/* TextModerationApi/model/final/
+          rmdir TextModerationApi/model/final/${{ inputs.model_version }}
+
+          echo "Model files:"
+          ls -lah TextModerationApi/model/final
+
+      - name: ACR login
+        run: az acr login --name ${{ secrets.ACR_NAME }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build & push moderation image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./TextModerationApi
+          file: ./TextModerationApi/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.ACR_LOGIN_SERVER }}/moderation:${{ inputs.model_version }}
+            ${{ secrets.ACR_LOGIN_SERVER }}/moderation:latest
+          cache-from: type=gha,scope=moderation
+          cache-to: type=gha,scope=moderation,mode=max
+
+      - name: Update ca-moderation Container App
+        run: |
+          az containerapp update \
+            --name ca-moderation \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --image ${{ secrets.ACR_LOGIN_SERVER }}/moderation:${{ inputs.model_version }}

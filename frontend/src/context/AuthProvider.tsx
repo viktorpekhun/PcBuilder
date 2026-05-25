@@ -2,7 +2,9 @@ import { createContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import type { AuthUser, IAuthContextType } from "../types/auth.types";
 import { authService } from "../api/auth.service";
+import { axiosPrivate } from "../api/axios";
 import { decodeToken } from "../utils/decodeToken";
+import type { IProfileResponse } from "../types/profile.types";
 
 const AuthContext = createContext<IAuthContextType>({} as IAuthContextType);
 
@@ -20,7 +22,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 const { data } = await authService.refresh();
                 if (cancelled) return;
                 const userData = decodeToken(data.accessToken);
-                setAuth({ ...userData, accessToken: data.accessToken });
+                const profileRes = await axiosPrivate.get<IProfileResponse>("/Profile", {
+                    headers: { Authorization: `Bearer ${data.accessToken}` },
+                });
+                if (cancelled) return;
+                setAuth({ ...userData, accessToken: data.accessToken, avatarUrl: profileRes.data.avatarUrl });
             } catch {
                 // No valid refresh cookie — stay unauthenticated.
             } finally {

@@ -6,7 +6,7 @@ import type { INotification } from "../types/notification.types";
 import { notificationService } from "../api/notification.service";
 import useAuth from "../hooks/useAuth";
 
-const HUB_URL = "https://localhost:5000/hubs/notifications";
+const HUB_URL = import.meta.env.VITE_HUB_URL ?? "/hubs/notifications";
 
 export interface INotificationContextType {
     notifications: INotification[];

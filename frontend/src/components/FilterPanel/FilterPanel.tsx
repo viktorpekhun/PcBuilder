@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { componentService } from "../../api/component.service";
 import type { ComponentType } from "../../types/component.types";
 import styles from './FilterPanel.module.css';
-import { Button } from '../Button/Button';
 import type { Filter, FilterConfig } from './filterConfigs';
 
 type RangeValue = { min: number; max: number };
@@ -25,13 +24,82 @@ const parseRangeValues = (values: string[] | undefined): [number, number] | null
 
 const PREFILTER_KEY = 'compat_prefilter_enabled';
 
+interface DoubleRangeSliderProps {
+    min: number;
+    max: number;
+    step: number;
+    value: RangeValue;
+    onChange: (value: RangeValue) => void;
+}
+
+const DoubleRangeSlider = ({ min, max, step, value, onChange }: DoubleRangeSliderProps) => {
+    const safeMin = Number.isFinite(min) ? min : 0;
+    const safeMax = Number.isFinite(max) && max > safeMin ? max : safeMin + 1;
+    const range = safeMax - safeMin;
+
+    const curMin = Math.min(Math.max(value.min, safeMin), safeMax);
+    const curMax = Math.min(Math.max(value.max, safeMin), safeMax);
+
+    const leftPct = range === 0 ? 0 : ((curMin - safeMin) / range) * 100;
+    const rightPct = range === 0 ? 100 : ((curMax - safeMin) / range) * 100;
+
+    const handleMin = (raw: number) => {
+        const newMin = Math.min(raw, curMax);
+        onChange({ min: newMin, max: curMax });
+    };
+    const handleMax = (raw: number) => {
+        const newMax = Math.max(raw, curMin);
+        onChange({ min: curMin, max: newMax });
+    };
+
+    const fmt = (n: number) => {
+        if (Number.isInteger(n)) return String(n);
+        return n.toFixed(2).replace(/\.?0+$/, '');
+    };
+
+    return (
+        <div className={styles.slider}>
+            <div className={styles.sliderTrackWrap}>
+                <div className={styles.sliderTrack} />
+                <div
+                    className={styles.sliderRange}
+                    style={{ left: `${leftPct}%`, right: `${100 - rightPct}%` }}
+                />
+                <input
+                    type="range"
+                    min={safeMin}
+                    max={safeMax}
+                    step={step}
+                    value={curMin}
+                    onChange={(e) => handleMin(parseFloat(e.target.value))}
+                    className={`${styles.sliderInput} ${styles.sliderInputMin}`}
+                />
+                <input
+                    type="range"
+                    min={safeMin}
+                    max={safeMax}
+                    step={step}
+                    value={curMax}
+                    onChange={(e) => handleMax(parseFloat(e.target.value))}
+                    className={`${styles.sliderInput} ${styles.sliderInputMax}`}
+                />
+            </div>
+            <div className={styles.sliderValues}>
+                <span className={styles.sliderVal}>{fmt(curMin)}</span>
+                <span className={styles.sliderDash}>—</span>
+                <span className={styles.sliderVal}>{fmt(curMax)}</span>
+            </div>
+        </div>
+    );
+};
+
 const FilterPanel = ({ config, onFilterChange, onPrefilterChange, showPrefilterToggle = false }: FilterPanelProps) => {
     const [filterValues, setFilterValues] = useState<FilterValues>({});
     const [dynamicOptions, setDynamicOptions] = useState<Record<string, string[] | undefined>>({});
     const [isLoading, setIsLoading] = useState(false);
     const isInitialMount = useRef(true);
     const previousConfigType = useRef<string | null>(null);
-    const prevFiltersRef = useRef<string | null>(null);
+    const prevFiltersRef = useRef<string>('{}');
     const initialRangeValuesRef = useRef<Record<string, RangeValue>>({});
     const [expandedFilters, setExpandedFilters] = useState<Record<string, boolean>>({});
     const [prefilterEnabled, setPrefilterEnabled] = useState<boolean>(() => {
@@ -144,7 +212,7 @@ const FilterPanel = ({ config, onFilterChange, onPrefilterChange, showPrefilterT
         });
     };
 
-    const handleRangeChange = (filterId: string, minOrMax: 'min' | 'max', value: string) => {
+    const handleRangeFieldChange = (filterId: string, minOrMax: 'min' | 'max', value: string) => {
         setFilterValues(prev => ({
             ...prev,
             [filterId]: {
@@ -153,6 +221,13 @@ const FilterPanel = ({ config, onFilterChange, onPrefilterChange, showPrefilterT
             }
         }));
     };
+
+    const handleSliderChange = useCallback((filterId: string, newRange: RangeValue) => {
+        setFilterValues(prev => ({
+            ...prev,
+            [filterId]: newRange
+        }));
+    }, []);
 
     const renderFilter = (filter: Filter) => {
         switch (filter.type) {
@@ -166,26 +241,34 @@ const FilterPanel = ({ config, onFilterChange, onPrefilterChange, showPrefilterT
                 const visibleOptions = showMoreButton && !isExpanded ? (options ?? []).slice(0, 6) : (options ?? []);
 
                 return (
-                    <div key={filter.id} className={styles.filterGroup}>
-                        <h4>{filter.label}</h4>
-                        <div className={styles.checkboxGroup}>
-                            {visibleOptions.map(option => (
-                                <label key={option} className={styles.checkboxLabel}>
-                                    <input
-                                        type="checkbox"
-                                        checked={(filterValues[filter.id] as string[])?.includes(option) || false}
-                                        onChange={(e) => handleCheckboxChange(filter.id, option, e.target.checked)}
-                                    />
-                                    {filter.formatOptionLabel ? filter.formatOptionLabel(option) : filter.displayLabels?.[option] || option}
-                                </label>
-                            ))}
+                    <div key={filter.id} className={styles.section}>
+                        <div className={styles.sectionLabel}>{filter.label}</div>
+                        <div className={styles.checks}>
+                            {visibleOptions.map(option => {
+                                const isOn = (filterValues[filter.id] as string[])?.includes(option) || false;
+                                return (
+                                    <label key={option} className={styles.check}>
+                                        <input
+                                            type="checkbox"
+                                            checked={isOn}
+                                            onChange={(e) => handleCheckboxChange(filter.id, option, e.target.checked)}
+                                            className={styles.checkInput}
+                                        />
+                                        <span className={`${styles.checkBox} ${isOn ? styles.checkBoxOn : ''}`} />
+                                        <span className={styles.checkLabel}>
+                                            {filter.formatOptionLabel ? filter.formatOptionLabel(option) : filter.displayLabels?.[option] || option}
+                                        </span>
+                                    </label>
+                                );
+                            })}
 
                             {showMoreButton && (
                                 <button
                                     className={styles.showMoreButton}
                                     onClick={() => toggleFilterExpand(filter.id)}
+                                    type="button"
                                 >
-                                    {isExpanded ? 'Приховати ▲' : `Показати ще (${(options ?? []).length - 6}) ▼`}
+                                    {isExpanded ? '— SHOW LESS' : `+ SHOW MORE (${(options ?? []).length - 6})`}
                                 </button>
                             )}
                         </div>
@@ -204,36 +287,51 @@ const FilterPanel = ({ config, onFilterChange, onPrefilterChange, showPrefilterT
                 if (parsedRange !== null) [minValue, maxValue] = parsedRange;
 
                 const rangeVal = filterValues[filter.id] as RangeValue | undefined;
+                const isPrice = filter.id === 'price';
+
+                if (isPrice) {
+                    return (
+                        <div key={filter.id} className={styles.section}>
+                            <div className={styles.sectionLabel}>{filter.label}</div>
+                            <div className={styles.priceRange}>
+                                <div className={styles.priceInput}>
+                                    <input
+                                        type="number"
+                                        min={minValue}
+                                        max={maxValue}
+                                        step={step}
+                                        placeholder={String(minValue)}
+                                        value={rangeVal?.min ?? minValue}
+                                        onChange={(e) => handleRangeFieldChange(filter.id, 'min', e.target.value)}
+                                    />
+                                </div>
+                                <span className={styles.priceDash}>—</span>
+                                <div className={styles.priceInput}>
+                                    <input
+                                        type="number"
+                                        min={minValue}
+                                        max={maxValue}
+                                        step={step}
+                                        placeholder={String(maxValue)}
+                                        value={rangeVal?.max ?? maxValue}
+                                        onChange={(e) => handleRangeFieldChange(filter.id, 'max', e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    );
+                }
 
                 return (
-                    <div key={filter.id} className={styles.filterGroup}>
-                        <h4>{filter.label}</h4>
-                        <div className={styles.rangeGroup}>
-                            <label>
-                                Min:
-                                <input
-                                    type="number"
-                                    min={minValue}
-                                    max={maxValue}
-                                    step={step}
-                                    value={rangeVal?.min ?? minValue}
-                                    onChange={(e) => handleRangeChange(filter.id, 'min', e.target.value)}
-                                    className={styles.rangeInput}
-                                />
-                            </label>
-                            <label>
-                                Max:
-                                <input
-                                    type="number"
-                                    min={minValue}
-                                    max={maxValue}
-                                    step={step}
-                                    value={rangeVal?.max ?? maxValue}
-                                    onChange={(e) => handleRangeChange(filter.id, 'max', e.target.value)}
-                                    className={styles.rangeInput}
-                                />
-                            </label>
-                        </div>
+                    <div key={filter.id} className={styles.section}>
+                        <div className={styles.sectionLabel}>{filter.label}</div>
+                        <DoubleRangeSlider
+                            min={minValue}
+                            max={maxValue}
+                            step={step}
+                            value={rangeVal ?? { min: minValue, max: maxValue }}
+                            onChange={(v) => handleSliderChange(filter.id, v)}
+                        />
                     </div>
                 );
             }
@@ -272,43 +370,37 @@ const FilterPanel = ({ config, onFilterChange, onPrefilterChange, showPrefilterT
     };
 
     return (
-        <div className={styles.filterPanel}>
-            <div className={styles.filterHeader}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
-                     className="bi bi-funnel" viewBox="0 0 16 16" stroke="currentColor" strokeWidth="0.7">
-                    <path
-                        d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5zm1 .5v1.308l4.372 4.858A.5.5 0 0 1 7 8.5v5.306l2-.666V8.5a.5.5 0 0 1 .128-.334L13.5 3.308V2z"/>
-                </svg>
-                <h3>Фільтри</h3>
+        <aside className={styles.filterPanel}>
+            <div className={styles.head}>
+                <span className={styles.eyebrow}>FILTERS</span>
+                <span className={styles.resetLink} onClick={handleClearFilters}>RESET →</span>
             </div>
-            <div className={styles.filtersContainer}>
-                {showPrefilterToggle && (
-                    <div className={styles.filterGroup}>
-                        <label className={styles.checkboxLabel}>
-                            <input
-                                type="checkbox"
-                                checked={prefilterEnabled}
-                                onChange={e => handlePrefilterToggle(e.target.checked)}
-                            />
-                            Лише сумісні компоненти
-                        </label>
+
+            {showPrefilterToggle && (
+                <div
+                    className={styles.compat}
+                    onClick={() => handlePrefilterToggle(!prefilterEnabled)}
+                    role="button"
+                    tabIndex={0}
+                >
+                    <div className={`${styles.toggleTrack} ${prefilterEnabled ? styles.toggleTrackOn : ''}`}>
+                        <div className={styles.toggleThumb} />
                     </div>
-                )}
+                    <div className={styles.toggleLabel}>
+                        <strong>Лише сумісні</strong>
+                        Показати компоненти, сумісні з поточним складанням
+                    </div>
+                </div>
+            )}
+
+            <div className={styles.body}>
                 {isLoading ? (
-                    <p>Loading filter options...</p>
+                    <div className={styles.loading}>LOADING…</div>
                 ) : (
                     config.filters.map(filter => renderFilter(filter))
                 )}
             </div>
-            <Button
-                variant='primary'
-                size='md'
-                onClick={handleClearFilters}
-                className={styles.clearButton}
-            >
-                Очистити фільтри
-            </Button>
-        </div>
+        </aside>
     );
 };
 
