@@ -30,16 +30,12 @@ jobs:
           - name: api
             context: ./backend
             dockerfile: ./backend/PcBuilder.Api/Dockerfile
-            build_args: ""
           - name: scraper
             context: ./backend
             dockerfile: ./backend/PcBuilder.ScraperWorker/Dockerfile
-            build_args: ""
           - name: frontend
             context: ./frontend
             dockerfile: ./frontend/Dockerfile
-            build_args: |
-              VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}
     steps:
       - uses: actions/checkout@v4
 
@@ -56,7 +52,8 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build & push ${{ matrix.name }}
+      - name: Build & push ${{ matrix.name }} (no build args)
+        if: matrix.name != 'frontend'
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
@@ -65,7 +62,21 @@ jobs:
           tags: |
             ${{ secrets.ACR_LOGIN_SERVER }}/${{ matrix.name }}:${{ env.IMAGE_TAG }}
             ${{ secrets.ACR_LOGIN_SERVER }}/${{ matrix.name }}:latest
-          build-args: ${{ matrix.build_args }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,scope=${{ matrix.name }},mode=max
+
+      - name: Build & push frontend (with Vite build args)
+        if: matrix.name == 'frontend'
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: |
+            ${{ secrets.ACR_LOGIN_SERVER }}/${{ matrix.name }}:${{ env.IMAGE_TAG }}
+            ${{ secrets.ACR_LOGIN_SERVER }}/${{ matrix.name }}:latest
+          build-args: |
+            VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,scope=${{ matrix.name }},mode=max
 
