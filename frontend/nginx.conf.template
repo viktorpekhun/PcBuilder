@@ -22,7 +22,7 @@ server {
     # SignalR hub — needs WebSocket upgrade and long read timeout
     location /hubs/ {
         set $upstream ${API_UPSTREAM};
-        proxy_pass $upstream;
+        proxy_pass $upstream$request_uri;
         proxy_ssl_verify off;
         proxy_ssl_server_name on;
         proxy_http_version 1.1;
@@ -40,7 +40,7 @@ server {
     # Backend API
     location /api/ {
         set $upstream ${API_UPSTREAM};
-        proxy_pass $upstream;
+        proxy_pass $upstream$request_uri;
         proxy_ssl_verify off;
         proxy_ssl_server_name on;
         proxy_http_version 1.1;
@@ -50,10 +50,10 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # ASP.NET serves a few non-/api endpoints (e.g. /health)
+    # ASP.NET health endpoint
     location = /health {
         set $upstream ${API_UPSTREAM};
-        proxy_pass $upstream/health;
+        proxy_pass $upstream$request_uri;
         proxy_ssl_verify off;
         proxy_ssl_server_name on;
         proxy_set_header Host $proxy_host;
