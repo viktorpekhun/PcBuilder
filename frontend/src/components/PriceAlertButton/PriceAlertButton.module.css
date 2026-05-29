@@ -1,59 +1,222 @@
-.wrapper {
-    position: relative;
-    display: inline-block;
-    margin-top: 0.5rem;
-}
-
-.popover {
-    position: absolute;
-    top: calc(100% + 6px);
-    left: 0;
-    z-index: 20;
-    min-width: 260px;
-    padding: 12px;
-    background: #1e1e24;
-    border: 1px solid #3a3a44;
-    border-radius: 8px;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+/* panel fills the alertCard container */
+.panel {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--sp-4);
+    height: 100%;
 }
 
+/* header row: eyebrow + status badge */
+.panelHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    font-weight: var(--fw-medium);
+    letter-spacing: var(--tr-widest);
+    text-transform: uppercase;
+    color: var(--fg-2);
+}
+
+/* status badges */
+.statusActive {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    font-weight: var(--fw-medium);
+    letter-spacing: var(--tr-widest);
+    text-transform: uppercase;
+    color: var(--ok);
+}
+.statusDot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--ok);
+    flex-shrink: 0;
+}
+.statusInactive {
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    font-weight: var(--fw-medium);
+    letter-spacing: var(--tr-widest);
+    text-transform: uppercase;
+    color: var(--fg-3);
+}
+
+/* description */
+.desc {
+    font-size: var(--fs-sm);
+    color: var(--fg-1);
+    line-height: var(--lh-normal);
+    margin: 0;
+}
+.desc strong { color: var(--fg-0); font-weight: var(--fw-medium); }
+
+/* stat boxes row */
+.statsRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--bd-1);
+    border: 1px solid var(--bd-1);
+}
+.statBox {
+    background: var(--bg-2);
+    padding: var(--sp-3) var(--sp-3);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.statLabel {
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    letter-spacing: var(--tr-widest);
+    text-transform: uppercase;
+    color: var(--fg-3);
+}
+.statVal {
+    font-family: var(--font-mono);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-semi);
+    color: var(--fg-0);
+    letter-spacing: var(--tr-tight);
+}
+
+/* tracking info row */
+.trackingRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--fg-2);
+    padding: var(--sp-2) var(--sp-3);
+    background: var(--bg-2);
+    border: 1px solid var(--bd-1);
+}
+.trackingDot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--ok);
+    flex-shrink: 0;
+}
+
+/* unsubscribe button */
+.btnUnsub {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 9px 16px;
+    background: transparent;
+    border: 1px solid var(--bd-2);
+    color: var(--fg-1);
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    cursor: pointer;
+    transition: border-color var(--dur-2), color var(--dur-2), background var(--dur-2);
+    margin-top: auto;
+}
+.btnUnsub:hover { border-color: var(--err); color: var(--err); background: var(--err-soft); }
+.btnUnsub:disabled { opacity: 0.5; cursor: default; }
+
+/* set alert button */
+.btnSetAlert {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    gap: 4px;
+    padding: 9px 16px;
+    background: var(--acc-soft);
+    border: 1px solid var(--acc);
+    color: var(--acc);
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semi);
+    cursor: pointer;
+    transition: background var(--dur-2);
+    margin-top: auto;
+}
+
+
+
+.btnSetAlert:hover { 
+    background: var(--acc); 
+    color: var(--acc-ink); 
+}
+
+/* subscribe form */
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+}
 .label {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    font-size: 0.9rem;
-    color: #ddd;
+    gap: var(--sp-2);
 }
-
+.labelText {
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--tr-widest);
+    text-transform: uppercase;
+    color: var(--fg-2);
+}
 .input {
-    padding: 6px 8px;
-    background: #2a2a32;
-    border: 1px solid #4a4a54;
-    border-radius: 4px;
-    color: #fff;
-    font-size: 0.95rem;
+    padding: 7px 10px;
+    background: var(--bg-0);
+    border: 1px solid var(--bd-1);
+    color: var(--fg-0);
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color var(--dur-1);
 }
+.input:focus { outline: none; border-color: var(--acc); }
 
-.input:focus {
-    outline: none;
-    border-color: #6b8afd;
-}
-
-.info {
-    font-size: 0.9rem;
-    color: #ccc;
-    line-height: 1.4;
-}
-
-.actions {
+.formActions {
     display: flex;
-    justify-content: flex-end;
+    gap: var(--sp-2);
 }
+.btnCancel {
+    flex: 1;
+    padding: 7px 12px;
+    background: transparent;
+    border: 1px solid var(--bd-1);
+    color: var(--fg-2);
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    cursor: pointer;
+    transition: border-color var(--dur-1), color var(--dur-1);
+}
+.btnCancel:hover { border-color: var(--bd-3); color: var(--fg-0); }
+
+.btnConfirm {
+    flex: 1;
+    padding: 7px 12px;
+    background: var(--acc);
+    border: 1px solid var(--acc);
+    color: var(--acc-ink);
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semi);
+    cursor: pointer;
+    transition: background var(--dur-1);
+}
+.btnConfirm:hover { background: var(--acc-dim); border-color: var(--acc-dim); }
+.btnConfirm:disabled { opacity: 0.5; cursor: default; }
 
 .error {
-    font-size: 0.85rem;
-    color: #ff7a7a;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--err);
 }

@@ -192,11 +192,6 @@ app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 app.UseStaticFiles();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
-
 app.UseCors("AllowFrontend");
 
 app.UseRateLimiter();

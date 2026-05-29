@@ -218,6 +218,10 @@ namespace Scraping.Infrastructure.Scrapers
                             offerUrl = $"{BaseUrl}{offerUrl}";
                         }
 
+                        var available = node?["available"]?.Value<bool?>();
+                        var stockStatus = available.HasValue ? (available.Value ? "in" : "out") : null;
+
+                        var now = DateTime.UtcNow;
                         var offer = new ProductOffer
                         {
                             Id = Guid.NewGuid(),
@@ -225,7 +229,10 @@ namespace Scraping.Infrastructure.Scrapers
                             ComponentType = ComponentType.Ssd,
                             ComponentId = ssd.Id,
                             ProductOfferUrl = offerUrl,
-                            StoreId = store.Id
+                            StoreId = store.Id,
+                            StockStatus = stockStatus,
+                            CreatedAt = now,
+                            UpdatedAt = now
                         };
 
                         offers.Add(offer);

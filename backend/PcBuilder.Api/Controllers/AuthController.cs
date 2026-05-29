@@ -15,10 +15,12 @@ namespace PcBuilder.Api.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly IWebHostEnvironment _env;
 
-        public AuthController(IMediator mediator)
+        public AuthController(IMediator mediator, IWebHostEnvironment env)
         {
             _mediator = mediator;
+            _env = env;
         }
 
         [HttpPost("register")]
@@ -137,11 +139,12 @@ namespace PcBuilder.Api.Controllers
 
         private void SetRefreshTokenCookie(string refreshToken, int expirationDays)
         {
+            var isSecure = !_env.IsDevelopment();
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None,
+                Secure = isSecure,
+                SameSite = isSecure ? SameSiteMode.None : SameSiteMode.Lax,
                 Expires = DateTime.Now.AddDays(expirationDays)
             };
             Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
@@ -149,11 +152,12 @@ namespace PcBuilder.Api.Controllers
 
         private void ClearRefreshTokenCookie()
         {
+            var isSecure = !_env.IsDevelopment();
             Response.Cookies.Append("refreshToken", "", new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None,
+                Secure = isSecure,
+                SameSite = isSecure ? SameSiteMode.None : SameSiteMode.Lax,
                 Expires = DateTime.Now.AddDays(-1)
             });
         }
