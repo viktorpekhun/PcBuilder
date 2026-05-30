@@ -40,7 +40,6 @@ export function BuildCover({ title, tag, stamp = true, className = '' }: BuildCo
         : seed.slice(0, 2)
     ).toUpperCase() || 'PC';
     const slugStamp = seed.slice(0, 18).toUpperCase();
-    const idStamp = '/' + (h % 9999).toString(16).padStart(4, '0').toUpperCase();
 
     const bgImage = [
         'linear-gradient(to right, rgba(255,255,255,0.025) 1px, transparent 1px)',
@@ -62,7 +61,6 @@ export function BuildCover({ title, tag, stamp = true, className = '' }: BuildCo
             {stamp && (
                 <div className={styles['bc-stamp']}>
                     <span className={styles['bc-slug']}>{slugStamp}</span>
-                    <span className={styles['bc-id']}>{idStamp}</span>
                 </div>
             )}
         </div>

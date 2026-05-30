@@ -98,6 +98,8 @@ export interface IPcBuildRequest {
     publishedAt?: string;
     price: number;
     averageRating?: number;
+    estimatedPower: number;
+    psuWattage?: number;
     userId: string;
     username?: string;
     avatarUrl?: string;
