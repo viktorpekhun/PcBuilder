@@ -502,8 +502,13 @@ function ComponentPage() {
         let detail = '';
         let cls = '';
 
-        if (compat.isStrictlyCompatible) return null;
-        badge = '× CONFLICT'; cls = styles.conflict ?? '';
+        if (compat.isStrictlyCompatible && compat.overallFitnessScore >= 0.8) {
+            badge = '✓ COMPATIBLE'; cls = styles.compatible ?? '';
+        } else if (compat.isStrictlyCompatible) {
+            badge = '▲ WARNING'; cls = styles.warning ?? '';
+        } else {
+            badge = '× CONFLICT'; cls = styles.conflict ?? '';
+        }
 
         const issues = compat.ruleResults.flatMap(r => r.issues);
         const first = issues.find(i => i.severity === 'Critical') ?? issues.find(i => i.severity === 'Warning');

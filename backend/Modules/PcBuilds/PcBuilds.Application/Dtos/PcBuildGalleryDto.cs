@@ -12,5 +12,8 @@ namespace PcBuilds.Application.Dtos
         public string? AvatarUrl { get; set; }
         public int ComponentCount { get; set; }
         public int CommentCount { get; set; }
+        public int RatingCount { get; set; }
+        public string? Socket { get; set; }
+        public List<string> Tags { get; set; } = new();
     }
 }

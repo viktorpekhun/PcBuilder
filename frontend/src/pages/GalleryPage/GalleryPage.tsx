@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import styles from './GalleryPage.module.css';
 import { galleryService } from '../../api/gallery.service';
 import { Pagination } from '../../components/Pagination/Pagination';
+import { BuildCover } from '../../components/BuildCover/BuildCover';
+import useAuth from '../../hooks/useAuth';
 import type { IPcBuildGallery } from '../../types/gallery.types';
 
 interface PaginationMeta {
@@ -13,6 +15,18 @@ interface PaginationMeta {
 }
 
 const PAGE_SIZE = 12;
+
+const SORTS = [
+    { field: 'publishedAt', label: 'Нові' },
+    { field: 'price', label: 'Ціна' },
+    { field: 'averageRating', label: 'Рейтинг' },
+    { field: 'name', label: 'Назва' },
+];
+
+/** "12 345" — whole-number, space-grouped, matching the mono tabular number style.
+   Rounds to whole UAH so decimal prices don't break grouping (uk-UA uses a comma decimal). */
+const fmt = (n: number) =>
+    Math.round(n).toLocaleString('uk-UA', { maximumFractionDigits: 0 }).replace(/[\s,]/g, ' ');
 
 function GalleryPage() {
     const [builds, setBuilds] = useState<IPcBuildGallery[]>([]);
@@ -28,6 +42,8 @@ function GalleryPage() {
     const [currentPage, setCurrentPage] = useState(1);
 
     const navigate = useNavigate();
+    const { auth } = useAuth();
+    const isLoggedIn = !!auth?.accessToken;
 
     const fetchBuilds = useCallback(async () => {
         try {
@@ -37,7 +53,7 @@ function GalleryPage() {
                 pageSize: PAGE_SIZE,
                 orderBy: sortField,
                 ascending: sortAscending,
-                searchQuery: searchQuery || undefined,
+                ...(searchQuery ? { searchQuery } : {}),
             });
             setBuilds(response.data);
 
@@ -57,11 +73,6 @@ function GalleryPage() {
         fetchBuilds();
     }, [fetchBuilds]);
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
-        setCurrentPage(1);
-    };
-
     const handleSortChange = (field: string) => {
         if (field === sortField) {
             setSortAscending(prev => !prev);
@@ -79,109 +90,136 @@ function GalleryPage() {
         });
     };
 
-    const truncate = (text: string | undefined, maxLen: number) => {
-        if (!text) return '';
-        return text.length > maxLen ? text.slice(0, maxLen) + '...' : text;
-    };
-
-    const renderStars = (rating: number) => {
-        const full = Math.floor(rating);
-        const stars = [];
-        for (let i = 0; i < 5; i++) {
-            stars.push(
-                <span key={i} className={i < full ? styles['star-filled'] : styles['star-empty']}>
-                    &#9733;
-                </span>
-            );
-        }
-        return <div className={styles['stars']}>{stars}</div>;
-    };
-
     return (
-        <div className={styles['gallery-page']}>
-            <h1>Галерея Збірок</h1>
+        <div className={styles['page-shell']}>
+            <div className={styles['head']}>
+                <div>
+                    <h1>Галерея збірок</h1>
+                </div>
+                {isLoggedIn && (
+                    <div className={styles['actions']}>
+                        <button
+                            className={`${styles['btn']} ${styles['btn-ghost']}`}
+                            onClick={() => navigate('/user/builds')}
+                        >
+                            ↗ Мої збірки
+                        </button>
+                        <button
+                            className={`${styles['btn']} ${styles['btn-pri']}`}
+                            onClick={() => navigate('/')}
+                        >
+                            ＋ Опублікувати збірку
+                        </button>
+                    </div>
+                )}
+            </div>
 
-            <div className={styles['controls']}>
-                <form className={styles['search-form']} onSubmit={handleSearch}>
+            <div className={styles['subbar']}>
+                <div className={styles['input']}>
+                    <span className={styles['ic']}>⌕</span>
                     <input
-                        type="text"
-                        className={styles['search-input']}
-                        placeholder="Пошук збірок..."
+                        placeholder="Пошук збірок…"
                         value={searchQuery}
                         onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                     />
-                </form>
-
-                <div className={styles['sort-controls']}>
-                    <span className={styles['sort-label']}>Сортувати:</span>
-                    {[
-                        { field: 'publishedAt', label: 'Нові' },
-                        { field: 'price', label: 'Ціна' },
-                        { field: 'averageRating', label: 'Рейтинг' },
-                        { field: 'name', label: 'Назва' },
-                    ].map(({ field, label }) => (
-                        <button
-                            key={field}
-                            className={`${styles['sort-btn']} ${sortField === field ? styles['sort-active'] : ''}`}
-                            onClick={() => handleSortChange(field)}
-                        >
-                            {label}
-                            {sortField === field && (
-                                <span className={styles['sort-arrow']}>{sortAscending ? ' ▲' : ' ▼'}</span>
-                            )}
-                        </button>
-                    ))}
+                </div>
+                <span className={styles['stat']}>
+                    <strong>{fmt(pagination.totalCount)}</strong> збірок знайдено
+                </span>
+                <span className={styles['grow']} />
+                <span className={styles['toolbarLabel']}>SORT</span>
+                <div className={styles['sortGroup']}>
+                    {SORTS.map(s => {
+                        const isActive = sortField === s.field;
+                        return (
+                            <span
+                                key={s.field}
+                                className={`${styles['sortSeg']} ${isActive ? styles['sortSegOn'] : ''}`}
+                                onClick={() => handleSortChange(s.field)}
+                            >
+                                {s.label}
+                                {isActive && (
+                                    <span className={styles['sortArrow']}>
+                                        {sortAscending ? '▲' : '▼'}
+                                    </span>
+                                )}
+                            </span>
+                        );
+                    })}
                 </div>
             </div>
 
             {error && <div className={styles['error']}>{error}</div>}
 
             {loading ? (
-                <div className={styles['loading']}>Завантаження...</div>
+                <div className={styles['loading']}>Завантаження…</div>
             ) : builds.length === 0 ? (
-                <div className={styles['no-results']}>Збірки не знайдено.</div>
+                <div className={styles['empty']}>
+                    <div className={styles['eyebrow']}>НЕМАЄ ЗБІГІВ</div>
+                    <div className={styles['empty-title']}>Жодна збірка не відповідає фільтрам.</div>
+                    <div className={styles['empty-hint']}>
+                        Спробуйте змінити запит пошуку, сокет або сортування.
+                    </div>
+                </div>
             ) : (
                 <>
-                    <div className={styles['builds-grid']}>
+                    <div className={styles['grid']}>
                         {builds.map(build => (
                             <div
                                 key={build.id}
-                                className={styles['build-card']}
+                                className={styles['card']}
                                 onClick={() => navigate(`/builds/${build.id}`)}
                             >
-                                <div className={styles['card-header']}>
-                                    <h3 className={styles['card-title']}>{build.name}</h3>
-                                    <span className={styles['card-price']}>{build.price} грн</span>
+                                <div className={styles['cover-wrap']}>
+                                    <BuildCover title={build.name} />
+                                    <span className={styles['price-badge']}>₴ {fmt(build.price)}</span>
                                 </div>
 
-                                {build.description && (
-                                    <p className={styles['card-description']}>
-                                        {truncate(build.description, 100)}
-                                    </p>
-                                )}
-
-                                <div className={styles['card-stats']}>
-                                    {renderStars(build.averageRating)}
-                                    <span className={styles['stat-item']}>
-                                        {build.componentCount} компонентів
-                                    </span>
-                                    <span className={styles['stat-item']}>
-                                        {build.commentCount} коментарів
-                                    </span>
-                                </div>
-
-                                <div className={styles['card-footer']}>
-                                    <div className={styles['card-author']}>
+                                <div className={styles['body']}>
+                                    <div className={styles['title']}>{build.name}</div>
+                                    {build.description && (
+                                        <div className={styles['description']}>{build.description}</div>
+                                    )}
+                                    <div className={styles['author-row']}>
                                         {build.avatarUrl ? (
-                                            <img src={build.avatarUrl} alt={build.username} className={styles['author-avatar']} loading="lazy" />
+                                            <img
+                                                src={build.avatarUrl}
+                                                alt={build.username}
+                                                className={styles['author-avatar']}
+                                                loading="lazy"
+                                            />
                                         ) : (
-                                            <div className={styles['author-avatar-placeholder']}>
+                                            <span className={styles['author-avatar-ph']}>
                                                 {build.username.charAt(0).toUpperCase()}
-                                            </div>
+                                            </span>
                                         )}
-                                        <span className={styles['author-name']}>{build.username}</span>
+                                        <span>@{build.username}</span>
+                                        {build.publishedAt && (
+                                            <>
+                                                <span className={styles['sep']}>·</span>
+                                                <span>{formatDate(build.publishedAt)}</span>
+                                            </>
+                                        )}
                                     </div>
-                                    <span className={styles['card-date']}>{formatDate(build.publishedAt)}</span>
+                                    {build.tags && build.tags.length > 0 && (
+                                        <div className={styles['tags']}>
+                                            {build.tags.slice(0, 3).map(tag => (
+                                                <span key={tag} className={styles['tag-mini']}>{tag}</span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className={styles['foot']}>
+                                    <span className={styles['rating']}>
+                                        <span className={styles['star']}>★</span>
+                                        <span>{build.averageRating.toFixed(1)}</span>
+                                        <span className={styles['rating-count']}>({build.ratingCount})</span>
+                                    </span>
+                                    <span className={styles['parts']}>{build.componentCount} КОМП.</span>
+                                    <span className={styles['comments']}>
+                                        <span>✎ {build.commentCount}</span>
+                                    </span>
                                 </div>
                             </div>
                         ))}
