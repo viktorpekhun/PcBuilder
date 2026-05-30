@@ -21,6 +21,8 @@ namespace PcBuilds.Domain.Entities
         [Range(0, 5, ErrorMessage = "Average rating must be between 0.00 and 5.00.")]
         public decimal AverageRating { get; set; } = 0;
 
+        public string? PhotoUrl { get; set; }
+
         public bool IsPublished { get; set; } = false;
         public DateTime? PublishedAt { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

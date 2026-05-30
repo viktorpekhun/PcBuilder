@@ -12,6 +12,9 @@ public class PcBuildConfiguration : IEntityTypeConfiguration<PcBuild>
             .IsRequired()
             .HasMaxLength(255);
 
+        builder.Property(p => p.PhotoUrl)
+            .HasMaxLength(2048);
+
         builder.Property(p => p.Description)
             .HasMaxLength(500);
 

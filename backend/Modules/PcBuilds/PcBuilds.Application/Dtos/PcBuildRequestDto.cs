@@ -7,6 +7,7 @@ namespace PcBuilds.Application.Dtos
         public string? Description { get; set; } = string.Empty;
         public bool IsPublished { get; set; }
         public DateTime? PublishedAt { get; set; }
+        public string? PhotoUrl { get; set; }
         public decimal Price { get; set; }
         public decimal AverageRating { get; set; }
 

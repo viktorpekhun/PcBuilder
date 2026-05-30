@@ -313,7 +313,6 @@ function BuildDetailPage() {
     }, [build]);
 
     const slotsUsed = useMemo(() => new Set(parts.map(p => p.slot)).size, [parts]);
-    const hasOffers = useMemo(() => parts.some(p => p.offerUrl), [parts]);
 
     // PSU load % and a human label, when both estimated draw and PSU wattage are known.
     const psuLoad = useMemo(() => {

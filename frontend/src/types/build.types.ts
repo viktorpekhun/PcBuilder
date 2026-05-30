@@ -64,6 +64,8 @@ export interface IPcBuildList {
     id: string;
     name: string;
     price: number;
+    isPublished: boolean;
+    componentCount: number;
     updatedAt?: string;
 }
 
@@ -96,6 +98,7 @@ export interface IPcBuildRequest {
     description?: string;
     isPublished: boolean;
     publishedAt?: string;
+    photoUrl?: string;
     price: number;
     averageRating?: number;
     estimatedPower: number;

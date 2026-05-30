@@ -51,6 +51,7 @@ namespace PcBuilds.Application.Handlers
                 Description = build.Description,
                 IsPublished = build.IsPublished,
                 PublishedAt = build.PublishedAt,
+                PhotoUrl = build.PhotoUrl,
                 Price = build.Price,
                 AverageRating = build.AverageRating,
                 EstimatedPower = EstimateSystemPower(build),

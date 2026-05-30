@@ -23,4 +23,12 @@ export const buildService = {
     getPublicBuildById: (id: string) => axios.get<IPcBuildRequest>(`${PATH}/${id}`),
     cloneBuild: (id: string) => axiosPrivate.post<{ success: boolean; buildId: string }>(`${PATH}/${id}/clone`),
     autoBuild: (data: IAutoBuildRequest) => axios.post<IAutoBuildResult>(`${PATH}/auto`, data),
+    uploadBuildPhoto: (id: string, file: File) => {
+        const form = new FormData();
+        form.append('file', file);
+        return axiosPrivate.post<{ photoUrl: string }>(`${PATH}/${id}/photo`, form, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+    },
+    deleteBuildPhoto: (id: string) => axiosPrivate.delete(`${PATH}/${id}/photo`),
 }
