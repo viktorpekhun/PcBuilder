@@ -522,7 +522,11 @@ const AlertRow = ({
     return (
         <div className={styles.alertRow}>
             <span className={styles.alertSlot}>{slot}</span>
-            <div className={styles.alertThumb} />
+            <div className={styles.alertThumb}>
+                {a.componentImageUrl && (
+                    <img src={a.componentImageUrl} alt={a.componentName ?? ""} className={styles.alertThumbImg} />
+                )}
+            </div>
             <div className={styles.alertNm}>
                 <div className={styles.alertName}>{a.componentName ?? "—"}</div>
                 <div className={styles.alertNmMeta}>
