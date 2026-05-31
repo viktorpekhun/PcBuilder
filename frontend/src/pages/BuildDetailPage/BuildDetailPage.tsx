@@ -587,7 +587,7 @@ function BuildDetailPage() {
                     <div className={styles['compose']}>
                         <div className={`${styles['field']} ${formError ? styles['field-error'] : ''}`}>
                             <textarea
-                                placeholder="Поділіться, що ви тестували, замінювали чи вимірювали. ctrl + enter — надіслати."
+                                placeholder="Поділіться своїм відгуком про цю збірку."
                                 value={text}
                                 maxLength={2000}
                                 onChange={e => { setText(e.target.value); if (formError) setFormError(null); }}

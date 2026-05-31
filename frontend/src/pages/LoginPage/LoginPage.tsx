@@ -4,36 +4,51 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import styles from './LoginPage.module.css';
 
 import { authService } from '../../api/auth.service';
-import { Button } from '../../components/Button/Button';
 import { AxiosError } from 'axios';
 import { decodeToken } from '../../utils/decodeToken';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 
+const EyeIcon = ({ off }: { off: boolean }) => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth="1.6" strokeLinecap="square" strokeLinejoin="miter">
+        {off ? (
+            <>
+                <path d="M10.7 5.1A9.9 9.9 0 0 1 12 5c5.5 0 9 7 9 7a14.8 14.8 0 0 1-2.6 3.3" />
+                <path d="M6.6 6.6A14.6 14.6 0 0 0 3 12s3.5 7 9 7a9.6 9.6 0 0 0 4.5-1.1" />
+                <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+                <line x1="3" y1="3" x2="21" y2="21" />
+            </>
+        ) : (
+            <>
+                <path d="M3 12s3.5-7 9-7 9 7 9 7-3.5 7-9 7-9-7-9-7Z" />
+                <circle cx="12" cy="12" r="2.6" />
+            </>
+        )}
+    </svg>
+);
+
+type ErrType = '' | 'empty' | 'server' | 'auth' | 'google';
+
 const LoginPage = () => {
-    const { setAuth, persist, setPersist } = useAuth();
+    const { setAuth, setPersist } = useAuth();
 
     const navigate = useNavigate();
     const location = useLocation();
     const from = (location.state as { from?: { pathname: string } })?.from?.pathname || "/";
 
     const emailRef = useRef<HTMLInputElement>(null);
-    const errRef = useRef<HTMLParagraphElement>(null);
 
     const [email, setEmail] = useState('');
     const [pwd, setPwd] = useState('');
-    const [errMsg, setErrMsg] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [err, setErr] = useState<ErrType>('');
 
-    useEffect(() => {
-        emailRef.current?.focus();
-    }, []);
-
-    useEffect(() => {
-        setErrMsg('');
-    }, [email, pwd]);
+    useEffect(() => { emailRef.current?.focus(); }, []);
+    useEffect(() => { setErr(''); }, [email, pwd]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (!email || !pwd) { setErr('empty'); return; }
 
         try {
             const response = await authService.login({ email, password: pwd });
@@ -43,18 +58,17 @@ const LoginPage = () => {
             setEmail('');
             setPwd('');
             navigate(from, { replace: true });
-        } catch (err) {
-            const error = err as AxiosError;
-            if (!error?.response) {
-                setErrMsg('Сервер не відповідає');
-            } else if (error.response?.status === 400) {
-                setErrMsg('Будь ласка, введіть e-mail та пароль');
-            } else if (error.response?.status === 401) {
-                setErrMsg('Невірні автентифікаційні дані');
+        } catch (error) {
+            const axiosErr = error as AxiosError;
+            if (!axiosErr?.response) {
+                setErr('server');
+            } else if (axiosErr.response?.status === 400) {
+                setErr('empty');
+            } else if (axiosErr.response?.status === 401) {
+                setErr('auth');
             } else {
-                setErrMsg('Не вдалося виконати вхід в акаунт');
+                setErr('auth');
             }
-            errRef.current?.focus();
         }
     };
 
@@ -68,117 +82,146 @@ const LoginPage = () => {
             setAuth({ ...userData, accessToken });
             navigate(from, { replace: true });
         } catch {
-            setErrMsg('Не вдалося увійти через Google');
-            errRef.current?.focus();
+            setErr('google');
         }
     };
 
-    useEffect(() => {
-        setPersist(true);
-    }, []);
-
-    useEffect(() => {
-        localStorage.setItem("persist", JSON.stringify(persist));
-    }, [persist]);
-
-    const togglePasswordVisibility = () => {
-        setShowPassword(prev => !prev);
-    };
+    useEffect(() => { setPersist(true); }, []);
 
     return (
         <section className={styles['login-page']}>
-            <div className={styles['login-container']}>
-                <h1>Вхід</h1>
-                <p className={styles['description']}>Увійдіть в акаунт щоб отримати доступ до усіх функцій</p>
-                <p
-                    ref={errRef}
-                    className={errMsg ? styles['errmsg'] : styles['offscreen']}
-                    aria-live="assertive"
+
+            <div className={styles['seg']} role="tablist">
+                <button
+                    className={`${styles['seg-btn']} ${styles['seg-btn-active']}`}
+                    role="tab" aria-selected="true"
                 >
-                    {errMsg && (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                             viewBox="0 0 16 16" style={{marginRight: '8px'}}>
-                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                            <path
-                                d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
-                        </svg>
-                    )}
-                    {errMsg}
-                </p>
-                <form onSubmit={handleSubmit}>
-                    <label htmlFor="email">E-mail:</label>
-                    <input
-                        type="text"
-                        id="email"
-                        ref={emailRef}
-                        autoComplete="off"
-                        onChange={(e) => setEmail(e.target.value)}
-                        value={email}
-                        required
-                        className={errMsg ? styles['input-error'] : ''}
-                    />
-
-                    <label htmlFor="password">Пароль:</label>
-                    <div className={styles['password-field']}>
-                        <input
-                            type={showPassword ? "text" : "password"}
-                            id="password"
-                            onChange={(e) => setPwd(e.target.value)}
-                            value={pwd}
-                            required
-                            className={errMsg ? styles['input-error'] : ''}
-                        />
-                        <button
-                            type="button"
-                            className={styles['password-toggle']}
-                            onClick={togglePasswordVisibility}
-                            aria-label={showPassword ? "Сховати пароль" : "Показати пароль"}
-                        >
-                            {showPassword ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                    viewBox="0 0 16 16">
-                                    <path
-                                        d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z" />
-                                    <path
-                                        d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z" />
-                                </svg>
-                            ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                    viewBox="0 0 16 16">
-                                    <path
-                                        d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486l.708.709z" />
-                                    <path
-                                        d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829l.822.822zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829z" />
-                                    <path d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12-.708.708z" />
-                                </svg>
-                            )}
-                        </button>
-                    </div>
-
-                    <Button type='submit' variant='primary' size='md'>
-                        Увійти
-                    </Button>
-                    <Link to="/forgot-password" className={styles['forgot-link']}>Забули пароль?</Link>
-                </form>
-
-                <div className={styles['divider']}>
-                    <span>або</span>
-                </div>
-                <div className={styles['google-login']}>
-                    <GoogleLogin
-                        onSuccess={handleGoogleLogin}
-                        onError={() => setErrMsg('Помилка входу через Google')}
-                        text="signin_with"
-                    />
-                </div>
-
-                <p className={styles['register-link']}>
-                    Немає акаунту?
-                    <span className={styles['line']}>
-                        <Link to="/register">Зареєструватись</Link>
-                    </span>
-                </p>
+                    <span className={styles['seg-tick']}>●</span>Увійти
+                </button>
+                <Link
+                    to="/register"
+                    className={styles['seg-btn']}
+                    role="tab" aria-selected="false"
+                >
+                    Зареєструватись
+                </Link>
             </div>
+
+            <div className={styles['login-container']}>
+                <div className={styles['card-head']}>
+                    <span className={styles['eyebrow']}>Акаунт / Доступ</span>
+                    <h1>Вхід</h1>
+                    <p className={styles['description']}>
+                        Увійдіть в свій акаунт щоб отримати доступ до всіх функцій.
+                    </p>
+                </div>
+
+                <div className={styles['card-body']}>
+                    {err === 'empty' && (
+                        <div className={styles['errmsg']} role="alert">
+                            <span className={styles['errmsg-glyph']}>×</span>
+                            <div>
+                                <div className={styles['errmsg-title']}>Порожні поля</div>
+                                <div className={styles['errmsg-body']}>Введіть e-mail та пароль щоб продовжити.</div>
+                            </div>
+                        </div>
+                    )}
+                    {(err === 'auth') && (
+                        <div className={styles['errmsg']} role="alert">
+                            <span className={styles['errmsg-glyph']}>×</span>
+                            <div>
+                                <div className={styles['errmsg-title']}>Невірні дані</div>
+                                <div className={styles['errmsg-body']}>E-mail або пароль неправильні. Спробуйте ще раз.</div>
+                            </div>
+                        </div>
+                    )}
+                    {err === 'server' && (
+                        <div className={styles['errmsg']} role="alert">
+                            <span className={styles['errmsg-glyph']}>×</span>
+                            <div>
+                                <div className={styles['errmsg-title']}>Сервер не відповідає</div>
+                                <div className={styles['errmsg-body']}>Спробуйте пізніше.</div>
+                            </div>
+                        </div>
+                    )}
+                    {err === 'google' && (
+                        <div className={styles['errmsg']} role="alert">
+                            <span className={styles['errmsg-glyph']}>×</span>
+                            <div>
+                                <div className={styles['errmsg-title']}>Помилка Google</div>
+                                <div className={styles['errmsg-body']}>Не вдалося увійти через Google. Спробуйте ще раз.</div>
+                            </div>
+                        </div>
+                    )}
+
+                    <form onSubmit={handleSubmit}>
+                        <div className={styles['field']}>
+                            <label className={styles['field-label']} htmlFor="login-email">E-mail</label>
+                            <div className={styles['control']}>
+                                <input
+                                    type="text"
+                                    id="login-email"
+                                    ref={emailRef}
+                                    autoComplete="off"
+                                    placeholder="you@example.com"
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    value={email}
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className={styles['field']}>
+                            <label className={styles['field-label']} htmlFor="login-pwd">Пароль</label>
+                            <div className={styles['password-field']}>
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    id="login-pwd"
+                                    placeholder="••••••••"
+                                    onChange={(e) => setPwd(e.target.value)}
+                                    value={pwd}
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    className={styles['password-toggle']}
+                                    onClick={() => setShowPassword(p => !p)}
+                                    aria-label={showPassword ? "Сховати пароль" : "Показати пароль"}
+                                >
+                                    <EyeIcon off={showPassword} />
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" className={styles['btn-primary']}>
+                            Увійти <span className={styles['btn-kbd']}>↵</span>
+                        </button>
+                        <Link to="/forgot-password" className={styles['forgot-link']}>
+                            Забули пароль? →
+                        </Link>
+                    </form>
+
+                    <div className={styles['divider']}><span>або</span></div>
+
+                    <div className={styles['google-login']}>
+                        <div className={styles['google-btn-wrap']}>
+                            <div className={styles['google-btn-face']} aria-hidden="true">
+                                <span className={styles['google-mark']}>G</span>
+                                Увійти через Google
+                            </div>
+                            <div className={styles['google-btn-real']}>
+                                <GoogleLogin
+                                    onSuccess={handleGoogleLogin}
+                                    onError={() => setErr('google')}
+                                    text="signin_with"
+                                    width="100%"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </section>
     );
 };

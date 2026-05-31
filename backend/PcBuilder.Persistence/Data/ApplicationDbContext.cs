@@ -54,6 +54,7 @@ namespace PcBuilder.Persistence.Data
         // Moderation
         public DbSet<Report> Reports { get; set; }
         public DbSet<Warning> Warnings { get; set; }
+        public DbSet<AdminActivityLog> AdminActivityLogs { get; set; }
 
         // Notifications
         public DbSet<Notification> Notifications { get; set; }

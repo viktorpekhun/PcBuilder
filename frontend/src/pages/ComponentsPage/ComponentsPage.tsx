@@ -228,17 +228,6 @@ function ComponentsPage() {
 
     return (
         <section className={styles.page}>
-            <div className={styles.searchBar}>
-                <span className={styles.searchIcon}>⌕</span>
-                <input
-                    type="text"
-                    placeholder={`Search ${typeLabel.toLowerCase()}…`}
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    className={styles.searchInput}
-                />
-            </div>
-
             <div className={styles.titleRow}>
                 <div>
                     <h1 className={styles.title}>{typeLabel}</h1>
@@ -263,7 +252,16 @@ function ComponentsPage() {
 
                 <div className={styles.results}>
                     <div className={styles.toolbar}>
-                        <div className={styles.grow} />
+                        <div className={styles.searchBar}>
+                            <span className={styles.searchIcon}>⌕</span>
+                            <input
+                                type="text"
+                                placeholder={`Search ${typeLabel.toLowerCase()}…`}
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                className={styles.searchInput}
+                            />
+                        </div>
                         <span className={styles.toolbarLabel}>SORT</span>
                         <div className={styles.sortGroup}>
                             {sortOptions.map(({ field, label }) => {

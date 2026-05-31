@@ -38,6 +38,7 @@ namespace PcBuilder.Api.Services
             await using var channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
             await channel.QueueDeclareAsync("scrape-results", durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
             await channel.QueueDeclareAsync("scrape-started", durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
+            await channel.QueueDeclareAsync("scrape-progress", durable: false, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
 
             var consumer = new AsyncEventingBasicConsumer(channel);
             consumer.ReceivedAsync += async (_, ea) =>
@@ -96,8 +97,29 @@ namespace PcBuilder.Api.Services
                 }
             };
 
+            var progressConsumer = new AsyncEventingBasicConsumer(channel);
+            progressConsumer.ReceivedAsync += async (_, ea) =>
+            {
+                try
+                {
+                    var json = Encoding.UTF8.GetString(ea.Body.ToArray());
+                    var msg = JsonSerializer.Deserialize<ScrapeJobProgressMessage>(json);
+                    if (msg != null)
+                        _tracker.MarkProgress(msg.JobId, msg.ItemsScraped, msg.TotalItems);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error processing scrape progress message");
+                }
+                finally
+                {
+                    await channel.BasicAckAsync(ea.DeliveryTag, false);
+                }
+            };
+
             await channel.BasicConsumeAsync("scrape-results", autoAck: false, consumer: consumer, cancellationToken: stoppingToken);
             await channel.BasicConsumeAsync("scrape-started", autoAck: false, consumer: startedConsumer, cancellationToken: stoppingToken);
+            await channel.BasicConsumeAsync("scrape-progress", autoAck: false, consumer: progressConsumer, cancellationToken: stoppingToken);
 
             await Task.Delay(Timeout.Infinite, stoppingToken).ContinueWith(_ => { }, CancellationToken.None);
         }

@@ -1,5 +1,7 @@
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using Moderation.Application.Services;
+using Moderation.Infrastructure.Services;
 
 namespace Moderation.Infrastructure
 {
@@ -11,6 +13,8 @@ namespace Moderation.Infrastructure
                 cfg.RegisterServicesFromAssembly(typeof(Moderation.Application.Commands.ReportReviewCommand).Assembly));
 
             services.AddValidatorsFromAssembly(typeof(Moderation.Application.Commands.ReportReviewCommand).Assembly);
+
+            services.AddScoped<IAdminActivityLogger, AdminActivityLogger>();
 
             return services;
         }

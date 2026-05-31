@@ -4,8 +4,6 @@ import styles from "./PcBuildPage.module.css";
 import { componentService } from "../../api/component.service";
 import useAuth from "../../hooks/useAuth";
 import { buildService } from "../../api/build.service";
-import SaveBuildModal from "../../components/SaveBuildModal/SaveBuildModal";
-import CancelEditModal from "../../components/CanselEditModal/CanselEditModal";
 import Toast from "../../components/Toast/Toast";
 import CompatibilityCheck from "./CompatibilityCheck";
 import AutoBuilderPanel from "./AutoBuilderPanel";
@@ -19,7 +17,7 @@ import { usePowerStats } from "./hooks";
 import type { IAutoBuildComponents, IComponentsCompatibility, IPcBuildInput } from "../../types/build.types";
 import type {
     SelectedComponents, ComponentDataState, EditingBuild,
-    SaveModalState, ToastState, SingleComponentData, MultiComponentData,
+    ToastState, SingleComponentData, MultiComponentData,
     MultiKey, SingleKey, SelectedOffer, SelectedMultiOffer,
 } from "./types";
 import {
@@ -32,11 +30,9 @@ type ViewMode = "table" | "cards" | "json";
 function PcBuildPage() {
     const [selectedComponents, setSelectedComponents] = useState<SelectedComponents>({ ...EMPTY_SELECTED });
     const [componentData, setComponentData] = useState<ComponentDataState>({ ...EMPTY_DATA });
-    const [cancelEditModal, setCancelEditModal] = useState(false);
     const [initialLoadComplete, setInitialLoadComplete] = useState(false);
     const [loading, setLoading] = useState(true);
     const [editingBuild, setEditingBuild] = useState<EditingBuild | null>(null);
-    const [saveModal, setSaveModal] = useState<SaveModalState>({ isOpen: false });
     const [saveLoading, setSaveLoading] = useState(false);
     const [toast, setToast] = useState<ToastState>({ visible: false, message: "", type: "success" });
     const [autoPanelOpen, setAutoPanelOpen] = useState(false);
@@ -46,7 +42,6 @@ function PcBuildPage() {
     const [criticalCount, setCriticalCount] = useState(0);
     const [firstCriticalMessage, setFirstCriticalMessage] = useState<string | null>(null);
     const [selectedRow, setSelectedRow] = useState<string | null>(null);
-    const [discardModal, setDiscardModal] = useState(false);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -315,71 +310,70 @@ function PcBuildPage() {
         callback();
     };
 
-    const openSaveModal = () => requireAuth(() => setSaveModal({ isOpen: true }));
-    const openSaveAsNewModal = () => requireAuth(() => setSaveModal({ isOpen: true, saveAsNew: true }));
-
-    const handleSaveBuild = async (buildData: { name: string; description: string }) => {
-        if (!hasAnySelected) {
-            setToast({ visible: true, message: "В збірці повинен бути хоча б один компонент.", type: "error" });
-            return;
-        }
-
-        try {
-            setSaveLoading(true);
-
-            const multiPayload = (key: MultiKey) =>
-                componentData[key].map(item => ({
-                    componentId: item.componentId,
-                    offerId: item.offerId,
-                    quantity: item.quantity || 1,
-                }));
-
-            const buildPayload: IPcBuildInput = {
-                name: buildData.name,
-                isPublished: false,
-                ...(buildData.description && { description: buildData.description }),
-                ...(selectedComponents.cpu && { cpuId: selectedComponents.cpu.componentId }),
-                ...(componentData.cpu?.selectedOffer?.id && { cpuOfferId: componentData.cpu.selectedOffer.id }),
-                ...(selectedComponents.motherboard && { motherboardId: selectedComponents.motherboard.componentId }),
-                ...(componentData.motherboard?.selectedOffer?.id && { motherboardOfferId: componentData.motherboard.selectedOffer.id }),
-                ...(selectedComponents.gpu && { gpuId: selectedComponents.gpu.componentId }),
-                ...(componentData.gpu?.selectedOffer?.id && { gpuOfferId: componentData.gpu.selectedOffer.id }),
-                ...(selectedComponents.powerSupply && { powerSupplyId: selectedComponents.powerSupply.componentId }),
-                ...(componentData.powerSupply?.selectedOffer?.id && { powerSupplyOfferId: componentData.powerSupply.selectedOffer.id }),
-                ...(selectedComponents.cpuCooler && { cpuCoolerId: selectedComponents.cpuCooler.componentId }),
-                ...(componentData.cpuCooler?.selectedOffer?.id && { cpuCoolerOfferId: componentData.cpuCooler.selectedOffer.id }),
-                ...(selectedComponents.pcCase && { pcCaseId: selectedComponents.pcCase.componentId }),
-                ...(componentData.pcCase?.selectedOffer?.id && { pcCaseOfferId: componentData.pcCase.selectedOffer.id }),
-                rams: multiPayload("rams"),
-                ssds: multiPayload("ssds"),
-                hdds: multiPayload("hdds"),
-                fans: multiPayload("fans"),
-            };
-
-            if (editingBuild?.id && !saveModal.saveAsNew) {
-                await buildService.updateBuild(editingBuild.id, buildPayload);
-            } else {
-                await buildService.saveBuild(buildPayload);
+    const handleSaveBuild = async (asNew = false) => {
+        requireAuth(async () => {
+            if (!hasAnySelected) {
+                setToast({ visible: true, message: "В збірці повинен бути хоча б один компонент.", type: "error" });
+                return;
             }
 
-            if (editingBuild) {
-                localStorage.removeItem("editingBuild");
-                setEditingBuild(null);
+            try {
+                setSaveLoading(true);
+
+                const multiPayload = (key: MultiKey) =>
+                    componentData[key].map(item => ({
+                        componentId: item.componentId,
+                        offerId: item.offerId,
+                        quantity: item.quantity || 1,
+                    }));
+
+                const name = editingBuild?.name || draftName || "untitled-build";
+
+                const buildPayload: IPcBuildInput = {
+                    name,
+                    isPublished: false,
+                    ...(selectedComponents.cpu && { cpuId: selectedComponents.cpu.componentId }),
+                    ...(componentData.cpu?.selectedOffer?.id && { cpuOfferId: componentData.cpu.selectedOffer.id }),
+                    ...(selectedComponents.motherboard && { motherboardId: selectedComponents.motherboard.componentId }),
+                    ...(componentData.motherboard?.selectedOffer?.id && { motherboardOfferId: componentData.motherboard.selectedOffer.id }),
+                    ...(selectedComponents.gpu && { gpuId: selectedComponents.gpu.componentId }),
+                    ...(componentData.gpu?.selectedOffer?.id && { gpuOfferId: componentData.gpu.selectedOffer.id }),
+                    ...(selectedComponents.powerSupply && { powerSupplyId: selectedComponents.powerSupply.componentId }),
+                    ...(componentData.powerSupply?.selectedOffer?.id && { powerSupplyOfferId: componentData.powerSupply.selectedOffer.id }),
+                    ...(selectedComponents.cpuCooler && { cpuCoolerId: selectedComponents.cpuCooler.componentId }),
+                    ...(componentData.cpuCooler?.selectedOffer?.id && { cpuCoolerOfferId: componentData.cpuCooler.selectedOffer.id }),
+                    ...(selectedComponents.pcCase && { pcCaseId: selectedComponents.pcCase.componentId }),
+                    ...(componentData.pcCase?.selectedOffer?.id && { pcCaseOfferId: componentData.pcCase.selectedOffer.id }),
+                    rams: multiPayload("rams"),
+                    ssds: multiPayload("ssds"),
+                    hdds: multiPayload("hdds"),
+                    fans: multiPayload("fans"),
+                };
+
+                if (editingBuild?.id && !asNew) {
+                    await buildService.updateBuild(editingBuild.id, buildPayload);
+                } else {
+                    await buildService.saveBuild(buildPayload);
+                }
+
+                if (editingBuild) {
+                    localStorage.removeItem("editingBuild");
+                    setEditingBuild(null);
+                }
+
+                localStorage.removeItem("composerDraftName");
+                setDraftName("");
+
+                setSaveLoading(false);
+                setToast({ visible: true, message: "Збірку успішно збережено!", type: "success" });
+                navigate("/user/builds", { state: { message: "Збірку успішно збережено!" } });
+            } catch (err: unknown) {
+                setSaveLoading(false);
+                const msg = (err as { response?: { data?: { message?: string } } })
+                    ?.response?.data?.message || "Не вдалося зберегти збірку. Будь ласка, спробуйте ще раз.";
+                setToast({ visible: true, message: msg, type: "error" });
             }
-
-            localStorage.removeItem("composerDraftName");
-            setDraftName("");
-
-            setSaveLoading(false);
-            setToast({ visible: true, message: "Збірку успішно збережено!", type: "success" });
-            setSaveModal({ isOpen: false });
-            navigate("/user/builds", { state: { message: "Збірку успішно збережено!" } });
-        } catch (err: unknown) {
-            setSaveLoading(false);
-            const msg = (err as { response?: { data?: { message?: string } } })
-                ?.response?.data?.message || "Не вдалося зберегти збірку. Будь ласка, спробуйте ще раз.";
-            setToast({ visible: true, message: msg, type: "error" });
-        }
+        });
     };
 
     const togglePublish = async () => {
@@ -423,7 +417,6 @@ function PcBuildPage() {
         setComponentData({ ...EMPTY_DATA });
         setDraftName("");
         setSelectedRow(null);
-        setDiscardModal(false);
     };
 
     const handleApplyAutoBuild = (components: IAutoBuildComponents) => {
@@ -471,30 +464,6 @@ function PcBuildPage() {
                     duration={5000}
                 />
             )}
-            <SaveBuildModal
-                isOpen={saveModal.isOpen}
-                onCancel={() => setSaveModal({ isOpen: false })}
-                onSave={handleSaveBuild}
-                isSaving={saveLoading}
-                initialName={(editingBuild && !saveModal.saveAsNew) ? editingBuild.name : (draftName || editingBuild?.name || "")}
-                initialDescription={editingBuild?.description || ""}
-                isEditing={!!editingBuild && !saveModal.saveAsNew}
-            />
-            <CancelEditModal
-                isOpen={cancelEditModal}
-                onCancel={() => setCancelEditModal(false)}
-                onConfirm={handleCancelEdit}
-            />
-            <CancelEditModal
-                isOpen={discardModal}
-                onCancel={() => setDiscardModal(false)}
-                onConfirm={handleDiscardDraft}
-                title="Скинути збірку?"
-                body="Усі вибрані компоненти та назва чернетки будуть видалені."
-                warning="Цю дію не можна скасувати."
-                cancelLabel="Залишити"
-                confirmLabel="Скинути"
-            />
 
             <div className={styles.colMain}>
                 {editingBuild && (
@@ -503,7 +472,7 @@ function PcBuildPage() {
                             <span className={styles.label}>EDITING · </span>
                             <span className={styles.name}>{editingBuild.name}</span>
                         </div>
-                        <button className={styles.btn} onClick={() => setCancelEditModal(true)}>
+                        <button className={styles.btn} onClick={handleCancelEdit}>
                             Скасувати редагування
                         </button>
                     </div>
@@ -521,7 +490,13 @@ function PcBuildPage() {
                             )}
                         </div>
                         {editingBuild ? (
-                            <h1>{editingBuild.name}</h1>
+                            <input
+                                className={styles.titleInput}
+                                value={editingBuild.name}
+                                onChange={(e) => setEditingBuild(prev => prev ? { ...prev, name: e.target.value } : prev)}
+                                spellCheck={false}
+                                aria-label="Назва збірки"
+                            />
                         ) : (
                             <input
                                 className={styles.titleInput}
@@ -544,23 +519,6 @@ function PcBuildPage() {
                         <button className={styles.btn} onClick={() => setAutoPanelOpen(true)}>
                             ⚙ Автопідбір
                         </button>
-                        {editingBuild ? (
-                            <>
-                                <button className={`${styles.btn} ${styles.btnPri}`}
-                                    onClick={openSaveModal} disabled={saveLoading}>
-                                    {saveLoading ? "Збереження..." : "✓ Оновити"}
-                                </button>
-                                <button className={styles.btn}
-                                    onClick={openSaveAsNewModal} disabled={saveLoading}>
-                                    Зберегти як нову
-                                </button>
-                            </>
-                        ) : (
-                            <button className={`${styles.btn} ${styles.btnPri}`}
-                                onClick={openSaveModal} disabled={saveLoading}>
-                                {saveLoading ? "Збереження..." : "✓ Зберегти"}
-                            </button>
-                        )}
                     </div>
                 </div>
 
@@ -678,11 +636,11 @@ function PcBuildPage() {
                                         : "↗ Опублікувати"}
                             </button>
                             <button className={`${styles.btn} ${styles.btnPri}`}
-                                onClick={openSaveModal} disabled={saveLoading}>
+                                onClick={() => handleSaveBuild()} disabled={saveLoading}>
                                 {saveLoading ? "Збереження..." : "✓ Оновити"}
                             </button>
                             <button className={styles.btn}
-                                onClick={openSaveAsNewModal} disabled={saveLoading}>
+                                onClick={() => handleSaveBuild(true)} disabled={saveLoading}>
                                 Зберегти як нову
                             </button>
                         </>
@@ -691,14 +649,14 @@ function PcBuildPage() {
                             {hasAnySelected && (
                                 <button
                                     className={`${styles.btn} ${styles.btnDng}`}
-                                    onClick={() => setDiscardModal(true)}
+                                    onClick={handleDiscardDraft}
                                     title="Скинути всі компоненти"
                                 >
                                     ⌫ Скинути
                                 </button>
                             )}
                             <button className={`${styles.btn} ${styles.btnPri}`}
-                                onClick={openSaveModal} disabled={saveLoading}>
+                                onClick={() => handleSaveBuild()} disabled={saveLoading}>
                                 {saveLoading ? "Збереження..." : "✓ Зберегти"}
                             </button>
                         </>

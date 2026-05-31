@@ -61,6 +61,7 @@ public class Worker : BackgroundService
         await jobChannel.QueueDeclareAsync("scrape-jobs", durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
         await jobChannel.QueueDeclareAsync("scrape-results", durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
         await jobChannel.QueueDeclareAsync("scrape-started", durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
+        await jobChannel.QueueDeclareAsync("scrape-progress", durable: false, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
 
         // Dedicated publisher channel for started/result messages. Not subject to the
         // consumer ack timeout, so long-running jobs can still report completion.
@@ -163,13 +164,20 @@ public class Worker : BackgroundService
             using var scope = _scopeFactory.CreateScope();
             var scraperService = scope.ServiceProvider.GetRequiredService<ScraperService>();
 
+            Func<int, int?, Task> progressCallback = async (scraped, total) =>
+            {
+                if (scraped % 5 != 0 && scraped != total) return;
+                try { await PublishProgressAsync(publishChannel, publishLock, message.JobId, message.ComponentType, scraped, total, stoppingToken); }
+                catch { /* non-fatal */ }
+            };
+
             if (message.Kind == "Category")
             {
                 var method = typeof(ScraperService)
                     .GetMethod(nameof(ScraperService.ScrapeCategoryAsync))!
                     .MakeGenericMethod(entityType);
 
-                var task = (Task<int>)method.Invoke(scraperService, [message.Url, Enum.Parse<ComponentType>(message.ComponentType), jobCts.Token])!;
+                var task = (Task<int>)method.Invoke(scraperService, [message.Url, Enum.Parse<ComponentType>(message.ComponentType), progressCallback, jobCts.Token])!;
                 itemsScraped = await task;
 
                 if (message.CorrectGpuModels)
@@ -200,7 +208,7 @@ public class Worker : BackgroundService
                     .GetMethod(nameof(ScraperService.UpdatePricesAsync))!
                     .MakeGenericMethod(entityType);
 
-                var task = (Task<int>)method.Invoke(scraperService, [Enum.Parse<ComponentType>(message.ComponentType), jobCts.Token])!;
+                var task = (Task<int>)method.Invoke(scraperService, [Enum.Parse<ComponentType>(message.ComponentType), progressCallback, jobCts.Token])!;
                 itemsScraped = await task;
 
                 var cacheInvalidator = scope.ServiceProvider.GetRequiredService<ICacheInvalidator>();
@@ -241,6 +249,23 @@ public class Worker : BackgroundService
         try
         {
             await channel.BasicPublishAsync("", "scrape-results", mandatory: false, basicProperties: props, body: body, cancellationToken: ct);
+        }
+        finally
+        {
+            publishLock.Release();
+        }
+    }
+
+    private static async Task PublishProgressAsync(IChannel channel, SemaphoreSlim publishLock, Guid jobId, string componentType, int itemsScraped, int? totalItems, CancellationToken ct)
+    {
+        var msg = new ScrapeJobProgressMessage(jobId, componentType, itemsScraped, totalItems);
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg));
+        var props = new BasicProperties { Persistent = false };
+
+        await publishLock.WaitAsync(ct);
+        try
+        {
+            await channel.BasicPublishAsync("", "scrape-progress", mandatory: false, basicProperties: props, body: body, cancellationToken: ct);
         }
         finally
         {

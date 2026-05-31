@@ -94,7 +94,13 @@ function GalleryPage() {
         <div className={styles['page-shell']}>
             <div className={styles['head']}>
                 <div>
+                    <span className={styles['eyebrow']}>
+                        ГАЛЕРЕЯ · ПУБЛІЧНІ ЗБІРКИ
+                    </span>
                     <h1>Галерея збірок</h1>
+                    <div className={styles['meta']}>
+                        <span>СПІЛЬНОТА · СОРТУВАННЯ ТА ПОШУК</span>
+                    </div>
                 </div>
                 {isLoggedIn && (
                     <div className={styles['actions']}>

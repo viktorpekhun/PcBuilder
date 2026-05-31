@@ -3,6 +3,7 @@ using Auth.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Moderation.Application.Commands;
+using Moderation.Application.Services;
 using Moderation.Domain.Entities;
 using Notifications.Domain.Entities;
 using PcBuilder.SharedKernel;
@@ -15,11 +16,13 @@ namespace Moderation.Application.Handlers
     {
         private readonly IApplicationDbContext _context;
         private readonly IEmailService _emailService;
+        private readonly IAdminActivityLogger _activity;
 
-        public AdminDeleteUserCommandHandler(IApplicationDbContext context, IEmailService emailService)
+        public AdminDeleteUserCommandHandler(IApplicationDbContext context, IEmailService emailService, IAdminActivityLogger activity)
         {
             _context = context;
             _emailService = emailService;
+            _activity = activity;
         }
 
         public async Task<Result<bool>> Handle(AdminDeleteUserCommand request, CancellationToken cancellationToken)
@@ -100,8 +103,18 @@ namespace Moderation.Application.Handlers
                 _context.Remove(report);
 
             // 7. Delete the user — cascades: PcBuilds → Reviews on those builds
+            var username = user.Username;
+            var userId = user.Id;
             _context.Set<User>().Remove(user);
             await _context.SaveChangesAsync(cancellationToken);
+
+            await _activity.LogAsync(
+                request.AdminId,
+                "DeleteUser",
+                targetType: "User",
+                targetId: userId,
+                targetName: $"@{username}",
+                cancellationToken: cancellationToken);
 
             return Result.Success(true);
         }

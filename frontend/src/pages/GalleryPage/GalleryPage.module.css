@@ -21,17 +21,16 @@
     grid-template-columns: 1fr auto;
     gap: var(--sp-6);
     align-items: end;
-    padding: var(--sp-2) 0 var(--sp-5);
+    padding: var(--sp-5) 0 var(--sp-5);
     border-bottom: 1px solid var(--bd-0);
 }
 
 .eyebrow {
     font-family: var(--font-mono);
-    font-size: var(--fs-2xs);
-    font-weight: var(--fw-medium);
+    font-size: var(--fs-3xs);
     letter-spacing: var(--tr-widest);
     text-transform: uppercase;
-    color: var(--acc);
+    color: var(--fg-2);
 }
 
 .head h1 {

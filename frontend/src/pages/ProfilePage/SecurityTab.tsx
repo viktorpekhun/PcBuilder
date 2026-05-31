@@ -60,7 +60,9 @@ export function SecurityTab({ profile, onUpdate }: { profile: IProfileResponse; 
             setTimeout(() => setSaved(false), 2200);
             setCur(''); setNext(''); setConf('');
         } catch (err: any) {
-            setErr(err?.response?.data?.message ?? 'Error changing password');
+            const data = err?.response?.data;
+            const msg: string = data?.errors?.[0] ?? data?.message ?? 'Error changing password';
+            setErr(msg);
         } finally { setSaving(false); }
     };
 

@@ -10,8 +10,8 @@ export interface IAdminStats {
 }
 
 export const BanType = {
-    Comment: 0,
-    Post: 1,
+    Comment: "Comment",
+    Post: "Post",
 } as const;
 
 export type BanTypeValue = typeof BanType[keyof typeof BanType];
@@ -86,23 +86,23 @@ export interface IChangeRoleRequest {
 }
 
 export const ReportType = {
-    Review: 0,
-    Build: 1,
+    Review: "Review",
+    Build: "Build",
 } as const;
 export type ReportTypeValue = typeof ReportType[keyof typeof ReportType];
 
 export const ReportStatus = {
-    Pending: 0,
-    Resolved: 1,
-    Dismissed: 2,
+    Pending: "Pending",
+    Resolved: "Resolved",
+    Dismissed: "Dismissed",
 } as const;
 export type ReportStatusValue = typeof ReportStatus[keyof typeof ReportStatus];
 
 export const ReportResolutionAction = {
-    Dismiss: 0,
-    DeleteContent: 1,
-    DeleteContentAndWarn: 2,
-    DeleteContentAndBan: 3,
+    Dismiss: "Dismiss",
+    DeleteContent: "DeleteContent",
+    DeleteContentAndWarn: "DeleteContentAndWarn",
+    DeleteContentAndBan: "DeleteContentAndBan",
 } as const;
 export type ReportResolutionActionValue = typeof ReportResolutionAction[keyof typeof ReportResolutionAction];
 
@@ -132,6 +132,17 @@ export interface IResolveReportRequest {
     reason?: string;
     banType?: BanTypeValue;
     banDurationDays?: number;
+}
+
+export interface IAdminActivityLog {
+    id: string;
+    adminUsername: string;
+    action: string;
+    targetType: string | null;
+    targetId: string | null;
+    targetName: string | null;
+    detail: string | null;
+    occurredAt: string;
 }
 
 export type ScrapeJobState =

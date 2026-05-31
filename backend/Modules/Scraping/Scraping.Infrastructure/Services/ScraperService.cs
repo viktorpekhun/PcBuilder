@@ -189,7 +189,7 @@ namespace Scraping.Infrastructure.Services
             }
         }
 
-        public async Task<int> ScrapeCategoryAsync<T>(string categoryUrl, ComponentType componentType, CancellationToken cancellationToken = default) where T : class
+        public async Task<int> ScrapeCategoryAsync<T>(string categoryUrl, ComponentType componentType, Func<int, int?, Task>? onProgress = null, CancellationToken cancellationToken = default) where T : class
         {
             var totalStopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Starting category scraping {ComponentType} from {Url}", componentType, categoryUrl);
@@ -207,6 +207,7 @@ namespace Scraping.Infrastructure.Services
 
             var failedLinks = new List<string>(productLinks);
             var storesByName = new Dictionary<string, Store>();
+            int scrapedSoFar = 0;
 
             int outerRetry = 0;
             const int maxOuterRetries = 3;
@@ -298,6 +299,9 @@ namespace Scraping.Infrastructure.Services
                                         Console.WriteLine("\n");
 
                                         componentsToSave.Add(result.Component);
+                                        var currentCount = Interlocked.Increment(ref scrapedSoFar);
+                                        if (onProgress != null)
+                                            _ = onProgress(currentCount, productLinks.Count);
 
                                         lock (_lock)
                                         {
@@ -749,7 +753,7 @@ namespace Scraping.Infrastructure.Services
             return totalSuccessful;
         }
 
-        public async Task<int> UpdatePricesAsync<T>(ComponentType componentType, CancellationToken cancellationToken = default) where T : class
+        public async Task<int> UpdatePricesAsync<T>(ComponentType componentType, Func<int, int?, Task>? onProgress = null, CancellationToken cancellationToken = default) where T : class
         {
             var totalStopwatch = Stopwatch.StartNew();
             _logger.LogInformation("Starting price update for {ComponentType}", componentType);
@@ -793,6 +797,7 @@ namespace Scraping.Infrastructure.Services
             var componentById = targets.ToDictionary(t => t.Id, t => t.Component);
 
             var failedTargets = new List<(T Component, Guid Id, string? Url)>(targets);
+            int pricedSoFar = 0;
 
             int outerRetry = 0;
             const int maxOuterRetries = 3;
@@ -886,6 +891,9 @@ namespace Scraping.Infrastructure.Services
                                         offersByComponent[target.Id] = result.Offers;
                                         _proxyPool.ReturnProxy(proxy, success: true);
                                         Console.WriteLine($"[{index}] Got {result.Offers.Count} offers for component {target.Id}");
+                                        var currentPriced = Interlocked.Increment(ref pricedSoFar);
+                                        if (onProgress != null)
+                                            _ = onProgress(currentPriced, targets.Count);
                                         return;
                                     }
                                     else

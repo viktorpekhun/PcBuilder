@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Button } from "../Button/Button";
 import { reportService } from "../../api/report.service";
 import type { ReportTargetType } from "../../types/report.types";
 import styles from "./ReportModal.module.css";
@@ -11,26 +10,65 @@ interface ReportModalProps {
     onClose: () => void;
 }
 
+const REASON_OPTIONS: Record<ReportTargetType, string[]> = {
+    build: [
+        "Спам або реклама",
+        "Неприйнятний вміст",
+        "Шахрайство або введення в оману",
+        "Порушення авторських прав",
+        "Дублікат збірки",
+        "Інше",
+    ],
+    review: [
+        "Спам або реклама",
+        "Образлива поведінка",
+        "Неприйнятний вміст",
+        "Недостовірна інформація",
+        "Інше",
+    ],
+};
+
+const MAX_REASON = 500;
+
 function ReportModal({ isOpen, targetType, targetId, onClose }: ReportModalProps) {
-    const [reason, setReason] = useState("");
+    const [selected, setSelected] = useState<string | null>(null);
+    const [details, setDetails] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
 
     if (!isOpen) return null;
 
+    const options = REASON_OPTIONS[targetType];
+    // "Інше" requires the free-text field; for everything else it's optional.
+    const requiresDetails = selected === "Інше";
+    const canSubmit = !!selected && (!requiresDetails || details.trim().length > 0) && !submitting;
+
+    const buildReason = () => {
+        const detail = details.trim();
+        if (!selected) return "";
+        // For "Інше" the detail IS the reason; otherwise append it as extra context.
+        const composed = requiresDetails
+            ? detail
+            : detail
+                ? `${selected} — ${detail}`
+                : selected;
+        return composed.slice(0, MAX_REASON);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!reason.trim() || submitting) return;
+        const reason = buildReason();
+        if (!reason || submitting) return;
 
         try {
             setSubmitting(true);
             setError(null);
 
             if (targetType === "review") {
-                await reportService.reportReview(targetId, { reason: reason.trim() });
+                await reportService.reportReview(targetId, { reason });
             } else {
-                await reportService.reportBuild(targetId, { reason: reason.trim() });
+                await reportService.reportBuild(targetId, { reason });
             }
 
             setSuccess(true);
@@ -48,7 +86,8 @@ function ReportModal({ isOpen, targetType, targetId, onClose }: ReportModalProps
     };
 
     const handleClose = () => {
-        setReason("");
+        setSelected(null);
+        setDetails("");
         setError(null);
         setSuccess(false);
         onClose();
@@ -58,50 +97,73 @@ function ReportModal({ isOpen, targetType, targetId, onClose }: ReportModalProps
 
     return (
         <div className={styles.overlay} onMouseDown={handleClose}>
-            <div className={styles.modal} onMouseDown={(e) => e.stopPropagation()}>
-                <h2 className={styles.title}>{title}</h2>
+            <div className={styles.modal} onMouseDown={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+                <div className={styles.head}>
+                    <span className={styles.eyebrow}>СКАРГА · МОДЕРАЦІЯ</span>
+                    <h2 className={styles.title}>{title}</h2>
+                </div>
 
                 {success ? (
                     <div className={styles.success}>
+                        <span className={styles.successGlyph}>✓</span>
                         Скаргу надіслано. Дякуємо за повідомлення.
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit}>
                         <p className={styles.description}>
-                            Опишіть причину скарги. Модератори розглянуть ваше повідомлення.
+                            Оберіть причину скарги. Модератори розглянуть ваше повідомлення.
                         </p>
 
+                        <div className={styles.options} role="radiogroup" aria-label="Причина скарги">
+                            {options.map((opt) => {
+                                const active = selected === opt;
+                                return (
+                                    <button
+                                        type="button"
+                                        key={opt}
+                                        className={`${styles.option} ${active ? styles.optionOn : ""}`}
+                                        onClick={() => setSelected(opt)}
+                                        role="radio"
+                                        aria-checked={active}
+                                    >
+                                        <span className={styles.radio} aria-hidden="true" />
+                                        <span className={styles.optionLabel}>{opt}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <label className={styles.fieldLabel}>
+                            {requiresDetails ? "ОПИШІТЬ ПРИЧИНУ" : "ДЕТАЛІ (НЕОБОВ’ЯЗКОВО)"}
+                        </label>
                         <textarea
                             className={styles.textarea}
-                            value={reason}
-                            onChange={(e) => setReason(e.target.value)}
-                            placeholder="Причина скарги..."
-                            maxLength={500}
-                            rows={4}
-                            autoFocus
+                            value={details}
+                            onChange={(e) => setDetails(e.target.value)}
+                            placeholder={requiresDetails ? "Опишіть причину скарги…" : "Додаткові деталі для адміністраторів…"}
+                            maxLength={MAX_REASON}
+                            rows={3}
                         />
-
-                        <div className={styles.charCount}>{reason.length}/500</div>
+                        <div className={styles.charCount}>{details.length}/{MAX_REASON}</div>
 
                         {error && <div className={styles.error}>{error}</div>}
 
                         <div className={styles.buttons}>
-                            <Button
-                                variant="outline-secondary"
-                                size="md"
+                            <button
+                                type="button"
+                                className={`${styles.btn} ${styles.btnGhost}`}
                                 onClick={handleClose}
                                 disabled={submitting}
                             >
                                 Скасувати
-                            </Button>
-                            <Button
-                                variant="danger"
-                                size="md"
-                                onClick={() => {}}
-                                disabled={!reason.trim() || submitting}
+                            </button>
+                            <button
+                                type="submit"
+                                className={`${styles.btn} ${styles.btnDanger}`}
+                                disabled={!canSubmit}
                             >
-                                {submitting ? "Надсилання..." : "Надіслати скаргу"}
-                            </Button>
+                                {submitting ? "Надсилання…" : "Надіслати скаргу"}
+                            </button>
                         </div>
                     </form>
                 )}

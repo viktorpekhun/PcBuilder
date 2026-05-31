@@ -1,0 +1,171 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+
+.page {
+    --bg0: #08080A;
+    --bg1: #0F0F12;
+    --bg2: #16161A;
+    --bg3: #1E1E23;
+    --bd0: #1F1F24;
+    --bd1: #2E2E36;
+    --bd2: #44444E;
+    --fg0: #ECECEE;
+    --fg1: #A6A6AE;
+    --fg2: #70707A;
+    --fg3: #4A4A52;
+    --acc: #AECF55;
+    --acc-soft: #232C13;
+    --ok: #7AE07A;
+    --ok-soft: rgba(122, 224, 122, 0.12);
+    --warn: #F5B43A;
+    --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --dur: 80ms;
+
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-sans);
+    background: var(--bg0);
+    color: var(--fg0);
+    flex: 1;
+    padding: 0 40px 80px;
+}
+
+/* ── Shared utilities ── */
+.eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg2);
+}
+
+.dot {
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 999px;
+    vertical-align: middle;
+    margin-right: 6px;
+    flex-shrink: 0;
+}
+.dotAcc  { background: var(--acc); }
+.dotDim  { background: var(--bd2); }
+.dotWarn { background: var(--warn); }
+.dotOk   { background: var(--ok); box-shadow: 0 0 0 2px var(--ok-soft); width: 6px; height: 6px; }
+
+.metaSep { color: var(--bd2); }
+
+/* ── Page header ── */
+.head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: flex-end;
+    padding: 20px 0 18px;
+    border-bottom: 1px solid var(--bd0);
+}
+
+.h1 {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 8px 0 0;
+    color: var(--fg0);
+}
+
+.headMeta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg2);
+    letter-spacing: 0.08em;
+    margin-top: 6px;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+/* ── Primary tabs ── */
+.tabs {
+    display: flex;
+    align-items: stretch;
+    margin-top: 18px;
+    border: 1px solid var(--bd1);
+    background: var(--bg1);
+    border-bottom: 0;
+}
+
+.tabBtn {
+    all: unset;
+    cursor: pointer;
+    padding: 14px 22px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--fg2);
+    border-right: 1px solid var(--bd1);
+    position: relative;
+    transition: background var(--dur), color var(--dur);
+}
+.tabBtn:hover { background: var(--bg2); color: var(--fg1); }
+.tabActive { color: var(--fg0); background: var(--bg2); }
+.tabActive::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: -1px;
+    height: 2px;
+    background: var(--acc);
+}
+
+.tabIc {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--fg3);
+    width: 14px;
+    text-align: center;
+}
+.tabActive .tabIc { color: var(--acc); }
+
+.tabLbl { font-weight: 500; letter-spacing: -0.005em; }
+
+.tabCount {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg3);
+    letter-spacing: 0.04em;
+    padding: 2px 8px;
+    border: 1px solid var(--bd1);
+    background: var(--bg1);
+}
+.tabActive .tabCount { color: var(--fg0); border-color: var(--bd2); background: var(--bg0); }
+.tabCount b { color: var(--warn); font-weight: 500; }
+
+.tabSpacer { flex: 1; border-right: 1px solid var(--bd1); }
+
+.tabFoot {
+    padding: 0 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--fg3);
+    letter-spacing: 0.06em;
+}
+
+/* ── Panel (content area) ── */
+.panel {
+    background: var(--bg1);
+    border: 1px solid var(--bd1);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Responsive ── */
+@media (max-width: 760px) {
+    .tabs { flex-wrap: wrap; }
+    .tabSpacer, .tabFoot { display: none; }
+    .tabBtn { padding: 12px 16px; }
+}

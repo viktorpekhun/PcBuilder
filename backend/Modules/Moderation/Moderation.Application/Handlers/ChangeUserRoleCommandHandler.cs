@@ -2,6 +2,7 @@ using Auth.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Moderation.Application.Commands;
+using Moderation.Application.Services;
 using PcBuilder.SharedKernel;
 using PcBuilder.SharedKernel.Persistence;
 
@@ -10,10 +11,12 @@ namespace Moderation.Application.Handlers
     public class ChangeUserRoleCommandHandler : IRequestHandler<ChangeUserRoleCommand, Result<bool>>
     {
         private readonly IApplicationDbContext _context;
+        private readonly IAdminActivityLogger _activity;
 
-        public ChangeUserRoleCommandHandler(IApplicationDbContext context)
+        public ChangeUserRoleCommandHandler(IApplicationDbContext context, IAdminActivityLogger activity)
         {
             _context = context;
+            _activity = activity;
         }
 
         public async Task<Result<bool>> Handle(ChangeUserRoleCommand request, CancellationToken cancellationToken)
@@ -47,7 +50,17 @@ namespace Moderation.Application.Handlers
             }
 
             await _context.SaveChangesAsync(cancellationToken);
-            return Result.Success(request.Role == "Admin");
+
+            var promoted = request.Role == "Admin";
+            await _activity.LogAsync(
+                request.AdminId,
+                promoted ? "PromoteToAdmin" : "DemoteToUser",
+                targetType: "User",
+                targetId: user.Id,
+                targetName: $"@{user.Username}",
+                cancellationToken: cancellationToken);
+
+            return Result.Success(promoted);
         }
     }
 }

@@ -1,63 +1,108 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+
 .page {
     display: flex;
     width: 100%;
     min-height: calc(100vh - 54px);
-    background: #f4f5f7;
+    background: #08080A;
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
 }
 
+/* ── sidebar rail ── */
 .sidebar {
-    width: 240px;
-    min-width: 240px;
-    background: #1e293b;
-    color: #e2e8f0;
+    width: 200px;
+    min-width: 200px;
+    background: #08080A;
+    border-right: 1px solid #2E2E36;
     display: flex;
     flex-direction: column;
-    padding: 24px 0;
+    padding: 12px 0;
+    min-height: calc(100vh - 54px);
 }
 
 .sidebar-title {
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    padding: 0 24px 20px;
-    border-bottom: 1px solid #334155;
-    color: #f8fafc;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: -0.02em;
+    padding: 4px 16px 16px;
+    border-bottom: 1px solid #2E2E36;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sidebar-title-bracket {
+    color: #4A4A52;
+}
+
+.sidebar-title-name {
+    color: #ECECEE;
+}
+
+.sidebar-title-slash {
+    color: #AECF55;
+}
+
+.sidebar-badge {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #AECF55;
+    border: 1px solid #38470F;
+    background: #232C13;
+    padding: 2px 6px;
+    border-radius: 2px;
+    margin-left: 4px;
 }
 
 .nav {
     display: flex;
     flex-direction: column;
-    padding: 16px 0;
+    padding: 8px 0;
+}
+
+.nav-group {
+    padding: 16px 16px 6px;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #4A4A52;
 }
 
 .nav-link {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 24px;
-    color: #cbd5e1;
+    gap: 10px;
+    padding: 8px 16px;
+    font-size: 13px;
+    color: #A6A6AE;
     text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
-    transition: background-color 0.15s, color 0.15s;
-    border-left: 3px solid transparent;
+    border-left: 2px solid transparent;
+    cursor: pointer;
+    transition: background 0.1s ease;
 }
 
 .nav-link:hover {
-    background: #273549;
-    color: #f8fafc;
+    background: #16161A;
+    color: #ECECEE;
 }
 
 .nav-link-active {
-    background: #273549;
-    color: #f8fafc;
-    border-left-color: #3b82f6;
+    color: #ECECEE;
+    background: #16161A;
+    border-left-color: #AECF55;
 }
 
+/* ── main content ── */
 .content {
     flex: 1;
-    padding: 32px 40px;
+    padding: 32px 40px 80px;
     overflow-x: auto;
+    background: #08080A;
 }
 
 @media (max-width: 900px) {
@@ -68,32 +113,39 @@
     .sidebar {
         width: 100%;
         min-width: 0;
-        padding: 12px 0;
+        min-height: auto;
+        padding: 8px 0;
+        border-right: none;
+        border-bottom: 1px solid #2E2E36;
     }
 
     .sidebar-title {
-        padding: 0 20px 12px;
+        padding: 4px 16px 12px;
     }
 
     .nav {
         flex-direction: row;
         overflow-x: auto;
-        padding: 8px 0;
+        padding: 4px 0;
+    }
+
+    .nav-group {
+        display: none;
     }
 
     .nav-link {
         border-left: none;
-        border-bottom: 3px solid transparent;
+        border-bottom: 2px solid transparent;
         padding: 10px 16px;
         white-space: nowrap;
     }
 
     .nav-link-active {
         border-left: none;
-        border-bottom-color: #3b82f6;
+        border-bottom-color: #AECF55;
     }
 
     .content {
-        padding: 20px;
+        padding: 24px 20px 60px;
     }
 }

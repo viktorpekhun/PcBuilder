@@ -20,18 +20,18 @@
     text-transform: uppercase;
 }
 
-/* ---- search (matches GlobalSearch design, sized for primary page input) ---- */
+/* ---- search (inline in toolbar, takes remaining space) ---- */
 .searchBar {
     display: flex;
     align-items: center;
     gap: 8px;
-    width: 100%;
-    height: 38px;
-    max-height: 38px;
-    padding: 0 12px;
+    flex: 1 1 0;
+    min-width: 80px;
+    height: 30px;
+    padding: 0 10px;
+    margin-right: 10px;
     background: transparent;
     border: 1px solid var(--bd-1);
-    margin-bottom: 16px;
     box-sizing: border-box;
     overflow: hidden;
     transition: border-color var(--dur-1) var(--ease-out);
@@ -153,7 +153,8 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 0;
+    padding-top: 0;
+    padding-bottom: 10px;
     border-bottom: 1px solid var(--bd-1);
     flex-wrap: wrap;
 }

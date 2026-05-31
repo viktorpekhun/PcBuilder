@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Moderation.Application.Commands;
 using Moderation.Application.Queries;
+using Moderation.Application.Dtos;
 using Moderation.Domain.Enums;
 
 namespace PcBuilder.Api.Controllers
@@ -172,6 +173,34 @@ namespace PcBuilder.Api.Controllers
                 return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
 
             return Ok(new { Success = true });
+        }
+
+        // --- Activity ---
+
+        [HttpGet("activity")]
+        public async Task<IActionResult> GetActivity(
+            [FromQuery] int daysBack = 1,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 20)
+        {
+            var result = await _mediator.Send(new GetAdminActivityQuery(daysBack, pageNumber, pageSize));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+
+            var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+            var pagedResult = result.Value!;
+
+            Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(new
+            {
+                pagedResult.TotalCount,
+                pagedResult.PageSize,
+                pagedResult.PageNumber,
+                pagedResult.TotalPages,
+                pagedResult.HasNext,
+                pagedResult.HasPrevious
+            }, jsonOptions));
+
+            return Ok(pagedResult.Items);
         }
 
         // --- Stats ---
