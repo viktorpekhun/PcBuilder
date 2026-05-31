@@ -87,7 +87,8 @@ namespace PcBuilds.Application.Handlers
                     {
                         ["buildId"] = build.Id.ToString(),
                         ["buildName"] = build.Name,
-                        ["reviewerUsername"] = user.Username
+                        ["reviewerUsername"] = user.Username,
+                        ["rating"] = ((int)request.Rating).ToString()
                     }), cancellationToken);
             }
 
