@@ -149,6 +149,7 @@ function ComponentsPage() {
     };
 
     // Initial load
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         firstLoadDone.current = false;
         setFilters({});
@@ -161,6 +162,7 @@ function ComponentsPage() {
     useEffect(() => { currentPageRef.current = currentPage; }, [currentPage]);
 
     // Filters / sort change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (!firstLoadDone.current) return;
         skipNextPageEffect.current = currentPageRef.current !== 1;
@@ -169,6 +171,7 @@ function ComponentsPage() {
     }, [filters, sortField, sortDirection]);
 
     // Page change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (!firstLoadDone.current) return;
         if (skipNextPageEffect.current) {
@@ -179,6 +182,7 @@ function ComponentsPage() {
     }, [currentPage]);
 
     // Debounced search
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (!firstLoadDone.current) return;
         const timer = setTimeout(() => {

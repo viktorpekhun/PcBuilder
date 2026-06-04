@@ -38,6 +38,7 @@ const VerifyEmailPage = () => {
                     setStatus('error');
                 }
             });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const content: Record<Status, { icon: 'success' | 'info' | 'error'; title: string; text: string; action: string }> = {

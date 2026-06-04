@@ -8,6 +8,7 @@ function getInitial(): Theme {
     try {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved === "light" || saved === "dark") return saved;
+    // eslint-disable-next-line no-empty
     } catch {}
     return "dark";
 }
@@ -25,6 +26,7 @@ export function useTheme() {
 
     useEffect(() => {
         applyTheme(theme);
+        // eslint-disable-next-line no-empty
         try { localStorage.setItem(STORAGE_KEY, theme); } catch {}
     }, [theme]);
 

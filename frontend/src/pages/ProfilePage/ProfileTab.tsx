@@ -35,8 +35,9 @@ export function ProfileTab({ profile, onUpdate }: { profile: IProfileResponse; o
             onUpdate(res.data);
             setSaved(true);
             setTimeout(() => setSaved(false), 2200);
-        } catch (err: any) {
-            setSaveErr(err?.response?.data?.message ?? t('profile.profileTab.saveFailed'));
+        } catch (err: unknown) {
+            const e = err as { response?: { data?: { message?: string } } };
+            setSaveErr(e?.response?.data?.message ?? t('profile.profileTab.saveFailed'));
         } finally { setSaving(false); }
     };
 
@@ -50,8 +51,9 @@ export function ProfileTab({ profile, onUpdate }: { profile: IProfileResponse; o
             const res = await profileService.uploadAvatar(fd);
             setAvatarUrl(res.data.avatarUrl);
             onUpdate({ ...profile, avatarUrl: res.data.avatarUrl });
-        } catch (err: any) {
-            setSaveErr(err?.response?.data?.message ?? t('profile.profileTab.avatarUploadFailed'));
+        } catch (err: unknown) {
+            const e = err as { response?: { data?: { message?: string } } };
+            setSaveErr(e?.response?.data?.message ?? t('profile.profileTab.avatarUploadFailed'));
         } finally {
             setAvatarLoading(false);
             if (fileRef.current) fileRef.current.value = '';

@@ -62,8 +62,8 @@ export function SecurityTab({ profile, onUpdate }: { profile: IProfileResponse; 
             setSaved(true);
             setTimeout(() => setSaved(false), 2200);
             setCur(''); setNext(''); setConf('');
-        } catch (err: any) {
-            const data = err?.response?.data;
+        } catch (err: unknown) {
+            const data = (err as { response?: { data?: { errors?: string[]; message?: string } } })?.response?.data;
             const msg: string = data?.errors?.[0] ?? data?.message ?? t('profile.securityTab.changeFailed');
             setErr(msg);
         } finally { setSaving(false); }
@@ -78,8 +78,9 @@ export function SecurityTab({ profile, onUpdate }: { profile: IProfileResponse; 
             setTimeout(() => setSaved(false), 2200);
             setNext(''); setConf('');
             onUpdate({ ...profile, hasPassword: true });
-        } catch (err: any) {
-            setErr(err?.response?.data?.message ?? t('profile.securityTab.changeFailed'));
+        } catch (err: unknown) {
+            const e = err as { response?: { data?: { message?: string } } };
+            setErr(e?.response?.data?.message ?? t('profile.securityTab.changeFailed'));
         } finally { setSaving(false); }
     };
 

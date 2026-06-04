@@ -88,6 +88,7 @@ const LoginPage = () => {
         }
     };
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { setPersist(true); }, []);
 
     return (
