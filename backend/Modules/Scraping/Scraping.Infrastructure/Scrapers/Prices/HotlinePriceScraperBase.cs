@@ -82,6 +82,10 @@ namespace Scraping.Infrastructure.Scrapers.Prices
                         offerUrl = $"{BaseUrl}{offerUrl}";
                     }
 
+                    var available = node["available"]?.Value<bool?>();
+                    var stockStatus = available.HasValue ? (available.Value ? "in" : "out") : null;
+
+                    var now = DateTime.UtcNow;
                     offers.Add(new ProductOffer
                     {
                         Id = Guid.NewGuid(),
@@ -89,7 +93,10 @@ namespace Scraping.Infrastructure.Scrapers.Prices
                         ComponentType = ComponentType,
                         ComponentId = component.Id,
                         ProductOfferUrl = offerUrl,
-                        StoreId = store.Id
+                        StoreId = store.Id,
+                        StockStatus = stockStatus,
+                        CreatedAt = now,
+                        UpdatedAt = now
                     });
                 }
                 catch (Exception ex)

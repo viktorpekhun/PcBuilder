@@ -109,6 +109,10 @@ namespace PcBuilder.Persistence.Migrations
                     b.Property<DateTime>("PostBanUntil")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("PreferredLanguage")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("RefreshToken")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -1106,6 +1110,9 @@ namespace PcBuilder.Persistence.Migrations
                     b.Property<int>("ComponentType")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<decimal>("Price")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
@@ -1114,8 +1121,15 @@ namespace PcBuilder.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("StockStatus")
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
+
                     b.Property<Guid>("StoreId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -1331,6 +1345,47 @@ namespace PcBuilder.Persistence.Migrations
                     b.ToTable("Stores");
                 });
 
+            modelBuilder.Entity("Moderation.Domain.Entities.AdminActivityLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<Guid>("AdminId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Detail")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("TargetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TargetName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("TargetType")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdminId");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.ToTable("AdminActivityLogs");
+                });
+
             modelBuilder.Entity("Moderation.Domain.Entities.Report", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1408,6 +1463,10 @@ namespace PcBuilder.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ReasonCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -1564,6 +1623,10 @@ namespace PcBuilder.Persistence.Migrations
 
                     b.Property<Guid?>("PcCaseOfferId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("PhotoUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)");
 
                     b.Property<Guid?>("PowerSupplyId")
                         .HasColumnType("uniqueidentifier");
@@ -2150,6 +2213,17 @@ namespace PcBuilder.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Motherboard");
+                });
+
+            modelBuilder.Entity("Moderation.Domain.Entities.AdminActivityLog", b =>
+                {
+                    b.HasOne("Auth.Domain.Entities.User", "Admin")
+                        .WithMany()
+                        .HasForeignKey("AdminId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Admin");
                 });
 
             modelBuilder.Entity("Moderation.Domain.Entities.Report", b =>

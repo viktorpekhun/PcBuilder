@@ -1,48 +1,173 @@
-.login-page {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    padding: 20px;
-    box-sizing: border-box;
-}
+/* ── Design system tokens (inlined) ────────────────────────── */
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
 
-.login-container {
+/* ── page stage ─────────────────────────────────────────────── */
+.login-page {
+    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 100%;
-    max-width: 450px; /* Increased from 400px */
-    padding: 32px; /* Slightly more padding */
-    background-color: white;
-    border-radius: 8px; /* Slightly more rounded corners */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    margin-top: 48px;
+    justify-content: center;
+    padding: 32px 20px;
+    background-color: var(--bg-0);
+    background-image:
+        linear-gradient(to right, var(--bd-0) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--bd-0) 1px, transparent 1px);
+    background-size: 32px 32px;
     box-sizing: border-box;
+    font-family: var(--font-sans);
+    overflow-y: auto;
 }
 
-
-.login-container h1 {
-    font-size: 24px;
-    color: #262B31;
-    margin: 0;
-    text-align: left;
+/* ── top wordmark + path ────────────────────────────────────── */
+.auth-top {
     width: 100%;
-
-}
-
-
-.errmsg {
-    background-color: #ffe6e6;
-    color: #721c24;
-    padding: 8px;
-    border-radius: 4px;
-    margin-bottom: 1rem;
-    text-align: left;
-    width: 100%;
-    border: 1px solid #dc3545;
+    max-width: 416px;
     display: flex;
     align-items: center;
-    box-sizing: border-box;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.wordmark {
+    font-family: var(--font-mono);
+    font-weight: var(--fw-semi);
+    font-size: var(--fs-lg);
+    letter-spacing: -0.02em;
+    color: var(--fg-0);
+}
+
+.wordmark-bracket { color: var(--fg-3); }
+.wordmark-slash   { color: var(--acc); }
+
+.auth-path {
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    color: var(--fg-2);
+    margin-left: auto;
+    letter-spacing: 0.04em;
+}
+
+.auth-path-sep    { color: var(--fg-3); padding: 0 5px; }
+.auth-path-active { color: var(--fg-0); }
+
+/* ── segmented toggle ───────────────────────────────────────── */
+.seg {
+    width: 100%;
+    max-width: 416px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--bd-1);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: -1px;
+}
+
+.seg-btn {
+    appearance: none;
+    background: var(--bg-1);
+    border: none;
+    border-right: 1px solid var(--bd-1);
+    color: var(--fg-2);
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 10px 0;
+    cursor: pointer;
+    transition: background var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+}
+
+.seg-btn:last-child { border-right: none; }
+.seg-btn:hover { background: var(--bg-2); color: var(--fg-1); }
+
+.seg-btn-active {
+    background: var(--bg-2);
+    color: var(--fg-0);
+}
+
+.seg-btn-active .seg-tick { color: var(--acc); }
+.seg-tick { color: transparent; }
+
+/* ── card ───────────────────────────────────────────────────── */
+.login-container {
+    width: 100%;
+    max-width: 416px;
+    background: var(--bg-1);
+    border: 1px solid var(--bd-1);
+    border-radius: 2px;
+}
+
+.card-head {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--bd-0);
+}
+
+.eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    font-weight: var(--fw-medium);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-2);
+    display: block;
+    margin-bottom: 8px;
+}
+
+.card-head h1 {
+    font-size: var(--fs-2xl);
+    font-weight: var(--fw-semi);
+    letter-spacing: -0.01em;
+    color: var(--fg-0);
+    margin: 0 0 8px;
+    font-family: var(--font-sans);
+}
+
+.description {
+    font-size: var(--fs-sm);
+    color: var(--fg-1);
+    margin: 0;
+    max-width: 34ch;
+}
+
+.card-body { padding: 24px; }
+
+/* ── error banner ───────────────────────────────────────────── */
+.errmsg {
+    display: grid;
+    grid-template-columns: 16px 1fr;
+    gap: 12px;
+    align-items: start;
+    background: var(--err-soft);
+    border: 1px solid var(--err);
+    border-radius: 2px;
+    padding: 11px 13px;
+    margin-bottom: 16px;
+    font-family: var(--font-mono);
+}
+
+.errmsg-glyph {
+    color: var(--err);
+    font-size: var(--fs-sm);
+    line-height: 1.2;
+}
+
+.errmsg-title {
+    font-size: var(--fs-2xs);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--err);
+}
+
+.errmsg-body {
+    font-size: var(--fs-xs);
+    color: var(--fg-1);
+    margin-top: 2px;
 }
 
 .offscreen {
@@ -50,172 +175,356 @@
     left: -9999px;
 }
 
-
+/* ── form fields ────────────────────────────────────────────── */
 .login-container form {
     display: flex;
     flex-direction: column;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+}
+
+.field-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    font-weight: var(--fw-medium);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-2);
+    margin-bottom: 8px;
+}
+
+.control {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.control input {
+    all: unset;
     width: 100%;
     box-sizing: border-box;
-    margin-top: 8px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    color: var(--fg-0);
+    background: var(--bg-2);
+    border: 1px solid var(--bd-1);
+    border-radius: 2px;
+    padding: 11px 12px;
+    transition: border-color var(--dur-1) var(--ease-out);
 }
 
+.control input::placeholder { color: var(--fg-3); }
 
-.login-container label {
-    font-size: 1rem;
-    color: #333;
-    margin-bottom: 4px;
-    text-align: left;
+.control input:focus {
+    border-color: var(--acc);
+    outline: 1px solid var(--acc);
+    outline-offset: 0;
 }
 
-.login-container input[type="text"],
-.login-container input[type="password"] {
-    font-size: 1rem;
-    padding: 10px;
-    border: 1px solid #CECECE;
-    border-radius: 4px;
-    margin-bottom: 1rem;
-    width: 100%;
-    box-sizing: border-box;
+.control-pwd input {
+    padding-right: 40px;
 }
 
-.login-container input:focus{
-    border: 1px solid #808386;
-    outline: none;
+.control input.input-error {
+    border-color: var(--err);
 }
 
-.description {
-    font-size: 14px;
-    color: #262B31;
-    text-align: left;
-    align-self: flex-start;
-    margin-top: 0;
+.control input.input-error:focus {
+    outline-color: var(--err);
 }
 
-.register-link{
-    font-size: 14px;
-    display: flex;
-    flex-direction: row;
-    gap: 4px;
-
-}
-
-
-.line {
-    color: #3498db;
-}
-
-.line a {
-    color: #3498db;
-    font-weight: bold;
-    transition: color 0.3s;
-}
-
-.line a:hover {
-    color: #2980b9;
-}
-
-
-.persistCheck {
-    font-size: 0.75rem;
-    margin-top: 10px;
-    display: flex;
-    justify-content: flex-start;
-    align-items: flex-end;
-}
-
-.persistCheck label {
-    margin: 0;
-}
-
-.login-container [type="checkbox"] {
-    height: 20px;
-    width: 20px;
-    margin: 0 5px 2px 2px;
-}
-
-/* Add error class for inputs */
-.input-error {
-    border: 1px solid #dc3545 !important;
-    background-color: #fff8f8;
-}
-
-/* Add styles for password field with eye icon */
+/* ── password toggle ────────────────────────────────────────── */
 .password-field {
     position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-field input {
+    all: unset;
     width: 100%;
+    box-sizing: border-box;
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    color: var(--fg-0);
+    background: var(--bg-2);
+    border: 1px solid var(--bd-1);
+    border-radius: 2px;
+    padding: 11px 40px 11px 12px;
+    transition: border-color var(--dur-1) var(--ease-out);
+}
+
+.password-field input::placeholder { color: var(--fg-3); }
+
+.password-field input:focus {
+    border-color: var(--acc);
+    outline: 1px solid var(--acc);
+    outline-offset: 0;
+}
+
+.password-field input.input-error {
+    border-color: var(--err);
 }
 
 .password-toggle {
     position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    cursor: pointer;
-    display: flex;
+    right: 6px;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: #808386;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--fg-2);
+    transition: color var(--dur-1) var(--ease-out);
     padding: 0;
-    margin: 0;
-    height: 24px;
-    width: 24px;
-    margin-top: -8px; /* Adjust for the bottom margin of the input */
-    transition: color 0.2s ease;
+    flex-shrink: 0;
 }
 
-.password-toggle:hover {
-    color: #262B31;
+.password-toggle:hover { color: var(--fg-0); }
+
+.password-toggle:focus-visible {
+    outline: 1px solid var(--acc);
+    outline-offset: 1px;
 }
 
-.password-toggle:focus {
-    outline: none;
+/* ── submit button ──────────────────────────────────────────── */
+.btn-primary {
+    appearance: none;
+    width: 100%;
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semi);
+    letter-spacing: 0.04em;
+    color: var(--acc-ink);
+    background: var(--acc);
+    border: 1px solid var(--acc);
+    border-radius: 2px;
+    padding: 11px 16px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out);
 }
 
-/* Adjust padding for password field to make room for the icon */
-.password-field input[type="text"],
-.password-field input[type="password"] {
-    padding-right: 38px;
+.btn-primary:hover {
+    background: var(--acc-dim);
+    border-color: var(--acc-dim);
 }
 
+.btn-primary:focus-visible {
+    outline: 1px solid var(--acc);
+    outline-offset: 2px;
+}
+
+.btn-kbd {
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    opacity: 0.55;
+    letter-spacing: 0.04em;
+}
+
+/* ── forgot link ────────────────────────────────────────────── */
+.forgot-link {
+    align-self: flex-end;
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: 0.04em;
+    color: var(--fg-2);
+    cursor: pointer;
+    margin-top: 12px;
+    text-decoration: none;
+    transition: color var(--dur-1) var(--ease-out);
+}
+
+.forgot-link:hover { color: var(--fg-0); }
+
+/* ── divider ────────────────────────────────────────────────── */
 .divider {
     display: flex;
     align-items: center;
-    width: 100%;
-    margin: 1rem 0;
+    gap: 12px;
+    margin: 20px 0;
 }
 
 .divider::before,
 .divider::after {
-    content: '';
+    content: "";
     flex: 1;
-    border-bottom: 1px solid #CECECE;
+    height: 1px;
+    background: var(--bd-0);
 }
 
 .divider span {
-    padding: 0 0.75rem;
-    color: #838383;
-    font-size: 0.875rem;
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-3);
 }
 
+/* ── google button ──────────────────────────────────────────── */
 .google-login {
-    display: flex;
-    justify-content: center;
     width: 100%;
-    margin-bottom: 0.5rem;
 }
 
-.forgot-link {
-    font-size: 13px;
-    color: #838383;
-    text-align: right;
-    align-self: flex-end;
-    margin-top: -4px;
+/* Overlay pattern: custom face on top, real GoogleLogin iframe underneath */
+.google-btn-wrap {
+    position: relative;
+    width: 100%;
+    height: 42px;
+    overflow: hidden;
+    border-radius: 2px;
+}
+
+.google-btn-face {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    color: var(--fg-0);
+    background: var(--bg-2);
+    border: 1px solid var(--bd-1);
+    border-radius: 2px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out);
+}
+
+.google-btn-wrap:hover .google-btn-face {
+    background: var(--bg-3);
+    border-color: var(--bd-2);
+}
+
+.google-mark {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--bd-2);
+    border-radius: 2px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    font-weight: var(--fw-semi);
+    color: var(--fg-1);
+}
+
+.google-btn-real {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    opacity: 0;
+    display: flex;
+    align-items: stretch;
+}
+
+.google-btn-real > div,
+.google-btn-real iframe {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+}
+
+.btn-google {
+    appearance: none;
+    width: 100%;
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    color: var(--fg-0);
+    background: var(--bg-2);
+    border: 1px solid var(--bd-1);
+    border-radius: 2px;
+    padding: 10px 16px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out);
+}
+
+.btn-google:hover {
+    background: var(--bg-3);
+    border-color: var(--bd-2);
+}
+
+.btn-google:focus-visible {
+    outline: 1px solid var(--acc);
+    outline-offset: 2px;
+}
+
+.btn-google:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ── card footer ────────────────────────────────────────────── */
+.card-foot {
+    padding: 16px 24px;
+    border-top: 1px solid var(--bd-0);
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: 0.04em;
+    color: var(--fg-2);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.card-foot-link {
+    color: var(--acc);
+    cursor: pointer;
     text-decoration: none;
-    transition: color 0.2s;
+    transition: color var(--dur-1) var(--ease-out);
 }
 
-.forgot-link:hover {
-    color: #262B31;
+.card-foot-link:hover { color: var(--acc-dim); }
+
+/* ── page footer ────────────────────────────────────────────── */
+.stage-foot {
+    width: 100%;
+    max-width: 416px;
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: var(--fs-3xs);
+    letter-spacing: 0.04em;
+    color: var(--fg-3);
 }
+
+.stage-foot-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--ok);
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.stage-foot-ok { color: var(--ok); }
+
+/* unused but kept for aria compat */
+.register-link { display: none; }
+.line { display: none; }

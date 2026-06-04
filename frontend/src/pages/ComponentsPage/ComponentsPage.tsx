@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import { componentService, parsePagination } from "../../api/component.service";
 import type { ComponentType, ComponentListMap, IPartialBuildIds, IResourceParameters } from "../../types/component.types";
 import type { FilterConfig } from '../../components/FilterPanel/filterConfigs';
@@ -13,19 +14,6 @@ type RangeValue = { min: number; max: number };
 type FilterValues = Record<string, string[] | RangeValue>;
 
 const PREFILTER_KEY = 'compat_prefilter_enabled';
-
-const TYPE_LABELS: Record<string, string> = {
-    cpu: 'CPU',
-    gpu: 'GPU',
-    motherboard: 'Motherboard',
-    ram: 'RAM',
-    ssd: 'SSD',
-    hdd: 'HDD',
-    powerSupply: 'Power Supply',
-    pcCase: 'Case',
-    cpuCooler: 'CPU Cooler',
-    fan: 'Fan',
-};
 
 function readPartialBuildIds(): IPartialBuildIds {
     try {
@@ -57,6 +45,7 @@ function readPartialBuildIds(): IPartialBuildIds {
 function ComponentsPage() {
     const { type } = useParams<{ type: string }>();
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [components, setComponents] = useState<ComponentListMap[ComponentType][]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -143,12 +132,12 @@ function ComponentsPage() {
 
             setError(null);
         } catch (err) {
-            setError(`Error loading ${type} components: ${(err as Error).message}`);
+            setError(t('componentsPage.errorLoading', { type, message: (err as Error).message }));
         } finally {
             setLoading(false);
             firstLoadDone.current = true;
         }
-    }, [type, buildApiFilters, pageSize, sortField, sortDirection, searchQuery, prefilterEnabled]);
+    }, [type, buildApiFilters, pageSize, sortField, sortDirection, searchQuery, prefilterEnabled, t]);
 
     const handleSortChange = (field: string) => {
         if (field === sortField) {
@@ -166,6 +155,7 @@ function ComponentsPage() {
         setSearchQuery('');
         setCurrentPage(1);
         fetchComponents({}, 1, '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [type]);
 
     // Keep currentPageRef in sync
@@ -177,6 +167,7 @@ function ComponentsPage() {
         skipNextPageEffect.current = currentPageRef.current !== 1;
         setCurrentPage(1);
         fetchComponents(filters, 1, searchQuery);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filters, sortField, sortDirection]);
 
     // Page change
@@ -187,6 +178,7 @@ function ComponentsPage() {
             return;
         }
         fetchComponents(filters, currentPage, searchQuery);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentPage]);
 
     // Debounced search
@@ -198,6 +190,7 @@ function ComponentsPage() {
             fetchComponents(filters, 1, searchQuery);
         }, 400);
         return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchQuery]);
 
     const handleFilterChange = useCallback((newFilters: FilterValues) => {
@@ -213,43 +206,32 @@ function ComponentsPage() {
     }, [filters, searchQuery, fetchComponents]);
 
     const sortOptions = [
-        { field: 'name', label: 'NAME' },
-        { field: 'averagePrice', label: 'PRICE' },
-        { field: 'offersCount', label: 'OFFERS' },
+        { field: 'name', label: t('componentsPage.sortFields.name') },
+        { field: 'averagePrice', label: t('componentsPage.sortFields.averagePrice') },
+        { field: 'offersCount', label: t('componentsPage.sortFields.offersCount') },
     ];
 
     const typeKey = type ?? '';
-    const typeLabel = TYPE_LABELS[typeKey] ?? typeKey.toUpperCase();
+    const typeLabel = t(`componentTypes.${typeKey}`, { defaultValue: typeKey.toUpperCase() });
 
     if (loading && !firstLoadDone.current) {
-        return <div className={styles.pageLoading}>LOADING {typeLabel.toUpperCase()}…</div>;
+        return <div className={styles.pageLoading}>{t('componentsPage.loading', { type: typeLabel.toUpperCase() })}</div>;
     }
     if (error) return <div className={styles.pageError}>{error}</div>;
 
     return (
         <section className={styles.page}>
-            <div className={styles.searchBar}>
-                <span className={styles.searchIcon}>⌕</span>
-                <input
-                    type="text"
-                    placeholder={`Search ${typeLabel.toLowerCase()}…`}
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    className={styles.searchInput}
-                />
-            </div>
-
             <div className={styles.titleRow}>
                 <div>
                     <h1 className={styles.title}>{typeLabel}</h1>
                     <div className={styles.meta}>
-                        <span>CATALOG · {totalResults} RESULTS</span>
+                        <span>{t('componentsPage.catalog')} · {t('componentsPage.results', { count: totalResults })}</span>
                     </div>
                 </div>
                 <div className={styles.metaRight}>
-                    <span>TYPE · {typeKey.toUpperCase()}</span>
+                    <span>{t('componentsPage.type')} · {typeKey.toUpperCase()}</span>
                     <span className={styles.metaSep}>·</span>
-                    <span>PAGE {currentPage} / {totalPages}</span>
+                    <span>{t('componentsPage.page', { current: currentPage, total: totalPages })}</span>
                 </div>
             </div>
 
@@ -263,8 +245,17 @@ function ComponentsPage() {
 
                 <div className={styles.results}>
                     <div className={styles.toolbar}>
-                        <div className={styles.grow} />
-                        <span className={styles.toolbarLabel}>SORT</span>
+                        <div className={styles.searchBar}>
+                            <span className={styles.searchIcon}>⌕</span>
+                            <input
+                                type="text"
+                                placeholder={t('componentsPage.searchPlaceholder', { type: typeLabel.toLowerCase() })}
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                className={styles.searchInput}
+                            />
+                        </div>
+                        <span className={styles.toolbarLabel}>{t('componentsPage.sort')}</span>
                         <div className={styles.sortGroup}>
                             {sortOptions.map(({ field, label }) => {
                                 const isActive = sortField === field;
@@ -288,7 +279,7 @@ function ComponentsPage() {
 
                     {components.length === 0 && !loading ? (
                         <div className={styles.empty}>
-                            No components match your filters. Try adjusting your criteria.
+                            {t('componentsPage.empty')}
                         </div>
                     ) : (
                         <div className={styles.list}>
@@ -379,14 +370,14 @@ function ComponentsPage() {
 
                                     <div className={styles.itemPrice}>
                                         <span className={styles.priceCcy}>₴</span>{component.averagePrice}
-                                        <div className={styles.offersLine}>{component.offersCount} OFFERS</div>
+                                        <div className={styles.offersLine}>{t('componentsPage.offers', { count: component.offersCount })}</div>
                                     </div>
 
                                     <div
                                         className={styles.itemAct}
                                         onClick={(e) => { e.stopPropagation(); navigate(`/components/${type}/${component.id}`); }}
                                     >
-                                        DETAILS →
+                                        {t('componentsPage.details')}
                                     </div>
                                 </div>
                             ))}

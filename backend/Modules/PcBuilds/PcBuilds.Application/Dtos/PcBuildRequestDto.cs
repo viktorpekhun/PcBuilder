@@ -7,8 +7,16 @@ namespace PcBuilds.Application.Dtos
         public string? Description { get; set; } = string.Empty;
         public bool IsPublished { get; set; }
         public DateTime? PublishedAt { get; set; }
+        public string? PhotoUrl { get; set; }
         public decimal Price { get; set; }
         public decimal AverageRating { get; set; }
+
+        /// <summary>Estimated full-system power draw in watts (CPU + GPU + board + cooler + RAM + drives + fans + overhead).</summary>
+        public int EstimatedPower { get; set; }
+
+        /// <summary>Rated wattage of the selected PSU, or null if no PSU is set.</summary>
+        public int? PsuWattage { get; set; }
+
         public Guid UserId { get; set; }
         public string Username { get; set; } = string.Empty;
         public string? AvatarUrl { get; set; }
@@ -26,6 +34,8 @@ namespace PcBuilds.Application.Dtos
         public List<MultiComponentPreviewDto> Ssds { get; set; } = new();
         public List<MultiComponentPreviewDto> Hdds { get; set; } = new();
         public List<MultiComponentPreviewDto> Fans { get; set; } = new();
+
+        public List<string> Tags { get; set; } = new();
     }
 
     public class ComponentPreviewDto

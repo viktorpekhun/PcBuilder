@@ -1,17 +1,11 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import styles from "./PcBuildPage.module.css";
 import type { ComponentDataState, MultiKey, SingleKey } from "./types";
 import { MULTI_TYPES, SINGLE_TYPES } from "./types";
 import { getRowSpec } from "./rowSpecs";
 import RowAlertButton from "./RowAlertButton";
 import { SLOT_TAG } from "./constants";
-
-const MORE_LABEL: Record<MultiKey, string> = {
-    rams: "Додати ще модуль RAM",
-    ssds: "Додати ще SSD",
-    hdds: "Додати ще HDD",
-    fans: "Додати ще вентилятор",
-};
 
 interface PartsTableProps {
     componentData: ComponentDataState;
@@ -28,26 +22,13 @@ function fmt(n: number): string {
     return Math.round(n).toLocaleString("uk-UA");
 }
 
-function slotHint(slot: SingleKey | MultiKey): string {
-    switch (slot) {
-        case "cpu": return "Виберіть процесор — він задає сокет та тип RAM";
-        case "gpu": return "Опційно для систем з iGPU";
-        case "motherboard": return "Має відповідати сокету CPU";
-        case "rams": return "DDR4 або DDR5 залежно від платформи";
-        case "ssds": return "Рекомендовано хоча б один NVMe";
-        case "hdds": return "Опційно · масивне сховище";
-        case "powerSupply": return "Підбирайте після CPU + GPU";
-        case "cpuCooler": return "Tower або AIO ≤ 165 мм";
-        case "pcCase": return "Має відповідати форм-фактору МП";
-        case "fans": return "Опційно · корпус зазвичай має 1–3";
-    }
-}
-
 export default function PartsTable({
     componentData, loading,
     selectedRow, onSelectRow,
     onRemoveSingle, onRemoveMulti, onAdjustQty,
 }: PartsTableProps) {
+    const { t } = useTranslation();
+
     const toggleSelect = (id: string) => {
         onSelectRow(selectedRow === id ? null : id);
     };
@@ -55,19 +36,22 @@ export default function PartsTable({
     return (
         <div className={styles.parts}>
             <div className={styles.partsHead}>
-                <span>SLOT</span>
+                <span>{t("pcBuildPage.partsTable.slot")}</span>
                 <span></span>
-                <span>COMPONENT</span>
-                <span>STORE</span>
-                <span className={styles.r}>SUBTOTAL · ₴</span>
+                <span>{t("pcBuildPage.partsTable.component")}</span>
+                <span>{t("pcBuildPage.partsTable.store")}</span>
+                <span className={styles.r}>{t("pcBuildPage.partsTable.subtotal")}</span>
                 <span></span>
                 <span></span>
             </div>
 
             {/* Single components */}
-            {SINGLE_TYPES.map(({ key, urlType, apiType, label, buttonLabel }) => {
+            {SINGLE_TYPES.map(({ key, urlType, apiType }) => {
                 const data = componentData[key];
                 const tag = SLOT_TAG[key];
+                const label = t(`pcBuildPage.componentTypes.${key}.label`);
+                const buttonLabel = t(`pcBuildPage.componentTypes.${key}.buttonLabel`);
+                const slotHint = t(`pcBuildPage.partsTable.slotHints.${key}`);
 
                 if (loading && !data) {
                     return (
@@ -76,7 +60,7 @@ export default function PartsTable({
                             <div className={`${styles.thumbMat} ${styles.thumbMatEmpty}`}>
                                 <span className={styles.thumbPh}>...</span>
                             </div>
-                            <div className={styles.loading}>Завантаження...</div>
+                            <div className={styles.loading}>{t("pcBuildPage.partsTable.loading")}</div>
                             <div /><div /><div /><div />
                         </div>
                     );
@@ -92,10 +76,10 @@ export default function PartsTable({
                             <div>
                                 <div className={`${styles.rowName} ${styles.rowNameEmpty}`}>
                                     <span className={styles.addCue}>＋</span>
-                                    Додати {buttonLabel.toLowerCase()}
+                                    {t("pcBuildPage.partsTable.addComponent", { label: buttonLabel.toLowerCase() })}
                                 </div>
                                 <div className={styles.rowSpec}>
-                                    <span>{slotHint(key)}</span>
+                                    <span>{slotHint}</span>
                                 </div>
                             </div>
                             <div />
@@ -143,9 +127,8 @@ export default function PartsTable({
                                     to={`/components/${urlType}`}
                                     className={styles.rowToolBtn}
                                     onClick={(e) => e.stopPropagation()}
-                                    title="Браузер сумісних альтернатив"
                                 >
-                                    <span className={styles.toolGly}>⇋</span> ALT
+                                    <span className={styles.toolGly}>⇋</span> {t("pcBuildPage.partsTable.altBtn")}
                                 </Link>
                                 <RowAlertButton componentId={data.id} componentType={apiType} />
                             </div>
@@ -164,7 +147,7 @@ export default function PartsTable({
                         <div />
                         <button
                             className={styles.rowX}
-                            title="Видалити"
+                            title={t("pcBuildPage.partsTable.removeTitle")}
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRemoveSingle(key); }}
                         >
                             ×
@@ -174,9 +157,13 @@ export default function PartsTable({
             })}
 
             {/* Multi components */}
-            {MULTI_TYPES.map(({ key, urlType, apiType, label, buttonLabel }) => {
+            {MULTI_TYPES.map(({ key, urlType, apiType }) => {
                 const items = componentData[key];
                 const tag = SLOT_TAG[key];
+                const label = t(`pcBuildPage.componentTypes.${key}.label`);
+                const buttonLabel = t(`pcBuildPage.componentTypes.${key}.buttonLabel`);
+                const slotHint = t(`pcBuildPage.partsTable.slotHints.${key}`);
+                const addMoreLabel = t(`pcBuildPage.partsTable.addMore.${key}`);
 
                 if (items.length === 0) {
                     return (
@@ -188,10 +175,10 @@ export default function PartsTable({
                             <div>
                                 <div className={`${styles.rowName} ${styles.rowNameEmpty}`}>
                                     <span className={styles.addCue}>＋</span>
-                                    Додати {buttonLabel.toLowerCase()}
+                                    {t("pcBuildPage.partsTable.addComponent", { label: buttonLabel.toLowerCase() })}
                                 </div>
                                 <div className={styles.rowSpec}>
-                                    <span>{slotHint(key)}</span>
+                                    <span>{slotHint}</span>
                                 </div>
                             </div>
                             <div />
@@ -219,7 +206,9 @@ export default function PartsTable({
                                     <div>
                                         <div className={styles.slotTag}>[{tag}]</div>
                                         {total > 1 && (
-                                            <div className={styles.slotMulti}>· {i + 1} OF {total}</div>
+                                            <div className={styles.slotMulti}>
+                                                {t("pcBuildPage.partsTable.ofCount", { index: i + 1, total })}
+                                            </div>
                                         )}
                                     </div>
                                     <Link to={`/components/${urlType}/${item.componentId}`} className={styles.thumbMat}>
@@ -251,9 +240,8 @@ export default function PartsTable({
                                                 to={`/components/${urlType}`}
                                                 className={styles.rowToolBtn}
                                                 onClick={(e) => e.stopPropagation()}
-                                                title="Браузер сумісних альтернатив"
                                             >
-                                                <span className={styles.toolGly}>⇋</span> ALT
+                                                <span className={styles.toolGly}>⇋</span> {t("pcBuildPage.partsTable.altBtn")}
                                             </Link>
                                             <RowAlertButton componentId={item.componentId} componentType={apiType} />
                                         </div>
@@ -278,7 +266,7 @@ export default function PartsTable({
                                     </div>
                                     <button
                                         className={styles.rowX}
-                                        title="Видалити"
+                                        title={t("pcBuildPage.partsTable.removeTitle")}
                                         onClick={(e) => { e.stopPropagation(); onRemoveMulti(key, item.componentId); }}
                                     >
                                         ×
@@ -289,8 +277,8 @@ export default function PartsTable({
                         <Link to={`/components/${urlType}`} className={styles.addRow}>
                             <span className={styles.aGly}>[{tag}]</span>
                             <span className={styles.aPlus}>＋</span>
-                            <span>{MORE_LABEL[key]}</span>
-                            <span className={styles.aHint}>BROWSE →</span>
+                            <span>{addMoreLabel}</span>
+                            <span className={styles.aHint}>{t("pcBuildPage.partsTable.browseAlt")}</span>
                         </Link>
                     </div>
                 );
@@ -298,4 +286,3 @@ export default function PartsTable({
         </div>
     );
 }
-

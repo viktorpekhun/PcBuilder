@@ -188,6 +188,134 @@
     border-color: var(--acc-dim);
 }
 
+/* ── Theme toggle ── */
+.themeToggle {
+    all: unset;
+    box-sizing: border-box;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    height: 30px;
+}
+
+.themeToggle:focus-visible .themeTrack {
+    outline: 1px solid var(--acc);
+    outline-offset: 2px;
+}
+
+/* Track holds both icons + the sliding thumb */
+.themeTrack {
+    position: relative;
+    width: 52px;
+    height: 26px;
+    border-radius: var(--r-pill);
+    border: 1px solid var(--bd-2);
+    background: var(--bg-3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 5px;
+    box-sizing: border-box;
+    transition:
+        background var(--dur-2) var(--ease-out),
+        border-color var(--dur-2) var(--ease-out);
+}
+
+.themeToggle:hover .themeTrack {
+    border-color: var(--bd-3);
+}
+
+/* Icons sit in the track, behind the thumb via z-index */
+.themeIcon {
+    position: relative;
+    z-index: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    color: var(--fg-2);
+    pointer-events: none;
+    transition: color var(--dur-2) var(--ease-out);
+}
+
+/* Thumb slides over one icon, covering it */
+.themeThumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: var(--r-pill);
+    background: var(--fg-0);
+    z-index: 1;
+    transition: transform var(--dur-2) var(--ease-out);
+}
+
+/* light: thumb slides right to cover the sun */
+.themeThumb.thumbLight {
+    transform: translateX(26px);
+}
+
+.langMenu {
+    position: relative;
+}
+
+.langBtn {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    padding: 0 8px;
+    height: 30px;
+    gap: 6px;
+    justify-content: center;
+}
+
+.flagImg {
+    width: 16px;
+    height: 12px;
+    object-fit: cover;
+    display: block;
+    flex-shrink: 0;
+}
+
+.langDropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 148px;
+    background: var(--bg-1);
+    border: 1px solid var(--bd-1);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+}
+
+.langOption {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: transparent;
+    border: 0;
+    color: var(--fg-1);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: var(--font-sans);
+    text-align: left;
+}
+
+.langOption:hover {
+    background: var(--bg-2);
+    color: var(--fg-0);
+}
+
+.langOptionActive {
+    color: var(--acc);
+}
+
 .avatar {
     width: 24px;
     height: 24px;

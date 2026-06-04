@@ -9,6 +9,7 @@ namespace Moderation.Application.Commands
         Guid ReportId,
         ReportResolutionAction Action,
         string? Reason = null,
+        string? ReasonCode = null,
         BanType? BanType = null,
         int? BanDurationDays = null) : IRequest<Result<bool>>;
 }

@@ -5,6 +5,8 @@ namespace PcBuilds.Application.Dtos
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public decimal Price { get; set; }
+        public bool IsPublished { get; set; }
+        public int ComponentCount { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }
 }

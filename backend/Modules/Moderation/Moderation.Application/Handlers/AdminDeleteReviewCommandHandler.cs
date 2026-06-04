@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Moderation.Application.Commands;
+using Moderation.Application.Services;
 using Notifications.Application.Commands;
 using Notifications.Domain;
 using PcBuilder.SharedKernel;
@@ -13,11 +14,13 @@ namespace Moderation.Application.Handlers
     {
         private readonly IApplicationDbContext _context;
         private readonly ISender _sender;
+        private readonly IAdminActivityLogger _activity;
 
-        public AdminDeleteReviewCommandHandler(IApplicationDbContext context, ISender sender)
+        public AdminDeleteReviewCommandHandler(IApplicationDbContext context, ISender sender, IAdminActivityLogger activity)
         {
             _context = context;
             _sender = sender;
+            _activity = activity;
         }
 
         public async Task<Result<bool>> Handle(AdminDeleteReviewCommand request, CancellationToken cancellationToken)
@@ -63,6 +66,14 @@ namespace Moderation.Application.Handlers
                         ["buildName"] = buildName
                     }), cancellationToken);
             }
+
+            await _activity.LogAsync(
+                request.AdminId,
+                "DeleteReview",
+                targetType: "Review",
+                targetId: request.ReviewId,
+                targetName: $"review on {buildName}",
+                cancellationToken: cancellationToken);
 
             return Result.Success(true);
         }

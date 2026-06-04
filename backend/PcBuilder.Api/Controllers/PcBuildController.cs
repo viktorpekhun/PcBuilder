@@ -250,6 +250,42 @@ namespace PcBuilder.Api.Controllers
 
             return Ok(new { Success = true, BuildId = result.Value });
         }
+
+        [Authorize]
+        [HttpPost("{id:guid}/photo")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> UploadBuildPhoto(Guid id, IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest(new { Message = "No file provided." });
+
+            if (file.Length > 10 * 1024 * 1024)
+                return BadRequest(new { Message = "File size cannot exceed 10 MB." });
+
+            var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp" };
+            if (!allowedTypes.Contains(file.ContentType.ToLower()))
+                return BadRequest(new { Message = "Only JPEG, PNG, and WebP images are allowed." });
+
+            using var ms = new MemoryStream();
+            await file.CopyToAsync(ms);
+
+            var result = await _mediator.Send(new UploadBuildPhotoCommand(id, GetUserId(), ms.ToArray()));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+
+            return Ok(new { photoUrl = result.Value });
+        }
+
+        [Authorize]
+        [HttpDelete("{id:guid}/photo")]
+        public async Task<IActionResult> DeleteBuildPhoto(Guid id)
+        {
+            var result = await _mediator.Send(new DeleteBuildPhotoCommand(id, GetUserId()));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+
+            return Ok(new { Success = true, Message = "Build photo deleted." });
+        }
     }
 
     public record PublishBuildRequest(bool IsPublished);

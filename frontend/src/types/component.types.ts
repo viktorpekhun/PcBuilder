@@ -52,6 +52,7 @@ export interface IProductOffer {
     price: number;
     productOfferUrl: string;
     store: IStore;
+    stockStatus?: 'in' | 'low' | 'out';
 }
 
 // --- Base component interfaces ---

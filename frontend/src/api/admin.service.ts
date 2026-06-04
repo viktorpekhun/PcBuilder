@@ -1,5 +1,6 @@
 import { axiosPrivate } from './axios';
 import type {
+    IAdminActivityLog,
     IAdminStats,
     IAdminUser,
     IAdminUserDetail,
@@ -79,4 +80,14 @@ export const adminService = {
 
     resolveReport: (reportId: string, data: IResolveReportRequest) =>
         axiosPrivate.post(`${PATH}/reports/${reportId}/resolve`, data),
+
+    getActivity: async (daysBack: number, pageNumber: number, pageSize: number) => {
+        const res = await axiosPrivate.get<IAdminActivityLog[]>(`${PATH}/activity`, {
+            params: { daysBack, pageNumber, pageSize },
+        });
+        return {
+            items: res.data,
+            pagination: parsePagination(res.headers['x-pagination']),
+        };
+    },
 };

@@ -9,4 +9,8 @@ export interface IPcBuildGallery {
     avatarUrl?: string;
     componentCount: number;
     commentCount: number;
+    ratingCount: number;
+    socket?: string;
+    photoUrl?: string;
+    tags: string[];
 }

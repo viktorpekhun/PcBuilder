@@ -34,6 +34,7 @@ namespace Auth.Application.Handlers
                 EmailVerified = user.IsEmailVerified,
                 AvatarUrl = user.AvatarUrl,
                 Bio = user.Bio,
+                PreferredLanguage = user.PreferredLanguage,
                 HasPassword = !string.IsNullOrEmpty(user.PasswordHash),
                 GoogleLinked = !string.IsNullOrEmpty(user.GoogleId),
                 Roles = user.Roles.Select(r => r.Name).ToList(),

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import styles from "./Pagination.module.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -52,6 +53,8 @@ export const Pagination: React.FC<PaginationProps> = ({
     siblingCount = 1,
     disabled = false,
 }) => {
+    const { t } = useTranslation();
+
     if (totalPages <= 1) return null;
 
     const pages = buildPages(currentPage, totalPages, siblingCount);
@@ -64,16 +67,16 @@ export const Pagination: React.FC<PaginationProps> = ({
     return (
         <div className={styles.paginationWrapper}>
             <span className={styles.resultsInfo}>
-                Showing <strong>{firstResult}–{lastResult}</strong> out of <strong>{totalResults}</strong> results
+                {t("components.pagination.resultsInfo", { from: firstResult, to: lastResult, total: totalResults })}
             </span>
 
-            <nav aria-label="Pagination" className={styles.pagination}>
+            <nav aria-label={t("components.pagination.page", { current: currentPage, total: totalPages })} className={styles.pagination}>
                 <button
                     className={`${styles.paginationButton} ${styles.navButton}`}
                     onClick={() => onPageChange(currentPage - 1)}
                     disabled={isFirst || disabled}
-                    title="Previous page"
-                    aria-label="Previous page"
+                    title={t("components.pagination.previous")}
+                    aria-label={t("components.pagination.previous")}
                 >
                     <FontAwesomeIcon icon={faChevronLeft} />
                 </button>
@@ -93,7 +96,7 @@ export const Pagination: React.FC<PaginationProps> = ({
                             className={`${styles.paginationButton} ${page === currentPage ? styles.activePagination : ""}`}
                             onClick={() => onPageChange(page)}
                             disabled={disabled}
-                            aria-label={`Page ${page}`}
+                            aria-label={t("components.pagination.page", { current: page, total: totalPages })}
                             aria-current={page === currentPage ? "page" : undefined}
                         >
                             {page}
@@ -105,8 +108,8 @@ export const Pagination: React.FC<PaginationProps> = ({
                     className={`${styles.paginationButton} ${styles.navButton}`}
                     onClick={() => onPageChange(currentPage + 1)}
                     disabled={isLast || disabled}
-                    title="Next page"
-                    aria-label="Next page"
+                    title={t("components.pagination.next")}
+                    aria-label={t("components.pagination.next")}
                 >
                     <FontAwesomeIcon icon={faChevronRight} />
                 </button>

@@ -19,6 +19,16 @@ public class ProductOfferConfiguration : IEntityTypeConfiguration<ProductOffer>
             .HasForeignKey(po => po.StoreId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.Property(po => po.StockStatus)
+            .HasMaxLength(8)
+            .IsRequired(false);
+
+        builder.Property(po => po.CreatedAt)
+            .IsRequired();
+
+        builder.Property(po => po.UpdatedAt)
+            .IsRequired();
+
         builder.HasIndex(po => new { po.ComponentId, po.ComponentType });
     }
 }

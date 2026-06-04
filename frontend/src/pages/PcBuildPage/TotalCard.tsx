@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import styles from "./PcBuildPage.module.css";
 
 interface TotalCardProps {
@@ -11,18 +12,20 @@ function fmt(n: number): string {
 }
 
 export default function TotalCard({ total, partCount }: TotalCardProps) {
+    const { t } = useTranslation();
+
     return (
         <div className={styles.sideCard}>
             <div className={styles.scHead}>
-                <span className={styles.scEyebrow}>BUILD TOTAL</span>
-                <span className={styles.scEyebrow} style={{ color: "var(--fg-3)" }}>₴ UAH</span>
+                <span className={styles.scEyebrow}>{t("pcBuildPage.totalCard.eyebrow")}</span>
+                <span className={styles.scEyebrow} style={{ color: "var(--fg-3)" }}>{t("pcBuildPage.totalCard.currency")}</span>
             </div>
             <div className={styles.scBody}>
                 <div className={styles.totalBig}>
                     <span className={styles.ccy}>₴</span>{fmt(total)}
                 </div>
                 <div className={styles.totalSub}>
-                    <span>{partCount} {partCount === 1 ? "позиція" : "позицій"}</span>
+                    <span>{t("pcBuildPage.totalCard.part", { count: partCount })}</span>
                 </div>
             </div>
         </div>

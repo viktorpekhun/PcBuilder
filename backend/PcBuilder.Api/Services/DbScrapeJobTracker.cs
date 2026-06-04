@@ -98,6 +98,14 @@ namespace PcBuilder.Api.Services
             });
         }
 
+        public void MarkProgress(Guid jobId, int itemsScraped, int? totalItems)
+        {
+            if (!_cache.TryGetValue(jobId, out var status)) return;
+            status.ItemsScraped = itemsScraped;
+            if (totalItems.HasValue)
+                status.TotalItems = totalItems;
+        }
+
         public void MarkCompleted(Guid jobId, string? errorMessage = null, int? itemsScraped = null)
         {
             if (!_cache.TryGetValue(jobId, out var status)) return;

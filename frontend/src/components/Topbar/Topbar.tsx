@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import useAuth from "../../hooks/useAuth";
 import useLogout from "../../hooks/useLogout";
+import { useTheme } from "../../hooks/useTheme";
 import NotificationCenter from "../NotificationCenter/NotificationCenter";
 import GlobalSearch from "../GlobalSearch/GlobalSearch";
 import { buildService } from "../../api/build.service";
 import { componentService } from "../../api/component.service";
+import { profileService } from "../../api/profile.service";
 import type { ComponentType } from "../../types/component.types";
 import styles from "./Topbar.module.css";
 
@@ -95,14 +98,21 @@ export default function Topbar() {
     const navigate = useNavigate();
     const location = useLocation();
     const logout = useLogout();
+    const { t, i18n } = useTranslation();
+    const { theme, toggle: toggleTheme } = useTheme();
     const [menuOpen, setMenuOpen] = useState(false);
+    const [langOpen, setLangOpen] = useState(false);
     const [resolved, setResolved] = useState<Record<string, string>>({});
     const menuRef = useRef<HTMLDivElement>(null);
+    const langRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const handler = (e: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
                 setMenuOpen(false);
+            }
+            if (langRef.current && !langRef.current.contains(e.target as Node)) {
+                setLangOpen(false);
             }
         };
         document.addEventListener("mousedown", handler);
@@ -173,10 +183,27 @@ export default function Topbar() {
         navigate("/");
     };
 
+    const LANGUAGES = [
+        { code: "en", label: "English", flagImg: "https://flagcdn.com/16x12/gb.png" },
+        { code: "uk", label: "Українська", flagImg: "https://flagcdn.com/16x12/ua.png" },
+    ];
+
+    const selectLanguage = (code: string) => {
+        setLangOpen(false);
+        if (code === i18n.language) return;
+        i18n.changeLanguage(code);
+        if (auth?.username) {
+            profileService.updateProfile({ username: auth.username, preferredLanguage: code })
+                .catch(() => {});
+        }
+    };
+
+    const currentLang = LANGUAGES.find(l => l.code === i18n.language) ?? LANGUAGES[0];
+
     return (
         <div className={styles.topbar}>
             <button className={styles.wordmark} onClick={() => navigate("/")}>
-                pc<span className={styles.b}>[</span><span className={styles.s}>builder</span><span className={styles.b}>]</span>
+                <span className={styles.b}>[</span><span>pcbuilder</span><span className={styles.s}>/</span><span className={styles.b}>]</span>
             </button>
 
             <span className={styles.path}>
@@ -193,7 +220,65 @@ export default function Topbar() {
             </span>
 
             <div className={styles.grow} />
+
+            <button
+                className={styles.themeToggle}
+                onClick={toggleTheme}
+                aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+                title={theme === "dark" ? "Light theme" : "Dark theme"}
+            >
+                <span className={styles.themeTrack}>
+                    {/* Moon — left, covered by thumb in dark mode */}
+                    <span className={styles.themeIcon}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                        </svg>
+                    </span>
+                    <span className={`${styles.themeThumb} ${theme === "light" ? styles.thumbLight : ""}`} />
+                    {/* Sun — right, covered by thumb in light mode */}
+                    <span className={styles.themeIcon}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="4"/>
+                            <line x1="12" y1="2" x2="12" y2="4"/>
+                            <line x1="12" y1="20" x2="12" y2="22"/>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                            <line x1="2" y1="12" x2="4" y2="12"/>
+                            <line x1="20" y1="12" x2="22" y2="12"/>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                        </svg>
+                    </span>
+                </span>
+            </button>
+
             <GlobalSearch />
+
+            <div className={styles.langMenu} ref={langRef}>
+                <button
+                    className={`${styles.btn} ${styles.langBtn}`}
+                    onClick={() => setLangOpen(p => !p)}
+                    aria-expanded={langOpen}
+                >
+                    {currentLang && <img src={currentLang.flagImg} alt={currentLang.code} className={styles.flagImg} />}
+                    <span>{currentLang?.code.toUpperCase()}</span>
+                    <span className={styles.caret}>{langOpen ? "▾" : "▸"}</span>
+                </button>
+                {langOpen && (
+                    <div className={styles.langDropdown}>
+                        {LANGUAGES.map(l => (
+                            <button
+                                key={l.code}
+                                className={`${styles.langOption} ${l.code === i18n.language ? styles.langOptionActive : ""}`}
+                                onClick={() => selectLanguage(l.code)}
+                            >
+                                <img src={l.flagImg} alt={l.code} className={styles.flagImg} />
+                                <span>{l.label}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
 
             {auth?.username ? (
                 <>
@@ -217,14 +302,14 @@ export default function Topbar() {
                                         setMenuOpen(false);
                                     }}
                                 >
-                                    @ Profile
+                                    {t("topbar.profile")}
                                 </button>
                                 <div className={styles.dropdownDivider} />
                                 <button
                                     className={`${styles.dropdownItem} ${styles.dropdownDanger}`}
                                     onClick={signOut}
                                 >
-                                    ↗ Sign out
+                                    {t("topbar.signOut")}
                                 </button>
                             </div>
                         )}
@@ -232,8 +317,8 @@ export default function Topbar() {
                 </>
             ) : (
                 <div className={styles.authButtons}>
-                    <button className={styles.btn} onClick={() => navigate("/login")}>Sign in</button>
-                    <button className={`${styles.btn} ${styles.btnPri}`} onClick={() => navigate("/register")}>Register</button>
+                    <button className={styles.btn} onClick={() => navigate("/login")}>{t("topbar.signIn")}</button>
+                    <button className={`${styles.btn} ${styles.btnPri}`} onClick={() => navigate("/register")}>{t("topbar.register")}</button>
                 </div>
             )}
         </div>

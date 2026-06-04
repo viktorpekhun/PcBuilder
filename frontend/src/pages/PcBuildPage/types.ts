@@ -132,16 +132,16 @@ export const EMPTY_DATA: ComponentDataState = {
 };
 
 export const COMPONENT_TYPES: ComponentTypeConfig[] = [
-    { key: 'cpu', apiType: 'Cpu', urlType: 'cpu', label: 'Процесор', buttonLabel: 'Процесор', isMulti: false },
-    { key: 'gpu', apiType: 'Gpu', urlType: 'gpu', label: 'Відеокарта', buttonLabel: 'Відеокарту', isMulti: false },
-    { key: 'motherboard', apiType: 'Motherboard', urlType: 'motherboard', label: 'Материнська Плата', buttonLabel: 'Материнську Плату', isMulti: false },
-    { key: 'rams', apiType: 'Ram', urlType: 'ram', label: "Оперативна Пам'ять", buttonLabel: "Оперативну Пам'ять", isMulti: true },
-    { key: 'ssds', apiType: 'Ssd', urlType: 'ssd', label: 'SSD Диски', buttonLabel: 'SSD Диск', isMulti: true },
-    { key: 'hdds', apiType: 'Hdd', urlType: 'hdd', label: 'HDD Диски', buttonLabel: 'HDD Диск', isMulti: true },
-    { key: 'powerSupply', apiType: 'PowerSupply', urlType: 'powerSupply', label: 'Блок живлення', buttonLabel: 'Блок живлення', isMulti: false },
-    { key: 'cpuCooler', apiType: 'CpuCooler', urlType: 'cpuCooler', label: 'Кулер Процесора', buttonLabel: 'Кулер Процесора', isMulti: false },
-    { key: 'pcCase', apiType: 'PcCase', urlType: 'pcCase', label: 'Корпус ПК', buttonLabel: 'Корпус ПК', isMulti: false },
-    { key: 'fans', apiType: 'Fan', urlType: 'fan', label: 'Додаткові Вентилятори', buttonLabel: 'Вентилятор', isMulti: true },
+    { key: 'cpu', apiType: 'Cpu', urlType: 'cpu', label: '', buttonLabel: '', isMulti: false },
+    { key: 'gpu', apiType: 'Gpu', urlType: 'gpu', label: '', buttonLabel: '', isMulti: false },
+    { key: 'motherboard', apiType: 'Motherboard', urlType: 'motherboard', label: '', buttonLabel: '', isMulti: false },
+    { key: 'rams', apiType: 'Ram', urlType: 'ram', label: '', buttonLabel: '', isMulti: true },
+    { key: 'ssds', apiType: 'Ssd', urlType: 'ssd', label: '', buttonLabel: '', isMulti: true },
+    { key: 'hdds', apiType: 'Hdd', urlType: 'hdd', label: '', buttonLabel: '', isMulti: true },
+    { key: 'powerSupply', apiType: 'PowerSupply', urlType: 'powerSupply', label: '', buttonLabel: '', isMulti: false },
+    { key: 'cpuCooler', apiType: 'CpuCooler', urlType: 'cpuCooler', label: '', buttonLabel: '', isMulti: false },
+    { key: 'pcCase', apiType: 'PcCase', urlType: 'pcCase', label: '', buttonLabel: '', isMulti: false },
+    { key: 'fans', apiType: 'Fan', urlType: 'fan', label: '', buttonLabel: '', isMulti: true },
 ];
 
 export const SINGLE_TYPES = COMPONENT_TYPES.filter((t): t is ComponentTypeConfig & { isMulti: false } => !t.isMulti);

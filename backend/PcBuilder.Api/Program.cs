@@ -87,6 +87,16 @@ builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CachingBehavi
 builder.Services.AddHealthChecks()
     .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")!);
 builder.Services.AddOpenApi();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddRequestLocalization(opts =>
+{
+    var supported = new[] { "en", "uk" };
+    opts.SetDefaultCulture("en")
+        .AddSupportedCultures(supported)
+        .AddSupportedUICultures(supported);
+    opts.FallBackToParentCultures = true;
+    opts.FallBackToParentUICultures = true;
+});
 
 var rateLimitConfig = builder.Configuration.GetSection("RateLimiting");
 builder.Services.AddRateLimiter(options =>
@@ -190,12 +200,9 @@ app.UseSerilogRequestLogging();
 
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
-app.UseStaticFiles();
+app.UseRequestLocalization();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
+app.UseStaticFiles();
 
 app.UseCors("AllowFrontend");
 

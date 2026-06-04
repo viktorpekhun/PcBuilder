@@ -1,11 +1,10 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import styles from "./PcBuildPage.module.css";
 import { componentService } from "../../api/component.service";
 import useAuth from "../../hooks/useAuth";
 import { buildService } from "../../api/build.service";
-import SaveBuildModal from "../../components/SaveBuildModal/SaveBuildModal";
-import CancelEditModal from "../../components/CanselEditModal/CanselEditModal";
 import Toast from "../../components/Toast/Toast";
 import CompatibilityCheck from "./CompatibilityCheck";
 import AutoBuilderPanel from "./AutoBuilderPanel";
@@ -19,7 +18,7 @@ import { usePowerStats } from "./hooks";
 import type { IAutoBuildComponents, IComponentsCompatibility, IPcBuildInput } from "../../types/build.types";
 import type {
     SelectedComponents, ComponentDataState, EditingBuild,
-    SaveModalState, ToastState, SingleComponentData, MultiComponentData,
+    ToastState, SingleComponentData, MultiComponentData,
     MultiKey, SingleKey, SelectedOffer, SelectedMultiOffer,
 } from "./types";
 import {
@@ -30,13 +29,12 @@ import {
 type ViewMode = "table" | "cards" | "json";
 
 function PcBuildPage() {
+    const { t, i18n } = useTranslation();
     const [selectedComponents, setSelectedComponents] = useState<SelectedComponents>({ ...EMPTY_SELECTED });
     const [componentData, setComponentData] = useState<ComponentDataState>({ ...EMPTY_DATA });
-    const [cancelEditModal, setCancelEditModal] = useState(false);
     const [initialLoadComplete, setInitialLoadComplete] = useState(false);
     const [loading, setLoading] = useState(true);
     const [editingBuild, setEditingBuild] = useState<EditingBuild | null>(null);
-    const [saveModal, setSaveModal] = useState<SaveModalState>({ isOpen: false });
     const [saveLoading, setSaveLoading] = useState(false);
     const [toast, setToast] = useState<ToastState>({ visible: false, message: "", type: "success" });
     const [autoPanelOpen, setAutoPanelOpen] = useState(false);
@@ -46,7 +44,6 @@ function PcBuildPage() {
     const [criticalCount, setCriticalCount] = useState(0);
     const [firstCriticalMessage, setFirstCriticalMessage] = useState<string | null>(null);
     const [selectedRow, setSelectedRow] = useState<string | null>(null);
-    const [discardModal, setDiscardModal] = useState(false);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -92,7 +89,7 @@ function PcBuildPage() {
 
     // Persist draft name (debounced)
     useEffect(() => {
-        const t = setTimeout(() => {
+        const timer = setTimeout(() => {
             try {
                 if (draftName) localStorage.setItem("composerDraftName", draftName);
                 else localStorage.removeItem("composerDraftName");
@@ -100,7 +97,7 @@ function PcBuildPage() {
                 console.error("Error saving draft name:", err);
             }
         }, 300);
-        return () => clearTimeout(t);
+        return () => clearTimeout(timer);
     }, [draftName]);
 
     // Fetch component data
@@ -257,7 +254,7 @@ function PcBuildPage() {
     const powerStats = usePowerStats(componentData);
 
     if (loading && !initialLoadComplete) {
-        return <div className={styles.loading}>Завантаження збірки...</div>;
+        return <div className={styles.loading}>{t("build.loading")}</div>;
     }
 
     // --- Handlers ---
@@ -308,78 +305,77 @@ function PcBuildPage() {
     const requireAuth = (callback: () => void) => {
         if (!auth?.accessToken) {
             navigate("/login", {
-                state: { from: location.pathname, message: "Увійдіть щоб зберегти збірку." },
+                state: { from: location.pathname, message: t("build.toasts.needLogin") },
             });
             return;
         }
         callback();
     };
 
-    const openSaveModal = () => requireAuth(() => setSaveModal({ isOpen: true }));
-    const openSaveAsNewModal = () => requireAuth(() => setSaveModal({ isOpen: true, saveAsNew: true }));
-
-    const handleSaveBuild = async (buildData: { name: string; description: string }) => {
-        if (!hasAnySelected) {
-            setToast({ visible: true, message: "В збірці повинен бути хоча б один компонент.", type: "error" });
-            return;
-        }
-
-        try {
-            setSaveLoading(true);
-
-            const multiPayload = (key: MultiKey) =>
-                componentData[key].map(item => ({
-                    componentId: item.componentId,
-                    offerId: item.offerId,
-                    quantity: item.quantity || 1,
-                }));
-
-            const buildPayload: IPcBuildInput = {
-                name: buildData.name,
-                isPublished: false,
-                ...(buildData.description && { description: buildData.description }),
-                ...(selectedComponents.cpu && { cpuId: selectedComponents.cpu.componentId }),
-                ...(componentData.cpu?.selectedOffer?.id && { cpuOfferId: componentData.cpu.selectedOffer.id }),
-                ...(selectedComponents.motherboard && { motherboardId: selectedComponents.motherboard.componentId }),
-                ...(componentData.motherboard?.selectedOffer?.id && { motherboardOfferId: componentData.motherboard.selectedOffer.id }),
-                ...(selectedComponents.gpu && { gpuId: selectedComponents.gpu.componentId }),
-                ...(componentData.gpu?.selectedOffer?.id && { gpuOfferId: componentData.gpu.selectedOffer.id }),
-                ...(selectedComponents.powerSupply && { powerSupplyId: selectedComponents.powerSupply.componentId }),
-                ...(componentData.powerSupply?.selectedOffer?.id && { powerSupplyOfferId: componentData.powerSupply.selectedOffer.id }),
-                ...(selectedComponents.cpuCooler && { cpuCoolerId: selectedComponents.cpuCooler.componentId }),
-                ...(componentData.cpuCooler?.selectedOffer?.id && { cpuCoolerOfferId: componentData.cpuCooler.selectedOffer.id }),
-                ...(selectedComponents.pcCase && { pcCaseId: selectedComponents.pcCase.componentId }),
-                ...(componentData.pcCase?.selectedOffer?.id && { pcCaseOfferId: componentData.pcCase.selectedOffer.id }),
-                rams: multiPayload("rams"),
-                ssds: multiPayload("ssds"),
-                hdds: multiPayload("hdds"),
-                fans: multiPayload("fans"),
-            };
-
-            if (editingBuild?.id && !saveModal.saveAsNew) {
-                await buildService.updateBuild(editingBuild.id, buildPayload);
-            } else {
-                await buildService.saveBuild(buildPayload);
+    const handleSaveBuild = async (asNew = false) => {
+        requireAuth(async () => {
+            if (!hasAnySelected) {
+                setToast({ visible: true, message: t("build.toasts.needComponent"), type: "error" });
+                return;
             }
 
-            if (editingBuild) {
-                localStorage.removeItem("editingBuild");
-                setEditingBuild(null);
+            try {
+                setSaveLoading(true);
+
+                const multiPayload = (key: MultiKey) =>
+                    componentData[key].map(item => ({
+                        componentId: item.componentId,
+                        offerId: item.offerId,
+                        quantity: item.quantity || 1,
+                    }));
+
+                const name = editingBuild?.name || draftName || "untitled-build";
+
+                const buildPayload: IPcBuildInput = {
+                    name,
+                    isPublished: false,
+                    ...(selectedComponents.cpu && { cpuId: selectedComponents.cpu.componentId }),
+                    ...(componentData.cpu?.selectedOffer?.id && { cpuOfferId: componentData.cpu.selectedOffer.id }),
+                    ...(selectedComponents.motherboard && { motherboardId: selectedComponents.motherboard.componentId }),
+                    ...(componentData.motherboard?.selectedOffer?.id && { motherboardOfferId: componentData.motherboard.selectedOffer.id }),
+                    ...(selectedComponents.gpu && { gpuId: selectedComponents.gpu.componentId }),
+                    ...(componentData.gpu?.selectedOffer?.id && { gpuOfferId: componentData.gpu.selectedOffer.id }),
+                    ...(selectedComponents.powerSupply && { powerSupplyId: selectedComponents.powerSupply.componentId }),
+                    ...(componentData.powerSupply?.selectedOffer?.id && { powerSupplyOfferId: componentData.powerSupply.selectedOffer.id }),
+                    ...(selectedComponents.cpuCooler && { cpuCoolerId: selectedComponents.cpuCooler.componentId }),
+                    ...(componentData.cpuCooler?.selectedOffer?.id && { cpuCoolerOfferId: componentData.cpuCooler.selectedOffer.id }),
+                    ...(selectedComponents.pcCase && { pcCaseId: selectedComponents.pcCase.componentId }),
+                    ...(componentData.pcCase?.selectedOffer?.id && { pcCaseOfferId: componentData.pcCase.selectedOffer.id }),
+                    rams: multiPayload("rams"),
+                    ssds: multiPayload("ssds"),
+                    hdds: multiPayload("hdds"),
+                    fans: multiPayload("fans"),
+                };
+
+                if (editingBuild?.id && !asNew) {
+                    await buildService.updateBuild(editingBuild.id, buildPayload);
+                } else {
+                    await buildService.saveBuild(buildPayload);
+                }
+
+                if (editingBuild) {
+                    localStorage.removeItem("editingBuild");
+                    setEditingBuild(null);
+                }
+
+                localStorage.removeItem("composerDraftName");
+                setDraftName("");
+
+                setSaveLoading(false);
+                setToast({ visible: true, message: t("build.toasts.saved"), type: "success" });
+                navigate("/user/builds", { state: { message: t("build.toasts.saved") } });
+            } catch (err: unknown) {
+                setSaveLoading(false);
+                const msg = (err as { response?: { data?: { message?: string } } })
+                    ?.response?.data?.message || t("build.toasts.saveFailed");
+                setToast({ visible: true, message: msg, type: "error" });
             }
-
-            localStorage.removeItem("composerDraftName");
-            setDraftName("");
-
-            setSaveLoading(false);
-            setToast({ visible: true, message: "Збірку успішно збережено!", type: "success" });
-            setSaveModal({ isOpen: false });
-            navigate("/user/builds", { state: { message: "Збірку успішно збережено!" } });
-        } catch (err: unknown) {
-            setSaveLoading(false);
-            const msg = (err as { response?: { data?: { message?: string } } })
-                ?.response?.data?.message || "Не вдалося зберегти збірку. Будь ласка, спробуйте ще раз.";
-            setToast({ visible: true, message: msg, type: "error" });
-        }
+        });
     };
 
     const togglePublish = async () => {
@@ -396,12 +392,12 @@ function PcBuildPage() {
             });
             setToast({
                 visible: true,
-                message: newState ? "Збірку опубліковано" : "Збірку знято з публікації",
+                message: newState ? t("build.toasts.published") : t("build.toasts.unpublished"),
                 type: "success",
             });
         } catch (err: unknown) {
             const msg = (err as { response?: { data?: { message?: string } } })
-                ?.response?.data?.message || "Не вдалося змінити статус публікації.";
+                ?.response?.data?.message || t("build.toasts.publishFailed");
             setToast({ visible: true, message: msg, type: "error" });
         } finally {
             setPublishLoading(false);
@@ -423,7 +419,6 @@ function PcBuildPage() {
         setComponentData({ ...EMPTY_DATA });
         setDraftName("");
         setSelectedRow(null);
-        setDiscardModal(false);
     };
 
     const handleApplyAutoBuild = (components: IAutoBuildComponents) => {
@@ -455,6 +450,8 @@ function PcBuildPage() {
 
     const TOTAL_SLOTS = COMPONENT_TYPES.length;
 
+    const locale = i18n.language === "uk" ? "uk-UA" : "en-GB";
+
     return (
         <section className={styles.page}>
             <AutoBuilderPanel
@@ -471,40 +468,16 @@ function PcBuildPage() {
                     duration={5000}
                 />
             )}
-            <SaveBuildModal
-                isOpen={saveModal.isOpen}
-                onCancel={() => setSaveModal({ isOpen: false })}
-                onSave={handleSaveBuild}
-                isSaving={saveLoading}
-                initialName={(editingBuild && !saveModal.saveAsNew) ? editingBuild.name : (draftName || editingBuild?.name || "")}
-                initialDescription={editingBuild?.description || ""}
-                isEditing={!!editingBuild && !saveModal.saveAsNew}
-            />
-            <CancelEditModal
-                isOpen={cancelEditModal}
-                onCancel={() => setCancelEditModal(false)}
-                onConfirm={handleCancelEdit}
-            />
-            <CancelEditModal
-                isOpen={discardModal}
-                onCancel={() => setDiscardModal(false)}
-                onConfirm={handleDiscardDraft}
-                title="Скинути збірку?"
-                body="Усі вибрані компоненти та назва чернетки будуть видалені."
-                warning="Цю дію не можна скасувати."
-                cancelLabel="Залишити"
-                confirmLabel="Скинути"
-            />
 
             <div className={styles.colMain}>
                 {editingBuild && (
                     <div className={styles.editBanner}>
                         <div>
-                            <span className={styles.label}>EDITING · </span>
+                            <span className={styles.label}>{t("pcBuildPage.page.editingBanner")}</span>
                             <span className={styles.name}>{editingBuild.name}</span>
                         </div>
-                        <button className={styles.btn} onClick={() => setCancelEditModal(true)}>
-                            Скасувати редагування
+                        <button className={styles.btn} onClick={handleCancelEdit}>
+                            {t("build.cancelEdit")}
                         </button>
                     </div>
                 )}
@@ -512,55 +485,44 @@ function PcBuildPage() {
                 <div className={styles.titleRow}>
                     <div style={{ minWidth: 0 }}>
                         <div className={styles.eyebrow}>
-                            <span>BUILD · {editingBuild ? "EDITING" : "DRAFT"}</span>
+                            <span>{t("build.buildLabel")} · {editingBuild ? t("build.editing") : t("build.draft")}</span>
                             {auth?.username && (
                                 <>
                                     <span className={styles.sep}>·</span>
-                                    <span className={styles.dim}>OWNER · @{auth.username}</span>
+                                    <span className={styles.dim}>{t("build.owner")} · @{auth.username}</span>
                                 </>
                             )}
                         </div>
                         {editingBuild ? (
-                            <h1>{editingBuild.name}</h1>
+                            <input
+                                className={styles.titleInput}
+                                value={editingBuild.name}
+                                onChange={(e) => setEditingBuild(prev => prev ? { ...prev, name: e.target.value } : prev)}
+                                spellCheck={false}
+                                aria-label={t("build.buildNameAriaLabel")}
+                            />
                         ) : (
                             <input
                                 className={styles.titleInput}
                                 value={draftName}
-                                placeholder="untitled-build"
+                                placeholder={t("build.titlePlaceholder")}
                                 onChange={(e) => setDraftName(e.target.value)}
                                 spellCheck={false}
-                                aria-label="Назва збірки"
+                                aria-label={t("build.buildNameAriaLabel")}
                             />
                         )}
                         <div className={styles.metaStrip}>
-                            <span>{filledSlots} / {TOTAL_SLOTS} SLOTS</span>
+                            <span>{t("pcBuildPage.page.metaSlots", { filled: filledSlots, total: TOTAL_SLOTS })}</span>
                             <span className={styles.sep}>·</span>
-                            <span>{partCount} {partCount === 1 ? "PART" : "PARTS"}</span>
+                            <span>{t("pcBuildPage.page.metaPart", { count: partCount })}</span>
                             <span className={styles.sep}>·</span>
-                            <span>{totalPrice.toLocaleString("uk-UA")} ₴</span>
+                            <span>{totalPrice.toLocaleString(locale)} ₴</span>
                         </div>
                     </div>
                     <div className={styles.titleActions}>
                         <button className={styles.btn} onClick={() => setAutoPanelOpen(true)}>
-                            ⚙ Автопідбір
+                            {t("build.autoBuilder")}
                         </button>
-                        {editingBuild ? (
-                            <>
-                                <button className={`${styles.btn} ${styles.btnPri}`}
-                                    onClick={openSaveModal} disabled={saveLoading}>
-                                    {saveLoading ? "Збереження..." : "✓ Оновити"}
-                                </button>
-                                <button className={styles.btn}
-                                    onClick={openSaveAsNewModal} disabled={saveLoading}>
-                                    Зберегти як нову
-                                </button>
-                            </>
-                        ) : (
-                            <button className={`${styles.btn} ${styles.btnPri}`}
-                                onClick={openSaveModal} disabled={saveLoading}>
-                                {saveLoading ? "Збереження..." : "✓ Зберегти"}
-                            </button>
-                        )}
                     </div>
                 </div>
 
@@ -569,25 +531,25 @@ function PcBuildPage() {
                         <button
                             className={`${styles.viewSeg} ${viewMode === "table" ? styles.viewSegOn : ""}`}
                             onClick={() => setViewMode("table")}
-                        >Table</button>
+                        >{t("pcBuildPage.page.viewTable")}</button>
                         <button
                             className={`${styles.viewSeg} ${viewMode === "cards" ? styles.viewSegOn : ""}`}
                             onClick={() => setViewMode("cards")}
-                        >Cards</button>
+                        >{t("pcBuildPage.page.viewCards")}</button>
                         <button
                             className={`${styles.viewSeg} ${viewMode === "json" ? styles.viewSegOn : ""}`}
                             onClick={() => setViewMode("json")}
-                        >JSON</button>
+                        >{t("pcBuildPage.page.viewJson")}</button>
                     </div>
                     <div className={styles.grow} />
                     <span className={styles.stat}>
-                        <strong>{filledSlots}</strong>&nbsp;/&nbsp;{TOTAL_SLOTS} slots filled
+                        <strong>{filledSlots}</strong>&nbsp;/&nbsp;{TOTAL_SLOTS} {t("pcBuildPage.page.slotsFilled")}
                     </span>
                     <span className={styles.statSep}>·</span>
                     <span className={styles.stat}>
                         {!hasAnySelected
-                            ? <><span className={styles.statDim}>○</span>&nbsp;PENDING</>
-                            : <><span className={styles.statOk}>✓</span>&nbsp;ACTIVE</>}
+                            ? <><span className={styles.statDim}>○</span>&nbsp;{t("build.pending")}</>
+                            : <><span className={styles.statOk}>✓</span>&nbsp;{t("build.active")}</>}
                     </span>
                 </div>
 
@@ -602,25 +564,25 @@ function PcBuildPage() {
                     <div className={styles.emptyCTA}>
                         <div className={`${styles.emptyPanel} ${styles.emptyPanelFeatured}`}>
                             <div className={styles.eh}>
-                                <span className={`${styles.emptyOrd} ${styles.emptyOrdFeatured}`}>01 ·</span>
-                                РЕКОМЕНДОВАНО
+                                <span className={`${styles.emptyOrd} ${styles.emptyOrdFeatured}`}>{t("build.emptyCTA.recommendedOrd")}</span>
+                                {t("build.emptyCTA.recommendedLabel")}
                             </div>
-                            <h2>Запустити Автопідбір</h2>
-                            <p>Введіть бюджет та сценарій використання. Ми підберемо сумісні компоненти у межах вашого бюджету.</p>
+                            <h2>{t("build.emptyCTA.autoBuilderTitle")}</h2>
+                            <p>{t("build.emptyCTA.autoBuilderDesc")}</p>
                             <button className={`${styles.btn} ${styles.btnPri}`}
                                 onClick={() => setAutoPanelOpen(true)}>
-                                ⚙ Відкрити Автопідбір
+                                {t("build.emptyCTA.openAutoBuilder")}
                             </button>
                         </div>
                         <div className={styles.emptyPanel}>
                             <div className={styles.eh}>
-                                <span className={styles.emptyOrd}>02 ·</span>
-                                ВРУЧНУ
+                                <span className={styles.emptyOrd}>{t("build.emptyCTA.manualOrd")}</span>
+                                {t("build.emptyCTA.manualLabel")}
                             </div>
-                            <h2>Підібрати по одному</h2>
-                            <p>Почніть з процесора. Сумісність перевіряється на кожному кроці.</p>
+                            <h2>{t("build.emptyCTA.manualTitle")}</h2>
+                            <p>{t("build.emptyCTA.manualDesc")}</p>
                             <button className={styles.btn} onClick={() => navigate("/components/cpu")}>
-                                ＋ Вибрати CPU →
+                                {t("build.emptyCTA.manualCTA")}
                             </button>
                         </div>
                     </div>
@@ -652,14 +614,14 @@ function PcBuildPage() {
 
                 <div className={styles.savebar}>
                     <div className={styles.meta}>
-                        <span>BUILD&nbsp;&nbsp;<strong>{editingBuild?.name || draftName || "untitled"}</strong></span>
+                        <span>{t("pcBuildPage.page.savebarBuild")}&nbsp;&nbsp;<strong>{editingBuild?.name || draftName || t("pcBuildPage.page.untitled")}</strong></span>
                         <span className={styles.statSep}>·</span>
-                        <span>{filledSlots}/{TOTAL_SLOTS} SLOTS · {partCount} PARTS</span>
+                        <span>{t("pcBuildPage.page.savebarSlotsParts", { slots: filledSlots, total: TOTAL_SLOTS, parts: partCount })}</span>
                         <span className={styles.statSep}>·</span>
                         <span>
                             {!hasAnySelected
-                                ? <span className={styles.statDim}>○ PENDING</span>
-                                : <span className={styles.statOk}>✓ ACTIVE</span>}
+                                ? <span className={styles.statDim}>○ {t("build.pending")}</span>
+                                : <span className={styles.statOk}>✓ {t("build.active")}</span>}
                         </span>
                     </div>
                     <div className={styles.grow} />
@@ -669,21 +631,21 @@ function PcBuildPage() {
                                 className={styles.btn}
                                 onClick={togglePublish}
                                 disabled={publishLoading || saveLoading || criticalCount > 0}
-                                title={criticalCount > 0 ? "Виправте конфлікти сумісності, щоб опублікувати" : undefined}
+                                title={criticalCount > 0 ? t("build.fixConflicts") : undefined}
                             >
                                 {publishLoading
                                     ? "..."
                                     : editingBuild.isPublished
-                                        ? "↩ Зняти з публікації"
-                                        : "↗ Опублікувати"}
+                                        ? t("build.unpublish")
+                                        : t("build.publish")}
                             </button>
                             <button className={`${styles.btn} ${styles.btnPri}`}
-                                onClick={openSaveModal} disabled={saveLoading}>
-                                {saveLoading ? "Збереження..." : "✓ Оновити"}
+                                onClick={() => handleSaveBuild()} disabled={saveLoading}>
+                                {saveLoading ? t("build.saving") : t("build.update")}
                             </button>
                             <button className={styles.btn}
-                                onClick={openSaveAsNewModal} disabled={saveLoading}>
-                                Зберегти як нову
+                                onClick={() => handleSaveBuild(true)} disabled={saveLoading}>
+                                {t("build.saveAsNew")}
                             </button>
                         </>
                     ) : (
@@ -691,15 +653,15 @@ function PcBuildPage() {
                             {hasAnySelected && (
                                 <button
                                     className={`${styles.btn} ${styles.btnDng}`}
-                                    onClick={() => setDiscardModal(true)}
-                                    title="Скинути всі компоненти"
+                                    onClick={handleDiscardDraft}
+                                    title={t("build.discardTitle")}
                                 >
-                                    ⌫ Скинути
+                                    {t("build.discard")}
                                 </button>
                             )}
                             <button className={`${styles.btn} ${styles.btnPri}`}
-                                onClick={openSaveModal} disabled={saveLoading}>
-                                {saveLoading ? "Збереження..." : "✓ Зберегти"}
+                                onClick={() => handleSaveBuild()} disabled={saveLoading}>
+                                {saveLoading ? t("build.saving") : t("build.save")}
                             </button>
                         </>
                     )}
@@ -719,20 +681,20 @@ function PcBuildPage() {
                 {(() => {
                     let cls = styles.sideFooterDim;
                     let glyph = "○";
-                    let text = "Очікує компонентів";
+                    let text = t("build.status.waiting");
                     if (hasAnySelected) {
                         if (criticalCount > 0) {
                             cls = styles.sideFooterErr;
                             glyph = "×";
-                            text = `${criticalCount} ${criticalCount === 1 ? "конфлікт" : "конфлікти"} сумісності`;
+                            text = t("build.status.conflict", { count: criticalCount });
                         } else if (firstCriticalMessage) {
                             cls = styles.sideFooterWarn;
                             glyph = "!";
-                            text = "Перевірте попередження";
+                            text = t("build.status.checkWarnings");
                         } else {
                             cls = styles.sideFooterOk;
                             glyph = "✓";
-                            text = "All systems ok";
+                            text = t("build.status.allOk");
                         }
                     }
                     return (

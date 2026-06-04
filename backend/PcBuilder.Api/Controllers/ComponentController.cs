@@ -131,5 +131,18 @@ namespace PcBuilder.Api.Controllers
 
             return Ok(result.Value);
         }
+
+        [HttpGet("{componentType}/{id:guid}/similar")]
+        public async Task<IActionResult> GetSimilarComponents(
+            ComponentType componentType,
+            Guid id,
+            [FromQuery] int count = 4)
+        {
+            var result = await _mediator.Send(new GetSimilarComponentsQuery(id, componentType, count));
+            if (result.IsFailure)
+                return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
+
+            return Ok(result.Value);
+        }
     }
 }

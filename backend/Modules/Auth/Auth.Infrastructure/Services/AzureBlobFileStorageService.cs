@@ -54,6 +54,36 @@ namespace Auth.Infrastructure.Services
                 _logger.LogInformation("Deleted avatar for user {UserId} from blob storage", userId);
         }
 
+        public async Task<string> SaveBuildPhotoAsync(Guid buildId, byte[] data, CancellationToken cancellationToken = default)
+        {
+            await EnsureContainerExistsAsync(cancellationToken);
+
+            var blobName = $"builds/{buildId}.webp";
+            var blobClient = _containerClient.GetBlobClient(blobName);
+
+            using var inputStream = new MemoryStream(data);
+            using var image = await Image.LoadAsync(inputStream, cancellationToken);
+            using var webpStream = new MemoryStream();
+            await image.SaveAsync(webpStream, new WebpEncoder(), cancellationToken);
+            webpStream.Position = 0;
+
+            await blobClient.UploadAsync(webpStream, new BlobHttpHeaders { ContentType = "image/webp" }, cancellationToken: cancellationToken);
+
+            _logger.LogInformation("Uploaded photo for build {BuildId} to blob storage", buildId);
+            return blobClient.Uri.ToString();
+        }
+
+        public async Task DeleteBuildPhotoAsync(Guid buildId, CancellationToken cancellationToken = default)
+        {
+            await EnsureContainerExistsAsync(cancellationToken);
+
+            var blobClient = _containerClient.GetBlobClient($"builds/{buildId}.webp");
+            var deleted = await blobClient.DeleteIfExistsAsync(cancellationToken: cancellationToken);
+
+            if (deleted)
+                _logger.LogInformation("Deleted photo for build {BuildId} from blob storage", buildId);
+        }
+
         private async Task EnsureContainerExistsAsync(CancellationToken cancellationToken)
         {
             if (_containerInitialized) return;

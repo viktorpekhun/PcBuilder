@@ -41,7 +41,7 @@ namespace PcBuilder.Api.Controllers
         public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto request)
         {
             var userId = GetUserId();
-            var result = await _mediator.Send(new UpdateProfileCommand(userId, request.Username, request.Bio));
+            var result = await _mediator.Send(new UpdateProfileCommand(userId, request.Username, request.Bio, request.PreferredLanguage));
             if (result.IsFailure)
                 return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
 

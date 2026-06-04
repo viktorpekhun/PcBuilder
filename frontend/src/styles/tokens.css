@@ -112,6 +112,50 @@
 }
 
 /* ============================================================
+   LIGHT THEME — override color tokens only
+   Apply via <html data-theme="light">
+   ============================================================ */
+
+[data-theme="light"] {
+  /* surfaces */
+  --bg-0:  #F4F4F6;   /* page background */
+  --bg-1:  #FFFFFF;   /* panel / card */
+  --bg-2:  #EAEAED;   /* raised surface */
+  --bg-3:  #DDDDE2;   /* interactive hover */
+  --bg-4:  #CECED4;   /* pressed / selected wash */
+
+  /* borders */
+  --bd-0:  #E2E2E7;   /* dividers (subtle) */
+  --bd-1:  #CECED4;   /* default border */
+  --bd-2:  #B0B0BA;   /* emphasized border */
+  --bd-3:  #888892;   /* focus / strong border */
+
+  /* foreground */
+  --fg-0:  #111114;   /* primary text */
+  --fg-1:  #4A4A56;   /* secondary text */
+  --fg-2:  #767682;   /* tertiary / labels */
+  --fg-3:  #A6A6B0;   /* disabled / hints */
+
+  /* accent — same hue, darkened for light bg contrast */
+  --acc:       #5A7A1A;   /* primary accent */
+  --acc-soft:  #E8F0D0;   /* selected row wash */
+  --acc-dim:   #3E5A0E;   /* hover/active */
+  --acc-ink:   #FFFFFF;   /* foreground on solid acc bg */
+
+  /* semantic — darkened for sufficient contrast on white */
+  --ok:    #2A8A2A;
+  --warn:  #C47A08;
+  --err:   #D03030;
+  --info:  #2878D8;
+
+  /* semantic washes */
+  --ok-soft:   #E4F4E4;
+  --warn-soft: #FDF0D4;
+  --err-soft:  #FAE0E0;
+  --info-soft: #DCECFA;
+}
+
+/* ============================================================
    SEMANTIC ELEMENTS — apply tokens to actual tags
    ============================================================ */
 

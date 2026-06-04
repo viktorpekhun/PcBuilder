@@ -1,8 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import styles from './GalleryPage.module.css';
 import { galleryService } from '../../api/gallery.service';
 import { Pagination } from '../../components/Pagination/Pagination';
+import { BuildCover } from '../../components/BuildCover/BuildCover';
+import useAuth from '../../hooks/useAuth';
 import type { IPcBuildGallery } from '../../types/gallery.types';
 
 interface PaginationMeta {
@@ -14,7 +17,11 @@ interface PaginationMeta {
 
 const PAGE_SIZE = 12;
 
+const fmt = (n: number) =>
+    Math.round(n).toLocaleString('uk-UA', { maximumFractionDigits: 0 }).replace(/[\s,]/g, ' ');
+
 function GalleryPage() {
+    const { t, i18n } = useTranslation();
     const [builds, setBuilds] = useState<IPcBuildGallery[]>([]);
     const [pagination, setPagination] = useState<PaginationMeta>({
         totalCount: 0, pageSize: PAGE_SIZE, pageNumber: 1, totalPages: 0
@@ -28,6 +35,15 @@ function GalleryPage() {
     const [currentPage, setCurrentPage] = useState(1);
 
     const navigate = useNavigate();
+    const { auth } = useAuth();
+    const isLoggedIn = !!auth?.accessToken;
+
+    const SORTS = [
+        { field: 'publishedAt', label: t('gallery.sorts.publishedAt') },
+        { field: 'price', label: t('gallery.sorts.price') },
+        { field: 'averageRating', label: t('gallery.sorts.averageRating') },
+        { field: 'name', label: t('gallery.sorts.name') },
+    ];
 
     const fetchBuilds = useCallback(async () => {
         try {
@@ -37,7 +53,7 @@ function GalleryPage() {
                 pageSize: PAGE_SIZE,
                 orderBy: sortField,
                 ascending: sortAscending,
-                searchQuery: searchQuery || undefined,
+                ...(searchQuery ? { searchQuery } : {}),
             });
             setBuilds(response.data);
 
@@ -47,20 +63,15 @@ function GalleryPage() {
             }
             setError(null);
         } catch {
-            setError('Не вдалося завантажити збірки.');
+            setError(t('gallery.loadFailed'));
         } finally {
             setLoading(false);
         }
-    }, [currentPage, sortField, sortAscending, searchQuery]);
+    }, [currentPage, sortField, sortAscending, searchQuery, t]);
 
     useEffect(() => {
         fetchBuilds();
     }, [fetchBuilds]);
-
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
-        setCurrentPage(1);
-    };
 
     const handleSortChange = (field: string) => {
         if (field === sortField) {
@@ -74,114 +85,148 @@ function GalleryPage() {
 
     const formatDate = (dateStr?: string) => {
         if (!dateStr) return '';
-        return new Date(dateStr).toLocaleDateString('uk-UA', {
+        const locale = i18n.language === 'uk' ? 'uk-UA' : 'en-GB';
+        return new Date(dateStr).toLocaleDateString(locale, {
             day: 'numeric', month: 'short', year: 'numeric'
         });
     };
 
-    const truncate = (text: string | undefined, maxLen: number) => {
-        if (!text) return '';
-        return text.length > maxLen ? text.slice(0, maxLen) + '...' : text;
-    };
-
-    const renderStars = (rating: number) => {
-        const full = Math.floor(rating);
-        const stars = [];
-        for (let i = 0; i < 5; i++) {
-            stars.push(
-                <span key={i} className={i < full ? styles['star-filled'] : styles['star-empty']}>
-                    &#9733;
-                </span>
-            );
-        }
-        return <div className={styles['stars']}>{stars}</div>;
-    };
-
     return (
-        <div className={styles['gallery-page']}>
-            <h1>Галерея Збірок</h1>
+        <div className={styles['page-shell']}>
+            <div className={styles['head']}>
+                <div>
+                    <span className={styles['eyebrow']}>
+                        {t('gallery.eyebrow')}
+                    </span>
+                    <h1>{t('gallery.heading')}</h1>
+                    <div className={styles['meta']}>
+                        <span>{t('gallery.meta')}</span>
+                    </div>
+                </div>
+                {isLoggedIn && (
+                    <div className={styles['actions']}>
+                        <button
+                            className={`${styles['btn']} ${styles['btn-ghost']}`}
+                            onClick={() => navigate('/user/builds')}
+                        >
+                            {t('gallery.myBuilds')}
+                        </button>
+                        <button
+                            className={`${styles['btn']} ${styles['btn-pri']}`}
+                            onClick={() => navigate('/')}
+                        >
+                            {t('gallery.publishBuild')}
+                        </button>
+                    </div>
+                )}
+            </div>
 
-            <div className={styles['controls']}>
-                <form className={styles['search-form']} onSubmit={handleSearch}>
+            <div className={styles['subbar']}>
+                <div className={styles['input']}>
+                    <span className={styles['ic']}>⌕</span>
                     <input
-                        type="text"
-                        className={styles['search-input']}
-                        placeholder="Пошук збірок..."
+                        placeholder={t('gallery.searchPlaceholder')}
                         value={searchQuery}
                         onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                     />
-                </form>
-
-                <div className={styles['sort-controls']}>
-                    <span className={styles['sort-label']}>Сортувати:</span>
-                    {[
-                        { field: 'publishedAt', label: 'Нові' },
-                        { field: 'price', label: 'Ціна' },
-                        { field: 'averageRating', label: 'Рейтинг' },
-                        { field: 'name', label: 'Назва' },
-                    ].map(({ field, label }) => (
-                        <button
-                            key={field}
-                            className={`${styles['sort-btn']} ${sortField === field ? styles['sort-active'] : ''}`}
-                            onClick={() => handleSortChange(field)}
-                        >
-                            {label}
-                            {sortField === field && (
-                                <span className={styles['sort-arrow']}>{sortAscending ? ' ▲' : ' ▼'}</span>
-                            )}
-                        </button>
-                    ))}
+                </div>
+                <span className={styles['stat']}>
+                    <strong>{fmt(pagination.totalCount)}</strong> {t('gallery.buildsFound', { count: pagination.totalCount })}
+                </span>
+                <span className={styles['grow']} />
+                <span className={styles['toolbarLabel']}>{t('gallery.sortLabel')}</span>
+                <div className={styles['sortGroup']}>
+                    {SORTS.map(s => {
+                        const isActive = sortField === s.field;
+                        return (
+                            <span
+                                key={s.field}
+                                className={`${styles['sortSeg']} ${isActive ? styles['sortSegOn'] : ''}`}
+                                onClick={() => handleSortChange(s.field)}
+                            >
+                                {s.label}
+                                {isActive && (
+                                    <span className={styles['sortArrow']}>
+                                        {sortAscending ? '▲' : '▼'}
+                                    </span>
+                                )}
+                            </span>
+                        );
+                    })}
                 </div>
             </div>
 
             {error && <div className={styles['error']}>{error}</div>}
 
             {loading ? (
-                <div className={styles['loading']}>Завантаження...</div>
+                <div className={styles['loading']}>{t('gallery.loading')}</div>
             ) : builds.length === 0 ? (
-                <div className={styles['no-results']}>Збірки не знайдено.</div>
+                <div className={styles['empty']}>
+                    <div className={styles['eyebrow']}>{t('gallery.empty.eyebrow')}</div>
+                    <div className={styles['empty-title']}>{t('gallery.empty.title')}</div>
+                    <div className={styles['empty-hint']}>
+                        {t('gallery.empty.hint')}
+                    </div>
+                </div>
             ) : (
                 <>
-                    <div className={styles['builds-grid']}>
+                    <div className={styles['grid']}>
                         {builds.map(build => (
                             <div
                                 key={build.id}
-                                className={styles['build-card']}
+                                className={styles['card']}
                                 onClick={() => navigate(`/builds/${build.id}`)}
                             >
-                                <div className={styles['card-header']}>
-                                    <h3 className={styles['card-title']}>{build.name}</h3>
-                                    <span className={styles['card-price']}>{build.price} грн</span>
+                                <div className={styles['cover-wrap']}>
+                                    <BuildCover title={build.name} coverUrl={build.photoUrl} />
+                                    <span className={styles['price-badge']}>₴ {fmt(build.price)}</span>
                                 </div>
 
-                                {build.description && (
-                                    <p className={styles['card-description']}>
-                                        {truncate(build.description, 100)}
-                                    </p>
-                                )}
-
-                                <div className={styles['card-stats']}>
-                                    {renderStars(build.averageRating)}
-                                    <span className={styles['stat-item']}>
-                                        {build.componentCount} компонентів
-                                    </span>
-                                    <span className={styles['stat-item']}>
-                                        {build.commentCount} коментарів
-                                    </span>
-                                </div>
-
-                                <div className={styles['card-footer']}>
-                                    <div className={styles['card-author']}>
+                                <div className={styles['body']}>
+                                    <div className={styles['title']}>{build.name}</div>
+                                    {build.description && (
+                                        <div className={styles['description']}>{build.description}</div>
+                                    )}
+                                    <div className={styles['author-row']}>
                                         {build.avatarUrl ? (
-                                            <img src={build.avatarUrl} alt={build.username} className={styles['author-avatar']} loading="lazy" />
+                                            <img
+                                                src={build.avatarUrl}
+                                                alt={build.username}
+                                                className={styles['author-avatar']}
+                                                loading="lazy"
+                                            />
                                         ) : (
-                                            <div className={styles['author-avatar-placeholder']}>
+                                            <span className={styles['author-avatar-ph']}>
                                                 {build.username.charAt(0).toUpperCase()}
-                                            </div>
+                                            </span>
                                         )}
-                                        <span className={styles['author-name']}>{build.username}</span>
+                                        <span>@{build.username}</span>
+                                        {build.publishedAt && (
+                                            <>
+                                                <span className={styles['sep']}>·</span>
+                                                <span>{formatDate(build.publishedAt)}</span>
+                                            </>
+                                        )}
                                     </div>
-                                    <span className={styles['card-date']}>{formatDate(build.publishedAt)}</span>
+                                    {build.tags && build.tags.length > 0 && (
+                                        <div className={styles['tags']}>
+                                            {build.tags.slice(0, 3).map(tag => (
+                                                <span key={tag} className={styles['tag-mini']}>{tag}</span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className={styles['foot']}>
+                                    <span className={styles['rating']}>
+                                        <span className={styles['star']}>★</span>
+                                        <span>{build.averageRating.toFixed(1)}</span>
+                                        <span className={styles['rating-count']}>({build.ratingCount})</span>
+                                    </span>
+                                    <span className={styles['parts']}>{build.componentCount} {t('gallery.partCount', { count: build.componentCount })}</span>
+                                    <span className={styles['comments']}>
+                                        <span>✎ {build.commentCount}</span>
+                                    </span>
                                 </div>
                             </div>
                         ))}

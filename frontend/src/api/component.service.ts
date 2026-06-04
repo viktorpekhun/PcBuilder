@@ -3,6 +3,7 @@ import type {
     ComponentType,
     ComponentListMap,
     ComponentDetailMap,
+    IComponentBase,
     IResourceParameters,
     IFilterOptions,
     IPagination,
@@ -65,4 +66,7 @@ export const componentService = {
 
     getPriceHistory: (type: ComponentType, id: string, days: number) =>
         axios.get<IPriceHistoryPoint[]>(`${PATH}/${type}/${id}/price-history?days=${days}`),
+
+    getSimilar: (type: ComponentType, id: string, count = 4) =>
+        axios.get<IComponentBase[]>(`${PATH}/${type}/${id}/similar?count=${count}`),
 };

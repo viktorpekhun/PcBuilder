@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import useAuth from "../../hooks/useAuth";
 import { priceAlertService } from "../../api/priceAlert.service";
 import type { ComponentType } from "../../types/component.types";
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export default function RowAlertButton({ componentId, componentType: rawType }: Props) {
+    const { t } = useTranslation();
     const componentType = normalize(rawType);
     const { auth } = useAuth();
     const [alert, setAlert] = useState<IPriceAlert | null>(null);
@@ -78,10 +80,10 @@ export default function RowAlertButton({ componentId, componentType: rawType }: 
             onClick={handleClick}
             disabled={busy}
             title={active
-                ? `Підписано · ±${alert!.thresholdPercent}%. Натисніть, щоб скасувати`
-                : "Сповіщати про зміну ціни"}
+                ? t("pcBuildPage.rowAlert.subscribed", { pct: alert!.thresholdPercent })
+                : t("pcBuildPage.rowAlert.subscribe")}
         >
-            <span className={styles.toolGly}>△</span> ALERT
+            <span className={styles.toolGly}>△</span> {t("pcBuildPage.rowAlert.label")}
         </button>
     );
 }

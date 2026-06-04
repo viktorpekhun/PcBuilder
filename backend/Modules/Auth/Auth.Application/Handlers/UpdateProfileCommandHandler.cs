@@ -38,6 +38,9 @@ namespace Auth.Application.Handlers
             user.Username = request.Username;
             user.Bio = request.Bio;
 
+            if (request.PreferredLanguage is "en" or "uk")
+                user.PreferredLanguage = request.PreferredLanguage;
+
             _context.Set<User>().Update(user);
             await _context.SaveChangesAsync(cancellationToken);
 
@@ -49,6 +52,7 @@ namespace Auth.Application.Handlers
                 EmailVerified = user.IsEmailVerified,
                 AvatarUrl = user.AvatarUrl,
                 Bio = user.Bio,
+                PreferredLanguage = user.PreferredLanguage,
                 HasPassword = !string.IsNullOrEmpty(user.PasswordHash),
                 GoogleLinked = !string.IsNullOrEmpty(user.GoogleId),
                 Roles = user.Roles.Select(r => r.Name).ToList(),

@@ -5,6 +5,7 @@ export interface IProfileResponse {
     emailVerified: boolean;
     avatarUrl?: string;
     bio?: string;
+    preferredLanguage: string;
     hasPassword: boolean;
     googleLinked: boolean;
     roles: string[];
@@ -15,6 +16,7 @@ export interface IProfileResponse {
 export interface IUpdateProfileRequest {
     username: string;
     bio?: string;
+    preferredLanguage?: string;
 }
 
 export interface IChangePasswordRequest {
@@ -30,6 +32,7 @@ export interface IWarningDto {
     id: string;
     banType: 'Comment' | 'Post';
     reason: string;
+    reasonCode?: string;
     issuedAt: string;
 }
 

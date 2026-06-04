@@ -17,5 +17,12 @@ namespace Components.Domain.Entities
         public Guid StoreId { get; set; }
 
         public Store Store { get; set; } = null!;
+
+        // "in" | "low" | "out" — populated by scraper; null until next scrape run
+        public string? StockStatus { get; set; }
+
+        public DateTime CreatedAt { get; set; }
+
+        public DateTime UpdatedAt { get; set; }
     }
 }

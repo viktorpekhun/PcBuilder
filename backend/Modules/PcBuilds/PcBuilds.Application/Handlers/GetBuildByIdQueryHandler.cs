@@ -25,12 +25,12 @@ namespace PcBuilds.Application.Handlers
                 .Include(b => b.Gpu)
                 .Include(b => b.Motherboard)
                 .Include(b => b.CpuCooler)
-                .Include(b => b.PcCase)
+                .Include(b => b.PcCase).ThenInclude(c => c!.PcCaseFormFactors)
                 .Include(b => b.PowerSupply)
-                .Include(b => b.PcBuild_Rams)
-                .Include(b => b.PcBuild_Ssds)
-                .Include(b => b.PcBuild_Hdds)
-                .Include(b => b.PcBuild_Fans)
+                .Include(b => b.PcBuild_Rams).ThenInclude(r => r.Ram)
+                .Include(b => b.PcBuild_Ssds).ThenInclude(s => s.Ssd)
+                .Include(b => b.PcBuild_Hdds).ThenInclude(h => h.Hdd)
+                .Include(b => b.PcBuild_Fans).ThenInclude(f => f.Fan)
                 .Include(b => b.User)
                 .FirstOrDefaultAsync(b => b.Id == request.PcBuildId, cancellationToken);
 
@@ -51,8 +51,11 @@ namespace PcBuilds.Application.Handlers
                 Description = build.Description,
                 IsPublished = build.IsPublished,
                 PublishedAt = build.PublishedAt,
+                PhotoUrl = build.PhotoUrl,
                 Price = build.Price,
                 AverageRating = build.AverageRating,
+                EstimatedPower = EstimateSystemPower(build),
+                PsuWattage = build.PowerSupply?.Wattage,
                 CreatedAt = build.CreatedAt,
                 UpdatedAt = build.UpdatedAt,
                 UserId = build.UserId,
@@ -150,7 +153,60 @@ namespace PcBuilds.Application.Handlers
                 id => _context.Set<Fan>().FirstOrDefaultAsync(f => f.Id == id, cancellationToken),
                 cancellationToken);
 
+            var tags = new List<string>();
+            if (!string.IsNullOrWhiteSpace(build.Cpu?.Socket))
+                tags.Add(build.Cpu.Socket);
+            var ramType = build.PcBuild_Rams.Select(r => r.Ram?.Type).FirstOrDefault(t => !string.IsNullOrWhiteSpace(t));
+            if (!string.IsNullOrWhiteSpace(ramType))
+                tags.Add(ramType!);
+            var formFactor = build.PcCase?.PcCaseFormFactors.Select(f => f.Name).FirstOrDefault(f => !string.IsNullOrWhiteSpace(f));
+            if (!string.IsNullOrWhiteSpace(formFactor))
+                tags.Add(formFactor!);
+            buildDto.Tags = tags.Distinct(StringComparer.OrdinalIgnoreCase).Take(3).ToList();
+
             return Result.Success(buildDto);
+        }
+
+        /// <summary>
+        /// Estimated full-system power draw in watts. Mirrors the formula in
+        /// <c>RequiredPowerSupplyRule</c>: sum of component draw + a fixed 150 W system overhead.
+        /// </summary>
+        private static int EstimateSystemPower(PcBuild build)
+        {
+            int power = 0;
+
+            power += build.Cpu?.Tdp ?? 0;
+
+            if (build.Gpu != null)
+            {
+                if (build.Gpu.Wattage is > 0)
+                    power += build.Gpu.Wattage.Value;
+                else if (build.Gpu.PsuReccomended is > 0)
+                    power += (int)(build.Gpu.PsuReccomended.Value * 0.45);
+            }
+
+            power += build.Motherboard?.Wattage ?? 0;
+            power += build.CpuCooler?.Wattage ?? 0;
+
+            foreach (var r in build.PcBuild_Rams)
+                if (r.Ram != null)
+                    power += (r.Ram.Wattage ?? 0) * (r.Ram.ModuleQuantity ?? 1) * r.Quantity;
+
+            foreach (var s in build.PcBuild_Ssds)
+                if (s.Ssd != null)
+                    power += s.Ssd.Wattage * s.Quantity;
+
+            foreach (var h in build.PcBuild_Hdds)
+                if (h.Hdd != null)
+                    power += (h.Hdd.Wattage ?? 0) * h.Quantity;
+
+            foreach (var f in build.PcBuild_Fans)
+                if (f.Fan != null)
+                    power += (f.Fan.Wattage ?? 0) * (f.Fan.ModuleCount ?? 1) * f.Quantity;
+
+            power += 150;
+
+            return power;
         }
 
         private async Task<List<MultiComponentPreviewDto>> BuildMultiComponentPreviews<TJunction, TComponent>(

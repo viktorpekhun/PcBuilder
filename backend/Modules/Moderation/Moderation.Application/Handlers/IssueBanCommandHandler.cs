@@ -2,6 +2,7 @@ using Auth.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Moderation.Application.Commands;
+using Moderation.Application.Services;
 using Moderation.Domain.Enums;
 using Notifications.Application.Commands;
 using Notifications.Domain;
@@ -14,11 +15,13 @@ namespace Moderation.Application.Handlers
     {
         private readonly IApplicationDbContext _context;
         private readonly ISender _sender;
+        private readonly IAdminActivityLogger _activity;
 
-        public IssueBanCommandHandler(IApplicationDbContext context, ISender sender)
+        public IssueBanCommandHandler(IApplicationDbContext context, ISender sender, IAdminActivityLogger activity)
         {
             _context = context;
             _sender = sender;
+            _activity = activity;
         }
 
         public async Task<Result<bool>> Handle(IssueBanCommand request, CancellationToken cancellationToken)
@@ -46,6 +49,15 @@ namespace Moderation.Application.Handlers
                     ["banUntil"] = banUntil.ToString("O"),
                     ["reason"] = request.Reason
                 }), cancellationToken);
+
+            await _activity.LogAsync(
+                request.AdminId,
+                "BanUser",
+                targetType: "User",
+                targetId: user.Id,
+                targetName: $"@{user.Username}",
+                detail: $"{request.BanType} ban · {request.DurationDays}d · {request.Reason}",
+                cancellationToken: cancellationToken);
 
             return Result.Success(true);
         }

@@ -34,6 +34,11 @@ namespace PcBuilds.Application.Handlers
                     baseQuery = baseQuery.Where(b => b.Price <= maxPrice);
             }
 
+            if (parameters.Filters.TryGetValue("socket", out var sockets) && sockets.Length > 0)
+            {
+                baseQuery = baseQuery.Where(b => b.Cpu != null && sockets.Contains(b.Cpu.Socket));
+            }
+
             List<Guid> orderedIds;
             int totalCount;
 
@@ -81,38 +86,65 @@ namespace PcBuilds.Application.Handlers
                     .ToListAsync(cancellationToken);
             }
 
-            var builds = await _context.Set<PcBuild>()
+            var projected = await _context.Set<PcBuild>()
                 .Where(b => orderedIds.Contains(b.Id))
-                .Include(b => b.User)
-                .Include(b => b.PcBuild_Rams)
-                .Include(b => b.PcBuild_Ssds)
-                .Include(b => b.PcBuild_Hdds)
-                .Include(b => b.PcBuild_Fans)
-                .Include(b => b.Reviews)
-                .Select(b => new PcBuildGalleryDto
+                .Select(b => new
                 {
-                    Id = b.Id,
-                    Name = b.Name,
-                    Description = b.Description,
-                    Price = b.Price,
-                    AverageRating = b.AverageRating,
-                    PublishedAt = b.PublishedAt,
-                    Username = b.User.Username,
-                    AvatarUrl = b.User.AvatarUrl,
-                    ComponentCount =
-                        (b.CpuId != null ? 1 : 0) +
-                        (b.GpuId != null ? 1 : 0) +
-                        (b.MotherboardId != null ? 1 : 0) +
-                        (b.CpuCoolerId != null ? 1 : 0) +
-                        (b.PowerSupplyId != null ? 1 : 0) +
-                        (b.PcCaseId != null ? 1 : 0) +
-                        b.PcBuild_Rams.Count +
-                        b.PcBuild_Ssds.Count +
-                        b.PcBuild_Hdds.Count +
-                        b.PcBuild_Fans.Count,
-                    CommentCount = b.Reviews.Count
+                    Dto = new PcBuildGalleryDto
+                    {
+                        Id = b.Id,
+                        Name = b.Name,
+                        Description = b.Description,
+                        Price = b.Price,
+                        AverageRating = b.AverageRating,
+                        PublishedAt = b.PublishedAt,
+                        Username = b.User.Username,
+                        AvatarUrl = b.User.AvatarUrl,
+                        ComponentCount =
+                            (b.CpuId != null ? 1 : 0) +
+                            (b.GpuId != null ? 1 : 0) +
+                            (b.MotherboardId != null ? 1 : 0) +
+                            (b.CpuCoolerId != null ? 1 : 0) +
+                            (b.PowerSupplyId != null ? 1 : 0) +
+                            (b.PcCaseId != null ? 1 : 0) +
+                            b.PcBuild_Rams.Count +
+                            b.PcBuild_Ssds.Count +
+                            b.PcBuild_Hdds.Count +
+                            b.PcBuild_Fans.Count,
+                        CommentCount = b.Reviews.Count,
+                        RatingCount = b.Reviews.Count,
+                        Socket = b.Cpu != null ? b.Cpu.Socket : null,
+                        PhotoUrl = b.PhotoUrl
+                    },
+                    RamTypes = b.PcBuild_Rams.Select(r => r.Ram.Type).ToList(),
+                    FormFactors = b.PcCase != null
+                        ? b.PcCase.PcCaseFormFactors.Select(f => f.Name).ToList()
+                        : new List<string>()
                 })
                 .ToListAsync(cancellationToken);
+
+            // Derived spec tags: socket · first RAM type · first case form-factor (≤3, distinct, non-empty).
+            foreach (var row in projected)
+            {
+                var tags = new List<string>();
+                if (!string.IsNullOrWhiteSpace(row.Dto.Socket))
+                    tags.Add(row.Dto.Socket!);
+
+                var ramType = row.RamTypes.FirstOrDefault(t => !string.IsNullOrWhiteSpace(t));
+                if (!string.IsNullOrWhiteSpace(ramType))
+                    tags.Add(ramType!);
+
+                var formFactor = row.FormFactors.FirstOrDefault(f => !string.IsNullOrWhiteSpace(f));
+                if (!string.IsNullOrWhiteSpace(formFactor))
+                    tags.Add(formFactor!);
+
+                row.Dto.Tags = tags
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .Take(3)
+                    .ToList();
+            }
+
+            var builds = projected.Select(p => p.Dto).ToList();
 
             // Restore the relevance order for fuzzy results (EF WHERE IN loses ordering)
             var orderedBuilds = orderedIds

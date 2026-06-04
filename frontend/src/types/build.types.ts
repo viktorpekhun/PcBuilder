@@ -64,6 +64,8 @@ export interface IPcBuildList {
     id: string;
     name: string;
     price: number;
+    isPublished: boolean;
+    componentCount: number;
     updatedAt?: string;
 }
 
@@ -96,8 +98,11 @@ export interface IPcBuildRequest {
     description?: string;
     isPublished: boolean;
     publishedAt?: string;
+    photoUrl?: string;
     price: number;
     averageRating?: number;
+    estimatedPower: number;
+    psuWattage?: number;
     userId: string;
     username?: string;
     avatarUrl?: string;
@@ -113,6 +118,7 @@ export interface IPcBuildRequest {
     ssds: IMultiComponentPreview[];
     hdds: IMultiComponentPreview[];
     fans: IMultiComponentPreview[];
+    tags: string[];
 }
 
 // --- Generic API response ---

@@ -319,7 +319,7 @@
 
 .resultRow {
     display: grid;
-    grid-template-columns: 110px 1fr auto;
+    grid-template-columns: minmax(auto, 140px) 1fr auto;
     gap: 8px;
     padding: 8px 12px;
     font-family: var(--font-mono);
@@ -381,7 +381,7 @@
     font-size: 10px;
     color: var(--warn);
     background: var(--warn-soft);
-    border: 1px solid #3A2A12;
+    border: 1px solid var(--warn-soft);
     padding: 8px 12px;
     letter-spacing: 0.04em;
 }
