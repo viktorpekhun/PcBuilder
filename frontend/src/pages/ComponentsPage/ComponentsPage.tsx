@@ -149,29 +149,28 @@ function ComponentsPage() {
     };
 
     // Initial load
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         firstLoadDone.current = false;
         setFilters({});
         setSearchQuery('');
         setCurrentPage(1);
         fetchComponents({}, 1, '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [type]);
 
     // Keep currentPageRef in sync
     useEffect(() => { currentPageRef.current = currentPage; }, [currentPage]);
 
     // Filters / sort change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (!firstLoadDone.current) return;
         skipNextPageEffect.current = currentPageRef.current !== 1;
         setCurrentPage(1);
         fetchComponents(filters, 1, searchQuery);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filters, sortField, sortDirection]);
 
     // Page change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (!firstLoadDone.current) return;
         if (skipNextPageEffect.current) {
@@ -179,10 +178,10 @@ function ComponentsPage() {
             return;
         }
         fetchComponents(filters, currentPage, searchQuery);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentPage]);
 
     // Debounced search
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (!firstLoadDone.current) return;
         const timer = setTimeout(() => {
@@ -191,6 +190,7 @@ function ComponentsPage() {
             fetchComponents(filters, 1, searchQuery);
         }, 400);
         return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchQuery]);
 
     const handleFilterChange = useCallback((newFilters: FilterValues) => {
