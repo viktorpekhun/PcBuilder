@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import useAuth from "../../hooks/useAuth";
 import useLogout from "../../hooks/useLogout";
 import useNotifications from "../../hooks/useNotifications";
@@ -24,20 +25,20 @@ interface ComponentTypeEntry {
     id: string;
     api: ComponentType;
     gly: string;
-    label: string;
+    labelKey: string;
 }
 
 const COMPONENT_TYPES: ComponentTypeEntry[] = [
-    { id: "cpu",         api: "Cpu",         gly: "CPU", label: "Processors" },
-    { id: "gpu",         api: "Gpu",         gly: "GPU", label: "Graphics cards" },
-    { id: "motherboard", api: "Motherboard", gly: "M/B", label: "Motherboards" },
-    { id: "ram",         api: "Ram",         gly: "RAM", label: "Memory" },
-    { id: "ssd",         api: "Ssd",         gly: "SSD", label: "SSD storage" },
-    { id: "hdd",         api: "Hdd",         gly: "HDD", label: "Hard drives" },
-    { id: "powerSupply", api: "PowerSupply", gly: "PSU", label: "Power supplies" },
-    { id: "cpuCooler",   api: "CpuCooler",   gly: "CLR", label: "CPU coolers" },
-    { id: "pcCase",      api: "PcCase",      gly: "CSE", label: "Cases" },
-    { id: "fan",         api: "Fan",         gly: "FAN", label: "Case fans" },
+    { id: "cpu",         api: "Cpu",         gly: "CPU", labelKey: "componentTypes.cpu" },
+    { id: "gpu",         api: "Gpu",         gly: "GPU", labelKey: "componentTypes.gpu" },
+    { id: "motherboard", api: "Motherboard", gly: "M/B", labelKey: "componentTypes.motherboard" },
+    { id: "ram",         api: "Ram",         gly: "RAM", labelKey: "componentTypes.ram" },
+    { id: "ssd",         api: "Ssd",         gly: "SSD", labelKey: "componentTypes.ssd" },
+    { id: "hdd",         api: "Hdd",         gly: "HDD", labelKey: "componentTypes.hdd" },
+    { id: "powerSupply", api: "PowerSupply", gly: "PSU", labelKey: "componentTypes.powerSupply" },
+    { id: "cpuCooler",   api: "CpuCooler",   gly: "CLR", labelKey: "componentTypes.cpuCooler" },
+    { id: "pcCase",      api: "PcCase",      gly: "CSE", labelKey: "componentTypes.pcCase" },
+    { id: "fan",         api: "Fan",         gly: "FAN", labelKey: "componentTypes.fan" },
 ];
 
 export default function Sidebar() {
@@ -46,6 +47,7 @@ export default function Sidebar() {
     const { auth } = useAuth();
     const logout = useLogout();
     const { unreadCount } = useNotifications();
+    const { t } = useTranslation();
 
     const isActive = (path: string) => {
         if (path === "/") return location.pathname === "/";
@@ -101,28 +103,28 @@ export default function Sidebar() {
 
     const groups: NavGroup[] = [
         {
-            grp: "BUILD",
+            grp: t("nav.build"),
             items: [
-                { id: "build", ic: "▣", label: "Composer", path: "/" },
-                { id: "components", ic: "≡", label: "Components", path: "/components/cpu" },
+                { id: "build", ic: "▣", label: t("nav.composer"), path: "/" },
+                { id: "components", ic: "≡", label: t("nav.components"), path: "/components/cpu" },
             ],
         },
         {
-            grp: "COMMUNITY",
+            grp: t("nav.community"),
             items: [
-                { id: "gallery", ic: "⌘", label: "Gallery", path: "/gallery" },
+                { id: "gallery", ic: "⌘", label: t("nav.gallery"), path: "/gallery" },
             ],
         },
     ];
 
     if (auth?.username) {
         groups.push({
-            grp: "YOU",
+            grp: t("nav.you"),
             items: [
-                { id: "saved", ic: "↓", label: "Saved builds", path: "/user/builds" },
-                { id: "profile", ic: "@", label: "Profile", path: "/profile" },
+                { id: "saved", ic: "↓", label: t("nav.savedBuilds"), path: "/user/builds" },
+                { id: "profile", ic: "@", label: t("nav.profile"), path: "/profile" },
                 {
-                    id: "notifs", ic: "●", label: "Notifications", path: "/notifications",
+                    id: "notifs", ic: "●", label: t("nav.notifications"), path: "/notifications",
                     ...(unreadCount > 0 ? { count: unreadCount } : {}),
                 },
             ],
@@ -131,9 +133,9 @@ export default function Sidebar() {
 
     if (auth?.roles?.includes("Admin")) {
         groups.push({
-            grp: "ADMIN",
+            grp: t("nav.admin"),
             items: [
-                { id: "admin", ic: "⚙", label: "Admin", path: "/admin" },
+                { id: "admin", ic: "⚙", label: t("nav.adminPanel"), path: "/admin" },
             ],
         });
     }
@@ -167,7 +169,7 @@ export default function Sidebar() {
                                             onClick={() => navigate(`/components/${ct.id}`)}
                                         >
                                             <span className={styles.typeGly}>{ct.gly}</span>
-                                            <span className={styles.label}>{ct.label}</span>
+                                            <span className={styles.label}>{t(ct.labelKey)}</span>
                                             {typeCounts[ct.id] != null && (
                                                 <span className={styles.typeCount}>{typeCounts[ct.id]}</span>
                                             )}
@@ -180,28 +182,28 @@ export default function Sidebar() {
                 </div>
             ))}
 
-            <div className={styles.grp} style={{ marginTop: 24 }}>SYSTEM</div>
+            <div className={styles.grp} style={{ marginTop: 24 }}>{t("nav.system")}</div>
             {auth?.username ? (
                 <button className={styles.item} onClick={handleSignOut}>
                     <span className={styles.ic}>↗</span>
-                    <span className={styles.label}>Sign out</span>
+                    <span className={styles.label}>{t("nav.signOut")}</span>
                 </button>
             ) : (
                 <>
                     <button className={styles.item} onClick={() => navigate("/login")}>
                         <span className={styles.ic}>→</span>
-                        <span className={styles.label}>Sign in</span>
+                        <span className={styles.label}>{t("nav.signIn")}</span>
                     </button>
                     <button className={styles.item} onClick={() => navigate("/register")}>
                         <span className={styles.ic}>+</span>
-                        <span className={styles.label}>Register</span>
+                        <span className={styles.label}>{t("nav.register")}</span>
                     </button>
                 </>
             )}
 
             <div className={styles.footer}>
                 v 0.42 · build 2026.05.16<br />
-                ● <span className={styles.ok}>all systems ok</span>
+                ● <span className={styles.ok}>{t("nav.allSystemsOk")}</span>
             </div>
         </nav>
     );

@@ -53,7 +53,7 @@ namespace PcBuilds.Application.Handlers
                     null,
                     request.UserId,
                     BanType.Comment,
-                    "Automated warning: toxic comment"), cancellationToken);
+                    Moderation.Application.WarnReasonCodes.InappropriateContent), cancellationToken);
 
                 return Result.Failure<Guid>(new Error("Toxic", "Comment rejected by moderation.", 400));
             }

@@ -8,6 +8,7 @@ namespace Auth.Application.Dtos
         public bool EmailVerified { get; set; }
         public string? AvatarUrl { get; set; }
         public string? Bio { get; set; }
+        public string PreferredLanguage { get; set; } = "en";
         public bool HasPassword { get; set; }
         public bool GoogleLinked { get; set; }
         public List<string> Roles { get; set; } = [];

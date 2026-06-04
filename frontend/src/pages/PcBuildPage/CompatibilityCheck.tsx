@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { buildService } from "../../api/build.service";
 import type { IBuildCompatibilityReport, ICompatibilityIssue, IComponentsCompatibility } from "../../types/build.types";
 import type { ComponentDataState, SingleKey, MultiKey } from "./types";
@@ -42,6 +43,7 @@ const KIND_CLASS: Record<DesignRowKind, string | undefined> = {
 };
 
 function CompatibilityCheck({ selectedComponentIds, componentData, onCounts }: CompatibilityCheckProps) {
+    const { t } = useTranslation();
     const [results, setResults] = useState<IBuildCompatibilityReport | null>(null);
     const [loading, setLoading] = useState(false);
     const [, setError] = useState<string | null>(null);
@@ -118,11 +120,11 @@ function CompatibilityCheck({ selectedComponentIds, componentData, onCounts }: C
         "ok";
 
     const overallLabel =
-        !hasComponents ? "○ PENDING" :
-        loading ? "○ CHECKING" :
-        !isStrict ? `× ${criticalCount} FAIL` :
-        hasWarnings ? `△ ${warningCount} WARN` :
-        "✓ PASS";
+        !hasComponents ? t("pcBuildPage.compatibility.status.pending") :
+        loading ? t("pcBuildPage.compatibility.status.checking") :
+        !isStrict ? t("pcBuildPage.compatibility.status.fail", { count: criticalCount }) :
+        hasWarnings ? t("pcBuildPage.compatibility.status.warn", { count: warningCount }) :
+        t("pcBuildPage.compatibility.status.pass");
 
     const overallPill =
         overallKind === "ok" ? styles.pillOk :
@@ -142,21 +144,21 @@ function CompatibilityCheck({ selectedComponentIds, componentData, onCounts }: C
     return (
         <div className={styles.compat}>
             <div className={styles.compatHead}>
-                <span className={styles.eyebrow}>COMPATIBILITY</span>
+                <span className={styles.eyebrow}>{t("pcBuildPage.compatibility.eyebrow")}</span>
                 <span className={`${styles.pill} ${overallPill}`}>{overallLabel}</span>
             </div>
 
             <div className={styles.body}>
                 <div className={styles.basicGrid}>
-                    <span className={styles.basicLbl}>POWER NEEDED</span>
+                    <span className={styles.basicLbl}>{t("pcBuildPage.compatibility.powerNeeded")}</span>
                     <span className={styles.basicVal}>{totalWattage} W</span>
-                    <span className={styles.basicLbl}>PSU CAPACITY</span>
+                    <span className={styles.basicLbl}>{t("pcBuildPage.compatibility.psuCapacity")}</span>
                     <span className={`${styles.basicVal} ${psuWattage && psuWattage < totalWattage ? styles.err : ""}`}>
                         {psuWattage ? `${psuWattage} W` : "—"}
                     </span>
-                    <span className={styles.basicLbl}>CRITICAL</span>
+                    <span className={styles.basicLbl}>{t("pcBuildPage.compatibility.critical")}</span>
                     <span className={`${styles.basicVal} ${criticalCount > 0 ? styles.err : ""}`}>{criticalCount}</span>
-                    <span className={styles.basicLbl}>WARNINGS</span>
+                    <span className={styles.basicLbl}>{t("pcBuildPage.compatibility.warnings")}</span>
                     <span className={`${styles.basicVal} ${warningCount > 0 ? styles.warn : ""}`}>{warningCount}</span>
                 </div>
             </div>
@@ -165,7 +167,7 @@ function CompatibilityCheck({ selectedComponentIds, componentData, onCounts }: C
                 {designRows.map(row => (
                     <div key={row.id} className={`${styles.row} ${KIND_CLASS[row.kind]}`}>
                         <span className={styles.rowGlyph}>{GLYPH[row.kind]}</span>
-                        <span className={styles.rowLabel}>{row.label}</span>
+                        <span className={styles.rowLabel}>{t(row.label)}</span>
                         <span className={styles.rowValue}>{row.value}</span>
                     </div>
                 ))}
@@ -180,7 +182,9 @@ function CompatibilityCheck({ selectedComponentIds, componentData, onCounts }: C
                         aria-expanded={detailsOpen}
                     >
                         <span className={`${styles.detailsCaret} ${detailsOpen ? styles.detailsCaretOpen : ""}`}>▸</span>
-                        DETAILS · {allIssues.length} ISSUE{allIssues.length === 1 ? "" : "S"}
+                        {allIssues.length === 1
+                            ? t("pcBuildPage.compatibility.details", { count: allIssues.length })
+                            : t("pcBuildPage.compatibility.details_plural", { count: allIssues.length })}
                     </button>
                     {detailsOpen && (
                         <ul className={styles.messages}>

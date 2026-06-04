@@ -58,7 +58,7 @@ namespace PcBuilds.Application.Handlers
                         null,
                         request.UserId,
                         BanType.Post,
-                        "Automated warning: toxic build content"), cancellationToken);
+                        Moderation.Application.WarnReasonCodes.InappropriateContent), cancellationToken);
 
                     return Result.Failure<bool>(new Error("Toxic", "Build rejected by moderation.", 400));
                 }

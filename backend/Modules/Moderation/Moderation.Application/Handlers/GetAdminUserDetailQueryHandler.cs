@@ -38,6 +38,7 @@ namespace Moderation.Application.Handlers
                     Id = w.Id,
                     BanType = w.BanType,
                     Reason = w.Reason,
+                    ReasonCode = w.ReasonCode,
                     IssuedByAdminUsername = w.IssuedByAdmin != null ? w.IssuedByAdmin.Username : null,
                     IssuedAt = w.IssuedAt
                 })

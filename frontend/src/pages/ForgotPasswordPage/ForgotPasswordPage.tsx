@@ -35,27 +35,13 @@ const EyeIcon = ({ off }: { off: boolean }) => (
     </svg>
 );
 
-/* ── shared shell pieces ─────────────────────────────────── */
-const Wordmark = ({ path }: { path: string }) => (
-    <div className={styles['auth-top']}>
-        <span className={styles['wordmark']}>
-            <span className={styles['wordmark-bracket']}>[</span>
-            pcbuilder
-            <span className={styles['wordmark-slash']}>/</span>
-            <span className={styles['wordmark-bracket']}>]</span>
-        </span>
-        <span className={styles['auth-path']}>
-            auth<span className={styles['auth-path-sep']}>/</span>
-            <span className={styles['auth-path-active']}>{path}</span>
-        </span>
-    </div>
-);
+
 
 const PageFoot = () => (
     <div className={styles['stage-foot']}>
         <span>
             <span className={styles['stage-foot-dot']}></span>
-            <span className={styles['stage-foot-ok']}>всі системи в нормі</span>
+            <span className={styles['stage-foot-ok']}>all systems ok</span>
         </span>
         <span>v 0.42 · 2026.05.31</span>
     </div>
@@ -88,7 +74,6 @@ const ForgotView = () => {
 
     return (
         <>
-            <Wordmark path="recovery" />
             <div className={styles['container']}>
                 <div className={styles['card-head']}>
                     <span className={styles['eyebrow']}>Акаунт / Відновлення</span>
@@ -189,7 +174,6 @@ const ResetView = ({ token }: { token: string }) => {
     if (status === 'invalid') {
         return (
             <>
-                <Wordmark path="new-password" />
                 <div className={styles['container']}>
                     <div className={styles['card-head']}>
                         <span className={styles['eyebrow']}>Акаунт / Відновлення</span>
@@ -219,7 +203,6 @@ const ResetView = ({ token }: { token: string }) => {
     if (status === 'expired') {
         return (
             <>
-                <Wordmark path="new-password" />
                 <div className={styles['container']}>
                     <div className={styles['card-head']}>
                         <span className={styles['eyebrow']}>Акаунт / Відновлення</span>
@@ -249,7 +232,6 @@ const ResetView = ({ token }: { token: string }) => {
     if (status === 'success') {
         return (
             <>
-                <Wordmark path="new-password" />
                 <div className={styles['container']}>
                     <div className={styles['card-head']}>
                         <span className={styles['eyebrow']}>Акаунт / Відновлення</span>
@@ -277,7 +259,6 @@ const ResetView = ({ token }: { token: string }) => {
 
     return (
         <>
-            <Wordmark path="new-password" />
             <div className={styles['container']}>
                 <div className={styles['card-head']}>
                     <span className={styles['eyebrow']}>Акаунт / Відновлення</span>

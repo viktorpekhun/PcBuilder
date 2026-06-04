@@ -118,6 +118,7 @@ export interface IPcBuildRequest {
     ssds: IMultiComponentPreview[];
     hdds: IMultiComponentPreview[];
     fans: IMultiComponentPreview[];
+    tags: string[];
 }
 
 // --- Generic API response ---

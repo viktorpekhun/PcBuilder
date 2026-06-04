@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { authService } from '../../api/auth.service';
 import useAuth from "../../hooks/useAuth";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import styles from './RegisterPage.module.css';
 import { AxiosError } from "axios";
 import { decodeToken } from "../../utils/decodeToken";
@@ -19,7 +20,6 @@ const pwdScore = (p: string) => {
     if (/[^a-zA-Z0-9]/.test(p)) s++;
     return Math.min(s, 4);
 };
-const SCORE_LABEL = ["", "Слабкий", "Середній", "Добрий", "Надійний"];
 
 const EyeIcon = ({ off }: { off: boolean }) => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -43,6 +43,7 @@ const EyeIcon = ({ off }: { off: boolean }) => (
 type ErrType = '' | 'validate' | 'conflict' | 'server' | 'google';
 
 const RegisterPage = () => {
+    const { t } = useTranslation();
     const { setAuth, setPersist } = useAuth();
     const navigate = useNavigate();
     const emailRef = useRef<HTMLInputElement>(null);
@@ -65,6 +66,14 @@ const RegisterPage = () => {
     const vMatch = pwd !== '' && pwd === matchPwd;
     const allValid = vEmail && vUser && vPwd && vMatch;
     const score = pwdScore(pwd);
+
+    const SCORE_LABEL = [
+        "",
+        t('auth.register.strengthLabels.weak'),
+        t('auth.register.strengthLabels.fair'),
+        t('auth.register.strengthLabels.good'),
+        t('auth.register.strengthLabels.strong'),
+    ];
 
     const handleGoogleLogin = async (credentialResponse: CredentialResponse) => {
         try {
@@ -114,22 +123,22 @@ const RegisterPage = () => {
                     className={styles['seg-btn']}
                     role="tab" aria-selected="false"
                 >
-                    Увійти
+                    {t('auth.tabs.signIn')}
                 </Link>
                 <button
                     className={`${styles['seg-btn']} ${styles['seg-btn-active']}`}
                     role="tab" aria-selected="true"
                 >
-                    <span className={styles['seg-tick']}>●</span>Зареєструватись
+                    <span className={styles['seg-tick']}>●</span>{t('auth.register.submitBtn')}
                 </button>
             </div>
 
             <div className={styles['register-container']}>
                 <div className={styles['card-head']}>
-                    <span className={styles['eyebrow']}>Акаунт / Реєстрація</span>
-                    <h1>Створити акаунт</h1>
+                    <span className={styles['eyebrow']}>{t('auth.register.eyebrow')}</span>
+                    <h1>{t('auth.register.heading')}</h1>
                     <p className={styles['description']}>
-                        Створіть свій акаунт щоб отримати доступ до всіх функцій.
+                        {t('auth.register.description')}
                     </p>
                 </div>
 
@@ -138,8 +147,8 @@ const RegisterPage = () => {
                         <div className={styles['errmsg']} role="alert">
                             <span className={styles['errmsg-glyph']}>×</span>
                             <div>
-                                <div className={styles['errmsg-title']}>Помилка валідації</div>
-                                <div className={styles['errmsg-body']}>Виправте виділені поля перед продовженням.</div>
+                                <div className={styles['errmsg-title']}>{t('auth.register.errors.validateTitle')}</div>
+                                <div className={styles['errmsg-body']}>{t('auth.register.errors.validateBody')}</div>
                             </div>
                         </div>
                     )}
@@ -147,8 +156,8 @@ const RegisterPage = () => {
                         <div className={styles['errmsg']} role="alert">
                             <span className={styles['errmsg-glyph']}>×</span>
                             <div>
-                                <div className={styles['errmsg-title']}>E-mail вже використовується</div>
-                                <div className={styles['errmsg-body']}>Акаунт з таким e-mail вже існує.</div>
+                                <div className={styles['errmsg-title']}>{t('auth.register.errors.conflictTitle')}</div>
+                                <div className={styles['errmsg-body']}>{t('auth.register.errors.conflictBody')}</div>
                             </div>
                         </div>
                     )}
@@ -156,8 +165,8 @@ const RegisterPage = () => {
                         <div className={styles['errmsg']} role="alert">
                             <span className={styles['errmsg-glyph']}>×</span>
                             <div>
-                                <div className={styles['errmsg-title']}>Сервер не відповідає</div>
-                                <div className={styles['errmsg-body']}>Спробуйте пізніше.</div>
+                                <div className={styles['errmsg-title']}>{t('auth.register.errors.serverTitle')}</div>
+                                <div className={styles['errmsg-body']}>{t('auth.register.errors.serverBody')}</div>
                             </div>
                         </div>
                     )}
@@ -165,8 +174,8 @@ const RegisterPage = () => {
                         <div className={styles['errmsg']} role="alert">
                             <span className={styles['errmsg-glyph']}>×</span>
                             <div>
-                                <div className={styles['errmsg-title']}>Помилка Google</div>
-                                <div className={styles['errmsg-body']}>Не вдалося зареєструватись через Google.</div>
+                                <div className={styles['errmsg-title']}>{t('auth.register.errors.googleTitle')}</div>
+                                <div className={styles['errmsg-body']}>{t('auth.register.errors.googleBody')}</div>
                             </div>
                         </div>
                     )}
@@ -175,7 +184,7 @@ const RegisterPage = () => {
                         {/* E-mail */}
                         <div className={styles['field']}>
                             <label className={styles['field-label']} htmlFor="reg-email">
-                                E-mail
+                                {t('auth.register.emailLabel')}
                                 {email && (
                                     <span className={`${styles['vmark']} ${vEmail ? styles['valid'] : styles['invalid']}`}>
                                         {vEmail ? '✓' : '×'}
@@ -201,14 +210,14 @@ const RegisterPage = () => {
                         {focus === 'email' && email && !vEmail && (
                             <div className={styles['instructions']}>
                                 <span className={styles['instructions-icon']}>i</span>
-                                <span className={styles['instructions-text']}>Введіть дійсну адресу електронної пошти.</span>
+                                <span className={styles['instructions-text']}>{t('auth.register.hints.email')}</span>
                             </div>
                         )}
 
                         {/* Username */}
                         <div className={styles['field']}>
                             <label className={styles['field-label']} htmlFor="reg-user">
-                                Ім'я користувача
+                                {t('auth.register.usernameLabel')}
                                 {user && (
                                     <span className={`${styles['vmark']} ${vUser ? styles['valid'] : styles['invalid']}`}>
                                         {vUser ? '✓' : '×'}
@@ -234,8 +243,9 @@ const RegisterPage = () => {
                             <div className={styles['instructions']}>
                                 <span className={styles['instructions-icon']}>i</span>
                                 <span className={styles['instructions-text']}>
-                                    4–30 символів. Має починатися з літери.<br />
-                                    Літери, цифри, підкреслення та дефіси.
+                                    {t('auth.register.hints.username').split('\n').map((line, i) => (
+                                        <span key={i}>{line}{i === 0 ? <br /> : null}</span>
+                                    ))}
                                 </span>
                             </div>
                         )}
@@ -243,7 +253,7 @@ const RegisterPage = () => {
                         {/* Password */}
                         <div className={styles['field']}>
                             <label className={styles['field-label']} htmlFor="reg-pwd">
-                                Пароль
+                                {t('auth.register.passwordLabel')}
                                 {pwd && (
                                     <span className={`${styles['vmark']} ${vPwd ? styles['valid'] : styles['invalid']}`}>
                                         {vPwd ? '✓' : '×'}
@@ -266,7 +276,7 @@ const RegisterPage = () => {
                                     type="button"
                                     className={styles['password-toggle']}
                                     onClick={() => setShowPassword(p => !p)}
-                                    aria-label={showPassword ? "Сховати пароль" : "Показати пароль"}
+                                    aria-label={showPassword ? t('auth.register.hidePassword') : t('auth.register.showPassword')}
                                 >
                                     <EyeIcon off={showPassword} />
                                 </button>
@@ -280,7 +290,7 @@ const RegisterPage = () => {
                                     ))}
                                 </div>
                                 <div className={styles['meter-label']}>
-                                    Надійність: {SCORE_LABEL[score] || '—'} · 8–30 символів, літери + цифри
+                                    {t('auth.register.passwordStrength', { label: SCORE_LABEL[score] || '—' })}
                                 </div>
                             </>
                         )}
@@ -288,7 +298,7 @@ const RegisterPage = () => {
                         {/* Confirm password */}
                         <div className={styles['field']}>
                             <label className={styles['field-label']} htmlFor="reg-match">
-                                Підтвердіть пароль
+                                {t('auth.register.confirmPasswordLabel')}
                                 {matchPwd && (
                                     <span className={`${styles['vmark']} ${vMatch ? styles['valid'] : styles['invalid']}`}>
                                         {vMatch ? '✓' : '×'}
@@ -311,7 +321,7 @@ const RegisterPage = () => {
                                     type="button"
                                     className={styles['password-toggle']}
                                     onClick={() => setShowMatchPassword(p => !p)}
-                                    aria-label={showMatchPassword ? "Сховати пароль" : "Показати пароль"}
+                                    aria-label={showMatchPassword ? t('auth.register.hidePassword') : t('auth.register.showPassword')}
                                 >
                                     <EyeIcon off={showMatchPassword} />
                                 </button>
@@ -320,7 +330,7 @@ const RegisterPage = () => {
                         {focus === 'match' && matchPwd && !vMatch && (
                             <div className={styles['instructions']}>
                                 <span className={styles['instructions-icon']}>i</span>
-                                <span className={styles['instructions-text']}>Має збігатися з полем пароля.</span>
+                                <span className={styles['instructions-text']}>{t('auth.register.hints.passwordMatch')}</span>
                             </div>
                         )}
 
@@ -329,17 +339,17 @@ const RegisterPage = () => {
                             className={styles['btn-primary']}
                             disabled={!allValid}
                         >
-                            Зареєструватись <span className={styles['btn-kbd']}>↵</span>
+                            {t('auth.register.submitBtn')} <span className={styles['btn-kbd']}>↵</span>
                         </button>
                     </form>
 
-                    <div className={styles['divider']}><span>або</span></div>
+                    <div className={styles['divider']}><span>{t('auth.register.orDivider')}</span></div>
 
                     <div className={styles['google-login']}>
                         <div className={styles['google-btn-wrap']}>
                             <div className={styles['google-btn-face']} aria-hidden="true">
                                 <span className={styles['google-mark']}>G</span>
-                                Зареєструватись через Google
+                                {t('auth.register.googleRegister')}
                             </div>
                             <div className={styles['google-btn-real']}>
                                 <GoogleLogin

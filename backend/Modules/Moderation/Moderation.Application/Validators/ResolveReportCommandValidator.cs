@@ -26,6 +26,11 @@ namespace Moderation.Application.Validators
             RuleFor(x => x.Reason)
                 .MaximumLength(500).WithMessage("Reason cannot exceed 500 characters.")
                 .When(x => !string.IsNullOrEmpty(x.Reason));
+
+            RuleFor(x => x.ReasonCode)
+                .NotEmpty().WithMessage("Reason code is required.")
+                .Must(code => WarnReasonCodes.All.Contains(code!)).WithMessage("Invalid reason code.")
+                .When(x => x.Action == ReportResolutionAction.DeleteContentAndWarn);
         }
     }
 }

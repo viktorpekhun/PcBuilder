@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import useAuth from '../../hooks/useAuth';
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import styles from './LoginPage.module.css';
 
 import { authService } from '../../api/auth.service';
@@ -30,6 +31,7 @@ const EyeIcon = ({ off }: { off: boolean }) => (
 type ErrType = '' | 'empty' | 'server' | 'auth' | 'google';
 
 const LoginPage = () => {
+    const { t } = useTranslation();
     const { setAuth, setPersist } = useAuth();
 
     const navigate = useNavigate();
@@ -96,23 +98,23 @@ const LoginPage = () => {
                     className={`${styles['seg-btn']} ${styles['seg-btn-active']}`}
                     role="tab" aria-selected="true"
                 >
-                    <span className={styles['seg-tick']}>●</span>Увійти
+                    <span className={styles['seg-tick']}>●</span>{t('auth.tabs.signIn')}
                 </button>
                 <Link
                     to="/register"
                     className={styles['seg-btn']}
                     role="tab" aria-selected="false"
                 >
-                    Зареєструватись
+                    {t('auth.tabs.register')}
                 </Link>
             </div>
 
             <div className={styles['login-container']}>
                 <div className={styles['card-head']}>
-                    <span className={styles['eyebrow']}>Акаунт / Доступ</span>
-                    <h1>Вхід</h1>
+                    <span className={styles['eyebrow']}>{t('auth.login.eyebrow')}</span>
+                    <h1>{t('auth.login.heading')}</h1>
                     <p className={styles['description']}>
-                        Увійдіть в свій акаунт щоб отримати доступ до всіх функцій.
+                        {t('auth.login.description')}
                     </p>
                 </div>
 
@@ -121,8 +123,8 @@ const LoginPage = () => {
                         <div className={styles['errmsg']} role="alert">
                             <span className={styles['errmsg-glyph']}>×</span>
                             <div>
-                                <div className={styles['errmsg-title']}>Порожні поля</div>
-                                <div className={styles['errmsg-body']}>Введіть e-mail та пароль щоб продовжити.</div>
+                                <div className={styles['errmsg-title']}>{t('auth.login.errors.emptyTitle')}</div>
+                                <div className={styles['errmsg-body']}>{t('auth.login.errors.emptyBody')}</div>
                             </div>
                         </div>
                     )}
@@ -130,8 +132,8 @@ const LoginPage = () => {
                         <div className={styles['errmsg']} role="alert">
                             <span className={styles['errmsg-glyph']}>×</span>
                             <div>
-                                <div className={styles['errmsg-title']}>Невірні дані</div>
-                                <div className={styles['errmsg-body']}>E-mail або пароль неправильні. Спробуйте ще раз.</div>
+                                <div className={styles['errmsg-title']}>{t('auth.login.errors.authTitle')}</div>
+                                <div className={styles['errmsg-body']}>{t('auth.login.errors.authBody')}</div>
                             </div>
                         </div>
                     )}
@@ -139,8 +141,8 @@ const LoginPage = () => {
                         <div className={styles['errmsg']} role="alert">
                             <span className={styles['errmsg-glyph']}>×</span>
                             <div>
-                                <div className={styles['errmsg-title']}>Сервер не відповідає</div>
-                                <div className={styles['errmsg-body']}>Спробуйте пізніше.</div>
+                                <div className={styles['errmsg-title']}>{t('auth.login.errors.serverTitle')}</div>
+                                <div className={styles['errmsg-body']}>{t('auth.login.errors.serverBody')}</div>
                             </div>
                         </div>
                     )}
@@ -148,15 +150,15 @@ const LoginPage = () => {
                         <div className={styles['errmsg']} role="alert">
                             <span className={styles['errmsg-glyph']}>×</span>
                             <div>
-                                <div className={styles['errmsg-title']}>Помилка Google</div>
-                                <div className={styles['errmsg-body']}>Не вдалося увійти через Google. Спробуйте ще раз.</div>
+                                <div className={styles['errmsg-title']}>{t('auth.login.errors.googleTitle')}</div>
+                                <div className={styles['errmsg-body']}>{t('auth.login.errors.googleBody')}</div>
                             </div>
                         </div>
                     )}
 
                     <form onSubmit={handleSubmit}>
                         <div className={styles['field']}>
-                            <label className={styles['field-label']} htmlFor="login-email">E-mail</label>
+                            <label className={styles['field-label']} htmlFor="login-email">{t('auth.login.emailLabel')}</label>
                             <div className={styles['control']}>
                                 <input
                                     type="text"
@@ -172,7 +174,7 @@ const LoginPage = () => {
                         </div>
 
                         <div className={styles['field']}>
-                            <label className={styles['field-label']} htmlFor="login-pwd">Пароль</label>
+                            <label className={styles['field-label']} htmlFor="login-pwd">{t('auth.login.passwordLabel')}</label>
                             <div className={styles['password-field']}>
                                 <input
                                     type={showPassword ? "text" : "password"}
@@ -186,7 +188,7 @@ const LoginPage = () => {
                                     type="button"
                                     className={styles['password-toggle']}
                                     onClick={() => setShowPassword(p => !p)}
-                                    aria-label={showPassword ? "Сховати пароль" : "Показати пароль"}
+                                    aria-label={showPassword ? t('auth.login.hidePassword') : t('auth.login.showPassword')}
                                 >
                                     <EyeIcon off={showPassword} />
                                 </button>
@@ -194,20 +196,20 @@ const LoginPage = () => {
                         </div>
 
                         <button type="submit" className={styles['btn-primary']}>
-                            Увійти <span className={styles['btn-kbd']}>↵</span>
+                            {t('auth.login.submitBtn')} <span className={styles['btn-kbd']}>↵</span>
                         </button>
                         <Link to="/forgot-password" className={styles['forgot-link']}>
-                            Забули пароль? →
+                            {t('auth.login.forgotPassword')}
                         </Link>
                     </form>
 
-                    <div className={styles['divider']}><span>або</span></div>
+                    <div className={styles['divider']}><span>{t('auth.login.orDivider')}</span></div>
 
                     <div className={styles['google-login']}>
                         <div className={styles['google-btn-wrap']}>
                             <div className={styles['google-btn-face']} aria-hidden="true">
                                 <span className={styles['google-mark']}>G</span>
-                                Увійти через Google
+                                {t('auth.login.googleSignIn')}
                             </div>
                             <div className={styles['google-btn-real']}>
                                 <GoogleLogin

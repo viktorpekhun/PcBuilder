@@ -11,5 +11,6 @@ export interface IPcBuildGallery {
     commentCount: number;
     ratingCount: number;
     socket?: string;
+    photoUrl?: string;
     tags: string[];
 }

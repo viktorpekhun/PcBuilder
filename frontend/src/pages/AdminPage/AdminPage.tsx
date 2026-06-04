@@ -1,6 +1,7 @@
 import { useLocation, useNavigate, Outlet } from "react-router-dom";
 import { adminService } from "../../api/admin.service";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { IAdminStats } from "../../types/admin.types";
 import styles from "./AdminPage.module.css";
 
@@ -8,20 +9,21 @@ interface TabDef {
     to: string;
     exact?: boolean;
     icon: string;
-    label: string;
+    labelKey: string;
     getCount?: (s: IAdminStats) => number | null;
 }
 
 const TABS: TabDef[] = [
-    { to: "/admin",            exact: true, icon: "▦", label: "Dashboard" },
-    { to: "/admin/users",                   icon: "@", label: "Users",      getCount: s => s.totalUsers },
-    { to: "/admin/moderation",              icon: "⚑", label: "Moderation", getCount: s => s.pendingReports },
-    { to: "/admin/scraping",                icon: "↻", label: "Scraping" },
+    { to: "/admin",            exact: true, icon: "▦", labelKey: "admin.tabs.dashboard" },
+    { to: "/admin/users",                   icon: "@", labelKey: "admin.tabs.users",      getCount: s => s.totalUsers },
+    { to: "/admin/moderation",              icon: "⚑", labelKey: "admin.tabs.moderation", getCount: s => s.pendingReports },
+    { to: "/admin/scraping",                icon: "↻", labelKey: "admin.tabs.scraping" },
 ];
 
 const AdminPage = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [stats, setStats] = useState<IAdminStats | null>(null);
 
     const fetchStats = () => {
@@ -46,23 +48,23 @@ const AdminPage = () => {
             {/* Header */}
             <div className={styles.head}>
                 <div>
-                    <span className={styles.eyebrow}>SYSTEM · ADMIN CONSOLE</span>
-                    <h1 className={styles.h1}>{activeTab.label}</h1>
+                    <span className={styles.eyebrow}>{t("admin.eyebrow")}</span>
+                    <h1 className={styles.h1}>{t(activeTab.labelKey)}</h1>
                     <div className={styles.headMeta}>
                         {stats ? (
                             <>
                                 <span>
                                     <span className={`${styles.dot} ${styles.dotAcc}`} />
-                                    {stats.totalUsers.toLocaleString("en-US").replace(/,/g, " ")} USERS
+                                    {t("admin.header.users_other", { count: stats.totalUsers })}
                                 </span>
                                 <span className={styles.metaSep}>·</span>
                                 <span>
                                     <span className={`${styles.dot} ${stats.pendingReports > 0 ? styles.dotWarn : styles.dotDim}`} />
-                                    {stats.pendingReports} PENDING REPORTS
+                                    {t("admin.header.pendingReports_other", { count: stats.pendingReports })}
                                 </span>
                             </>
                         ) : (
-                            <span className={styles.dotDim}>LOADING…</span>
+                            <span className={styles.dotDim}>{t("admin.header.loading")}</span>
                         )}
                     </div>
                 </div>
@@ -81,7 +83,7 @@ const AdminPage = () => {
                             onClick={() => navigate(tab.to)}
                         >
                             <span className={styles.tabIc}>{tab.icon}</span>
-                            <span className={styles.tabLbl}>{tab.label}</span>
+                            <span className={styles.tabLbl}>{t(tab.labelKey)}</span>
                             {count !== null && (
                                 <span className={styles.tabCount}>
                                     {tab.to === "/admin/moderation" && count > 0

@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import { useTranslation } from "react-i18next";
 import styles from "./PcBuildPage.module.css";
 import type { ComponentDataState } from "./types";
 import { usePowerStats } from "./hooks";
@@ -9,6 +10,7 @@ interface PowerCardProps {
 }
 
 export default function PowerCard({ componentData }: PowerCardProps) {
+    const { t } = useTranslation();
     const { slots, totalDraw, psu, loadPct, headroom, kind } = usePowerStats(componentData);
 
     const fillClass =
@@ -23,29 +25,29 @@ export default function PowerCard({ componentData }: PowerCardProps) {
         styles.pillErr;
 
     const pillLabel =
-        psu === 0 ? "○ AWAITING PSU" :
-        kind === "ok" ? "✓ HEALTHY" :
-        kind === "warn" ? "△ TIGHT" :
-        "× OVER";
+        psu === 0 ? t("pcBuildPage.powerCard.awaitingPsu") :
+        kind === "ok" ? t("pcBuildPage.powerCard.healthy") :
+        kind === "warn" ? t("pcBuildPage.powerCard.tight") :
+        t("pcBuildPage.powerCard.over");
 
     return (
         <div className={styles.sideCard}>
             <div className={styles.scHead}>
-                <span className={styles.scEyebrow}>POWER</span>
+                <span className={styles.scEyebrow}>{t("pcBuildPage.powerCard.eyebrow")}</span>
                 <span className={`${styles.pill} ${pillClass}`}>{pillLabel}</span>
             </div>
             <div className={styles.scBody}>
                 {psu === 0 ? (
                     <div className={styles.gaugeEmpty}>
-                        ○ Додайте БЖ для розрахунку запасу.<br />
-                        Поточне споживання: <span style={{ color: "var(--fg-0)" }}>{totalDraw} W</span>
+                        ○ {t("pcBuildPage.powerCard.noPsuHint")}<br />
+                        {t("pcBuildPage.powerCard.currentDraw")}: <span style={{ color: "var(--fg-0)" }}>{totalDraw} W</span>
                     </div>
                 ) : (
                     <>
                         <div className={styles.gauge}>
                             <div className={styles.gaugeHead}>
-                                <span><span className={styles.big}>{totalDraw}</span> <span className={styles.dim}>W est.</span></span>
-                                <span className={styles.dim}>/ {psu} W max</span>
+                                <span><span className={styles.big}>{totalDraw}</span> <span className={styles.dim}>{t("pcBuildPage.powerCard.estW")}</span></span>
+                                <span className={styles.dim}>{t("pcBuildPage.powerCard.max", { psu })}</span>
                             </div>
                             <div className={styles.gaugeBar}>
                                 <div className={`${styles.gaugeFill} ${fillClass}`}
@@ -55,8 +57,8 @@ export default function PowerCard({ componentData }: PowerCardProps) {
                             </div>
                             <div className={styles.gaugeLegend}>
                                 <span>0 W</span>
-                                <span>SAFE 80%</span>
-                                <span>MAX 95%</span>
+                                <span>{t("pcBuildPage.powerCard.safe80")}</span>
+                                <span>{t("pcBuildPage.powerCard.max95")}</span>
                                 <span>{psu} W</span>
                             </div>
                         </div>
@@ -88,7 +90,7 @@ export default function PowerCard({ componentData }: PowerCardProps) {
                                         <span className={styles.val}>{s.watts} W</span>
                                     </Fragment>
                                 ))}
-                                <span className={`${styles.lbl} ${styles.totalRow}`}>HEADROOM</span>
+                                <span className={`${styles.lbl} ${styles.totalRow}`}>{t("pcBuildPage.powerCard.headroom")}</span>
                                 <span className={`${styles.val} ${styles.totalRow}`}
                                     style={{ color: kind === "ok" ? "var(--ok)" : kind === "warn" ? "var(--warn)" : "var(--err)" }}>
                                     {headroom} W

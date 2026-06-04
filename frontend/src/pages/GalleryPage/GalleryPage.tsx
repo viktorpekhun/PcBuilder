@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import styles from './GalleryPage.module.css';
 import { galleryService } from '../../api/gallery.service';
 import { Pagination } from '../../components/Pagination/Pagination';
@@ -16,19 +17,11 @@ interface PaginationMeta {
 
 const PAGE_SIZE = 12;
 
-const SORTS = [
-    { field: 'publishedAt', label: 'Нові' },
-    { field: 'price', label: 'Ціна' },
-    { field: 'averageRating', label: 'Рейтинг' },
-    { field: 'name', label: 'Назва' },
-];
-
-/** "12 345" — whole-number, space-grouped, matching the mono tabular number style.
-   Rounds to whole UAH so decimal prices don't break grouping (uk-UA uses a comma decimal). */
 const fmt = (n: number) =>
-    Math.round(n).toLocaleString('uk-UA', { maximumFractionDigits: 0 }).replace(/[\s,]/g, ' ');
+    Math.round(n).toLocaleString('uk-UA', { maximumFractionDigits: 0 }).replace(/[\s,]/g, ' ');
 
 function GalleryPage() {
+    const { t, i18n } = useTranslation();
     const [builds, setBuilds] = useState<IPcBuildGallery[]>([]);
     const [pagination, setPagination] = useState<PaginationMeta>({
         totalCount: 0, pageSize: PAGE_SIZE, pageNumber: 1, totalPages: 0
@@ -44,6 +37,13 @@ function GalleryPage() {
     const navigate = useNavigate();
     const { auth } = useAuth();
     const isLoggedIn = !!auth?.accessToken;
+
+    const SORTS = [
+        { field: 'publishedAt', label: t('gallery.sorts.publishedAt') },
+        { field: 'price', label: t('gallery.sorts.price') },
+        { field: 'averageRating', label: t('gallery.sorts.averageRating') },
+        { field: 'name', label: t('gallery.sorts.name') },
+    ];
 
     const fetchBuilds = useCallback(async () => {
         try {
@@ -63,11 +63,11 @@ function GalleryPage() {
             }
             setError(null);
         } catch {
-            setError('Не вдалося завантажити збірки.');
+            setError(t('gallery.loadFailed'));
         } finally {
             setLoading(false);
         }
-    }, [currentPage, sortField, sortAscending, searchQuery]);
+    }, [currentPage, sortField, sortAscending, searchQuery, t]);
 
     useEffect(() => {
         fetchBuilds();
@@ -85,7 +85,8 @@ function GalleryPage() {
 
     const formatDate = (dateStr?: string) => {
         if (!dateStr) return '';
-        return new Date(dateStr).toLocaleDateString('uk-UA', {
+        const locale = i18n.language === 'uk' ? 'uk-UA' : 'en-GB';
+        return new Date(dateStr).toLocaleDateString(locale, {
             day: 'numeric', month: 'short', year: 'numeric'
         });
     };
@@ -95,11 +96,11 @@ function GalleryPage() {
             <div className={styles['head']}>
                 <div>
                     <span className={styles['eyebrow']}>
-                        ГАЛЕРЕЯ · ПУБЛІЧНІ ЗБІРКИ
+                        {t('gallery.eyebrow')}
                     </span>
-                    <h1>Галерея збірок</h1>
+                    <h1>{t('gallery.heading')}</h1>
                     <div className={styles['meta']}>
-                        <span>СПІЛЬНОТА · СОРТУВАННЯ ТА ПОШУК</span>
+                        <span>{t('gallery.meta')}</span>
                     </div>
                 </div>
                 {isLoggedIn && (
@@ -108,13 +109,13 @@ function GalleryPage() {
                             className={`${styles['btn']} ${styles['btn-ghost']}`}
                             onClick={() => navigate('/user/builds')}
                         >
-                            ↗ Мої збірки
+                            {t('gallery.myBuilds')}
                         </button>
                         <button
                             className={`${styles['btn']} ${styles['btn-pri']}`}
                             onClick={() => navigate('/')}
                         >
-                            ＋ Опублікувати збірку
+                            {t('gallery.publishBuild')}
                         </button>
                     </div>
                 )}
@@ -124,16 +125,16 @@ function GalleryPage() {
                 <div className={styles['input']}>
                     <span className={styles['ic']}>⌕</span>
                     <input
-                        placeholder="Пошук збірок…"
+                        placeholder={t('gallery.searchPlaceholder')}
                         value={searchQuery}
                         onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                     />
                 </div>
                 <span className={styles['stat']}>
-                    <strong>{fmt(pagination.totalCount)}</strong> збірок знайдено
+                    <strong>{fmt(pagination.totalCount)}</strong> {t('gallery.buildsFound', { count: pagination.totalCount })}
                 </span>
                 <span className={styles['grow']} />
-                <span className={styles['toolbarLabel']}>SORT</span>
+                <span className={styles['toolbarLabel']}>{t('gallery.sortLabel')}</span>
                 <div className={styles['sortGroup']}>
                     {SORTS.map(s => {
                         const isActive = sortField === s.field;
@@ -158,13 +159,13 @@ function GalleryPage() {
             {error && <div className={styles['error']}>{error}</div>}
 
             {loading ? (
-                <div className={styles['loading']}>Завантаження…</div>
+                <div className={styles['loading']}>{t('gallery.loading')}</div>
             ) : builds.length === 0 ? (
                 <div className={styles['empty']}>
-                    <div className={styles['eyebrow']}>НЕМАЄ ЗБІГІВ</div>
-                    <div className={styles['empty-title']}>Жодна збірка не відповідає фільтрам.</div>
+                    <div className={styles['eyebrow']}>{t('gallery.empty.eyebrow')}</div>
+                    <div className={styles['empty-title']}>{t('gallery.empty.title')}</div>
                     <div className={styles['empty-hint']}>
-                        Спробуйте змінити запит пошуку, сокет або сортування.
+                        {t('gallery.empty.hint')}
                     </div>
                 </div>
             ) : (
@@ -177,7 +178,7 @@ function GalleryPage() {
                                 onClick={() => navigate(`/builds/${build.id}`)}
                             >
                                 <div className={styles['cover-wrap']}>
-                                    <BuildCover title={build.name} />
+                                    <BuildCover title={build.name} coverUrl={build.photoUrl} />
                                     <span className={styles['price-badge']}>₴ {fmt(build.price)}</span>
                                 </div>
 
@@ -222,7 +223,7 @@ function GalleryPage() {
                                         <span>{build.averageRating.toFixed(1)}</span>
                                         <span className={styles['rating-count']}>({build.ratingCount})</span>
                                     </span>
-                                    <span className={styles['parts']}>{build.componentCount} КОМП.</span>
+                                    <span className={styles['parts']}>{build.componentCount} {t('gallery.partCount', { count: build.componentCount })}</span>
                                     <span className={styles['comments']}>
                                         <span>✎ {build.commentCount}</span>
                                     </span>

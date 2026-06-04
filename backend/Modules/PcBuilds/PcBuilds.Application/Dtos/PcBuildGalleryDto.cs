@@ -14,6 +14,7 @@ namespace PcBuilds.Application.Dtos
         public int CommentCount { get; set; }
         public int RatingCount { get; set; }
         public string? Socket { get; set; }
+        public string? PhotoUrl { get; set; }
         public List<string> Tags { get; set; } = new();
     }
 }

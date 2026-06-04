@@ -144,14 +144,14 @@ export function deriveDesignRows(
         : DASH;
 
     return [
-        { id: "cpuSocket", label: "CPU SOCKET", kind: cpuSocketKind, value: cpuSocketValue },
-        { id: "ramType", label: "RAM TYPE", kind: ramTypeKind, value: ramTypeValue },
-        { id: "ramSlots", label: "RAM SLOTS", kind: ramSlotsKind, value: ramSlotsValue },
-        { id: "gpuLength", label: "GPU LENGTH", kind: gpuLengthKind, value: gpuLengthValue },
-        { id: "cooler", label: "COOLER", kind: coolerKind, value: coolerValue },
-        { id: "psu", label: "PSU HEADROOM", kind: psuKind, value: psuValue },
-        { id: "formFactor", label: "FORM FACTOR", kind: formFactorKind, value: formFactorValue },
-        { id: "m2", label: "M.2 SLOTS", kind: m2Kind, value: m2Value },
+        { id: "cpuSocket", label: "pcBuildPage.compatibility.rows.cpuSocket", kind: cpuSocketKind, value: cpuSocketValue },
+        { id: "ramType", label: "pcBuildPage.compatibility.rows.ramType", kind: ramTypeKind, value: ramTypeValue },
+        { id: "ramSlots", label: "pcBuildPage.compatibility.rows.ramSlots", kind: ramSlotsKind, value: ramSlotsValue },
+        { id: "gpuLength", label: "pcBuildPage.compatibility.rows.gpuLength", kind: gpuLengthKind, value: gpuLengthValue },
+        { id: "cooler", label: "pcBuildPage.compatibility.rows.cooler", kind: coolerKind, value: coolerValue },
+        { id: "psu", label: "pcBuildPage.compatibility.rows.psuHeadroom", kind: psuKind, value: psuValue },
+        { id: "formFactor", label: "pcBuildPage.compatibility.rows.formFactor", kind: formFactorKind, value: formFactorValue },
+        { id: "m2", label: "pcBuildPage.compatibility.rows.m2Slots", kind: m2Kind, value: m2Value },
     ];
 }
 

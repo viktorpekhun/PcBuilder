@@ -5,6 +5,7 @@ import { authService } from "../api/auth.service";
 import { axiosPrivate } from "../api/axios";
 import { decodeToken } from "../utils/decodeToken";
 import type { IProfileResponse } from "../types/profile.types";
+import i18n from "../i18n";
 
 const AuthContext = createContext<IAuthContextType>({} as IAuthContextType);
 
@@ -27,6 +28,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 });
                 if (cancelled) return;
                 setAuth({ ...userData, accessToken: data.accessToken, avatarUrl: profileRes.data.avatarUrl });
+                if (profileRes.data.preferredLanguage) {
+                    i18n.changeLanguage(profileRes.data.preferredLanguage);
+                }
             } catch {
                 // No valid refresh cookie — stay unauthenticated.
             } finally {

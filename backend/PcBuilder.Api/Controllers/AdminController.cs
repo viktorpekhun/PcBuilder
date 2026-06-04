@@ -59,9 +59,10 @@ namespace PcBuilder.Api.Controllers
                 adminId,
                 reportId,
                 request.Action,
-                request.Reason,
-                request.BanType,
-                request.BanDurationDays));
+                Reason: request.Reason,
+                ReasonCode: request.ReasonCode,
+                BanType: request.BanType,
+                BanDurationDays: request.BanDurationDays));
 
             if (result.IsFailure)
                 return StatusCode(result.Error!.StatusCode, new { Message = result.Error.Message });
@@ -231,6 +232,7 @@ namespace PcBuilder.Api.Controllers
     public record ResolveReportRequest(
         ReportResolutionAction Action,
         string? Reason = null,
+        string? ReasonCode = null,
         BanType? BanType = null,
         int? BanDurationDays = null);
 

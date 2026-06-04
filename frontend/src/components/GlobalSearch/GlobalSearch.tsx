@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { searchService, type IGlobalSearchItem } from "../../api/search.service";
 import styles from "./GlobalSearch.module.css";
 
 export default function GlobalSearch() {
+    const { t } = useTranslation();
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<IGlobalSearchItem[]>([]);
     const [loading, setLoading] = useState(false);
@@ -57,7 +59,7 @@ export default function GlobalSearch() {
     }, []);
 
     const grouped = results.reduce<Record<string, IGlobalSearchItem[]>>((acc, item) => {
-        const group = item.category === "Build" ? "Builds" : "Components";
+        const group = item.category === "Build" ? t("globalSearch.groupBuilds") : t("globalSearch.groupComponents");
         (acc[group] ??= []).push(item);
         return acc;
     }, {});
@@ -75,7 +77,7 @@ export default function GlobalSearch() {
                 <input
                     className={styles.searchInput}
                     type="text"
-                    placeholder="Search components & builds…"
+                    placeholder={t("globalSearch.placeholder")}
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onFocus={() => results.length > 0 && setOpen(true)}
@@ -86,7 +88,7 @@ export default function GlobalSearch() {
             {open && (
                 <div className={styles.dropdown}>
                     {results.length === 0 && !loading ? (
-                        <span className={styles.empty}>No results</span>
+                        <span className={styles.empty}>{t("globalSearch.noResults")}</span>
                     ) : (
                         Object.entries(grouped).map(([group, items]) => (
                             <div key={group} className={styles.group}>

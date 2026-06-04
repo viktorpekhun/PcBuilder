@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { adminService } from "../../api/admin.service";
+import { useTranslation } from "react-i18next";
 import {
     BanType,
     type BanTypeValue,
@@ -24,18 +25,6 @@ const fmtDateTime = (iso: string) => {
         d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 };
 
-const reportTypeLabel = (value: ReportTypeValue) => value === ReportType.Review ? "REVIEW" : "BUILD";
-
-const statusLabel = (status: ReportStatusValue) =>
-    status === ReportStatus.Pending ? "Pending" : status === ReportStatus.Resolved ? "Resolved" : "Dismissed";
-
-const ACTION_OPTS: { value: ReportResolutionActionValue; label: string; hint: string }[] = [
-    { value: ReportResolutionAction.Dismiss,              label: "Dismiss",             hint: "No violation — close the report, no action." },
-    { value: ReportResolutionAction.DeleteContent,        label: "Delete content",       hint: "Remove the content. No warning or ban." },
-    { value: ReportResolutionAction.DeleteContentAndWarn, label: "Delete + warn user",   hint: "Remove content and log a formal warning." },
-    { value: ReportResolutionAction.DeleteContentAndBan,  label: "Delete + ban user",    hint: "Remove content and issue a temporary ban." },
-];
-
 // ── Segmented control ────────────────────────────────────────────────────────
 interface SegOption<T> { value: T; label: string; }
 function Seg<T extends number | string>({ value, onChange, options, fill }: { value: T; onChange: (v: T) => void; options: SegOption<T>[]; fill?: boolean }) {
@@ -58,12 +47,23 @@ function Seg<T extends number | string>({ value, onChange, options, fill }: { va
 // ── Resolve modal ─────────────────────────────────────────────────────────────
 interface ResolveModalProps { report: IReport; onClose: () => void; onResolved: () => void; }
 const ResolveModal = ({ report, onClose, onResolved }: ResolveModalProps) => {
+    const { t } = useTranslation();
     const [action, setAction] = useState<ReportResolutionActionValue>(ReportResolutionAction.Dismiss);
     const [banType, setBanType] = useState<BanTypeValue>(BanType.Comment);
     const [days, setDays] = useState(7);
     const [reason, setReason] = useState("");
+    const [reasonCode, setReasonCode] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [err, setErr] = useState<string | null>(null);
+
+    const REASON_CODE_OPTS = [
+        "SPAM",
+        "INAPPROPRIATE_CONTENT",
+        "OFFENSIVE_BEHAVIOUR",
+        "FALSE_INFORMATION",
+        "COPYRIGHT_VIOLATION",
+        "COMMUNITY_GUIDELINES",
+    ] as const;
 
     useEffect(() => {
         const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -71,24 +71,42 @@ const ResolveModal = ({ report, onClose, onResolved }: ResolveModalProps) => {
         return () => window.removeEventListener("keydown", h);
     }, [onClose]);
 
-    const needsReason = action === ReportResolutionAction.DeleteContentAndWarn || action === ReportResolutionAction.DeleteContentAndBan;
+    const reportTypeLabel = (value: ReportTypeValue) =>
+        value === ReportType.Review ? t("admin.moderationPage.reportTag.review") : t("admin.moderationPage.reportTag.build");
+
+    const needsReasonCode = action === ReportResolutionAction.DeleteContentAndWarn;
+    const needsReason = action === ReportResolutionAction.DeleteContentAndBan;
+    const needsBanScope = needsReasonCode || needsReason;
     const needsDuration = action === ReportResolutionAction.DeleteContentAndBan;
 
+    const ACTION_OPTS = [
+        { value: ReportResolutionAction.Dismiss,              label: t("admin.moderationPage.resolveModal.actions.dismiss"),       hint: t("admin.moderationPage.resolveModal.actions.dismissHint") },
+        { value: ReportResolutionAction.DeleteContent,        label: t("admin.moderationPage.resolveModal.actions.deleteContent"), hint: t("admin.moderationPage.resolveModal.actions.deleteContentHint") },
+        { value: ReportResolutionAction.DeleteContentAndWarn, label: t("admin.moderationPage.resolveModal.actions.deleteWarn"),    hint: t("admin.moderationPage.resolveModal.actions.deleteWarnHint") },
+        { value: ReportResolutionAction.DeleteContentAndBan,  label: t("admin.moderationPage.resolveModal.actions.deleteBan"),     hint: t("admin.moderationPage.resolveModal.actions.deleteBanHint") },
+    ];
+
+    const banTypeOpts = [
+        { value: BanType.Comment as BanTypeValue, label: t("admin.moderationPage.resolveModal.commentLabel") },
+        { value: BanType.Post as BanTypeValue,    label: t("admin.moderationPage.resolveModal.postLabel") },
+    ];
+
     const submit = async () => {
-        if (needsReason && !reason.trim()) { setErr("Reason is required for this action."); return; }
-        if (needsDuration && (days < 1 || days > 365)) { setErr("Duration must be 1–365 days."); return; }
+        if (needsReasonCode && !reasonCode) { setErr(t("admin.moderationPage.resolveModal.reasonCodeRequired")); return; }
+        if (needsReason && !reason.trim()) { setErr(t("admin.moderationPage.resolveModal.reasonRequired")); return; }
+        if (needsDuration && (days < 1 || days > 365)) { setErr(t("admin.moderationPage.resolveModal.durationInvalid")); return; }
         setSubmitting(true);
         setErr(null);
         try {
             const payload: IResolveReportRequest = { action };
-            if (needsReason) payload.reason = reason;
-            if (needsReason) payload.banType = banType;
+            if (needsReasonCode) { payload.reasonCode = reasonCode; payload.banType = banType; }
+            if (needsReason) { payload.reason = reason; payload.banType = banType; }
             if (needsDuration) payload.banDurationDays = days;
             await adminService.resolveReport(report.id, payload);
             onResolved();
         } catch (e: unknown) {
             const message = (e as { response?: { data?: { message?: string } } })?.response?.data?.message;
-            setErr(message || "Failed to resolve report. The content may no longer exist.");
+            setErr(message || t("admin.moderationPage.resolveModal.resolveDefaultErr"));
         } finally {
             setSubmitting(false);
         }
@@ -99,7 +117,7 @@ const ResolveModal = ({ report, onClose, onResolved }: ResolveModalProps) => {
             <div className={styles.modal} onClick={e => e.stopPropagation()}>
                 <div className={styles.modalHead}>
                     <div>
-                        <div className={styles.modalTitle}>Resolve report</div>
+                        <div className={styles.modalTitle}>{t("admin.moderationPage.resolveModal.title")}</div>
                         <div className={styles.modalSub}>{reportTypeLabel(report.reportType)} · reported by @{report.reporterUsername}</div>
                     </div>
                     <button type="button" className={styles.modalClose} onClick={onClose}>×</button>
@@ -107,7 +125,7 @@ const ResolveModal = ({ report, onClose, onResolved }: ResolveModalProps) => {
 
                 <div className={styles.modalBody}>
                     <div className={styles.field}>
-                        <label className={styles.fieldLabel}>Resolution</label>
+                        <label className={styles.fieldLabel}>{t("admin.moderationPage.resolveModal.resolution")}</label>
                         <div className={styles.actionOptions}>
                             {ACTION_OPTS.map(o => (
                                 <button
@@ -128,17 +146,16 @@ const ResolveModal = ({ report, onClose, onResolved }: ResolveModalProps) => {
                         </div>
                     </div>
 
-                    {needsReason && (
+                    {needsBanScope && (
                         <div className={styles.field}>
-                            <label className={styles.fieldLabel}>Ban scope</label>
-                            <Seg fill value={banType} onChange={setBanType}
-                                options={[{ value: BanType.Comment, label: "Comment" }, { value: BanType.Post, label: "Post" }]} />
+                            <label className={styles.fieldLabel}>{t("admin.moderationPage.resolveModal.banScope")}</label>
+                            <Seg fill value={banType} onChange={setBanType} options={banTypeOpts} />
                         </div>
                     )}
 
                     {needsDuration && (
                         <div className={styles.field}>
-                            <label className={styles.fieldLabel}>Ban duration</label>
+                            <label className={styles.fieldLabel}>{t("admin.moderationPage.resolveModal.banDuration")}</label>
                             <div className={styles.fieldRow}>
                                 <input
                                     type="number" min={1} max={365}
@@ -146,7 +163,7 @@ const ResolveModal = ({ report, onClose, onResolved }: ResolveModalProps) => {
                                     value={days}
                                     onChange={e => setDays(Number(e.target.value))}
                                 />
-                                <span className={styles.fieldDays}>days</span>
+                                <span className={styles.fieldDays}>{t("admin.moderationPage.resolveModal.days")}</span>
                                 <div className={styles.fieldGrow} />
                                 <Seg value={days} onChange={setDays}
                                     options={[{ value: 7, label: "7d" }, { value: 30, label: "30d" }, { value: 90, label: "90d" }]} />
@@ -154,12 +171,30 @@ const ResolveModal = ({ report, onClose, onResolved }: ResolveModalProps) => {
                         </div>
                     )}
 
+                    {needsReasonCode && (
+                        <div className={styles.field}>
+                            <label className={styles.fieldLabel}>{t("admin.moderationPage.resolveModal.reasonCodeLabel")}</label>
+                            <select
+                                className={styles.fieldInput}
+                                value={reasonCode}
+                                onChange={e => { setReasonCode(e.target.value); setErr(null); }}
+                            >
+                                <option value="" disabled>— select —</option>
+                                {REASON_CODE_OPTS.map(code => (
+                                    <option key={code} value={code}>
+                                        {t(`warnReasonCodes.${code}`)}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+
                     {needsReason && (
                         <div className={styles.field}>
-                            <label className={styles.fieldLabel}>Reason (shown to user)</label>
+                            <label className={styles.fieldLabel}>{t("admin.moderationPage.resolveModal.reasonLabel")}</label>
                             <textarea className={styles.fieldTextarea} maxLength={500} value={reason}
                                 onChange={e => setReason(e.target.value)}
-                                placeholder="Explain the decision…" />
+                                placeholder={t("admin.moderationPage.resolveModal.reasonPlaceholder")} />
                         </div>
                     )}
 
@@ -167,14 +202,20 @@ const ResolveModal = ({ report, onClose, onResolved }: ResolveModalProps) => {
                 </div>
 
                 <div className={styles.modalFoot}>
-                    <button type="button" className={styles.btnGhost} onClick={onClose} disabled={submitting}>Cancel</button>
+                    <button type="button" className={styles.btnGhost} onClick={onClose} disabled={submitting}>
+                        {t("admin.moderationPage.resolveModal.cancel")}
+                    </button>
                     <button
                         type="button"
                         className={action === ReportResolutionAction.Dismiss ? styles.btnSec : styles.btnPrimary}
                         onClick={submit}
                         disabled={submitting}
                     >
-                        {submitting ? "Resolving…" : action === ReportResolutionAction.Dismiss ? "Dismiss report" : "Confirm action"}
+                        {submitting
+                            ? t("admin.moderationPage.resolveModal.resolving")
+                            : action === ReportResolutionAction.Dismiss
+                                ? t("admin.moderationPage.resolveModal.dismiss")
+                                : t("admin.moderationPage.resolveModal.confirm")}
                     </button>
                 </div>
             </div>
@@ -182,16 +223,9 @@ const ResolveModal = ({ report, onClose, onResolved }: ResolveModalProps) => {
     );
 };
 
-// ── Tab bar ───────────────────────────────────────────────────────────────────
-const STATUS_TABS: { value: ReportStatusValue; label: string }[] = [
-    { value: ReportStatus.Pending,   label: "PENDING" },
-    { value: ReportStatus.Resolved,  label: "RESOLVED" },
-    { value: ReportStatus.Dismissed, label: "DISMISSED" },
-];
-
-
 // ── Main page ─────────────────────────────────────────────────────────────────
 const AdminModerationPage = () => {
+    const { t } = useTranslation();
     const [tab, setTab] = useState<ReportStatusValue>(ReportStatus.Pending);
     const [reports, setReports] = useState<IReport[]>([]);
     const [loading, setLoading] = useState(true);
@@ -200,6 +234,22 @@ const AdminModerationPage = () => {
     const [selected, setSelected] = useState<IReport | null>(null);
     const [resolvingReport, setResolvingReport] = useState<IReport | null>(null);
     const [counts, setCounts] = useState<Partial<Record<ReportStatusValue, number>>>({});
+
+    const reportTypeLabel = (value: ReportTypeValue) =>
+        value === ReportType.Review ? t("admin.moderationPage.reportTag.review") : t("admin.moderationPage.reportTag.build");
+
+    const statusLabel = (status: ReportStatusValue) =>
+        status === ReportStatus.Pending
+            ? t("admin.moderationPage.status.pending")
+            : status === ReportStatus.Resolved
+                ? t("admin.moderationPage.status.resolved")
+                : t("admin.moderationPage.status.dismissed");
+
+    const STATUS_TABS = [
+        { value: ReportStatus.Pending,   label: t("admin.moderationPage.tabs.pending") },
+        { value: ReportStatus.Resolved,  label: t("admin.moderationPage.tabs.resolved") },
+        { value: ReportStatus.Dismissed, label: t("admin.moderationPage.tabs.dismissed") },
+    ];
 
     const fetchReports = useCallback(async (status: ReportStatusValue, page: number) => {
         setLoading(true);
@@ -246,17 +296,17 @@ const AdminModerationPage = () => {
         <div className={styles.page}>
             {/* Top tab bar */}
             <div className={styles.tabBar}>
-                {STATUS_TABS.map(t => {
-                    const cnt = counts[t.value];
-                    const active = tab === t.value;
+                {STATUS_TABS.map(tabDef => {
+                    const cnt = counts[tabDef.value];
+                    const active = tab === tabDef.value;
                     return (
                         <button
-                            key={t.value}
+                            key={tabDef.value}
                             type="button"
                             className={`${styles.tabBtn} ${active ? styles.tabBtnActive : ""}`}
-                            onClick={() => handleTabChange(t.value)}
+                            onClick={() => handleTabChange(tabDef.value)}
                         >
-                            {t.label}
+                            {tabDef.label}
                             {cnt !== undefined && (
                                 <span className={styles.tabCount}>{cnt}</span>
                             )}
@@ -265,7 +315,7 @@ const AdminModerationPage = () => {
                 })}
                 <span className={styles.tabMeta}>
                     {tab === ReportStatus.Pending && pagination
-                        ? `${pagination.totalCount} awaiting review`
+                        ? t("admin.moderationPage.tabMeta.awaiting", { count: pagination.totalCount })
                         : statusLabel(tab).toLowerCase()}
                 </span>
             </div>
@@ -275,11 +325,11 @@ const AdminModerationPage = () => {
                 {/* Left — report list */}
                 <div className={styles.listPane}>
                     {loading ? (
-                        <div className={styles.loading}>LOADING…</div>
+                        <div className={styles.loading}>{t("admin.moderationPage.loading")}</div>
                     ) : reports.length === 0 ? (
                         <div className={styles.empty}>
                             <span className={styles.emptyGlyph}>✓</span>
-                            <span className={styles.emptyMsg}>No {statusLabel(tab).toLowerCase()} reports.</span>
+                            <span className={styles.emptyMsg}>{t("admin.moderationPage.empty", { status: statusLabel(tab).toLowerCase() })}</span>
                         </div>
                     ) : (
                         reports.map((report, idx) => {
@@ -314,7 +364,9 @@ const AdminModerationPage = () => {
                 <div className={styles.detailPane}>
                     {selected ? (
                         <>
-                            <div className={styles.detailBreadcrumb}>/ REPORT / R{reports.indexOf(selected) + 1 + (pageNumber - 1) * PAGE_SIZE}</div>
+                            <div className={styles.detailBreadcrumb}>
+                                {t("admin.moderationPage.detail.breadcrumb", { num: reports.indexOf(selected) + 1 + (pageNumber - 1) * PAGE_SIZE })}
+                            </div>
                             <div className={styles.detailTitle}>{selected.reportedEntityId ?? "—"}</div>
 
                             <div className={styles.detailMeta}>
@@ -322,7 +374,7 @@ const AdminModerationPage = () => {
                                 {selected.status === ReportStatus.Pending && (
                                     <span className={styles.detailSev}>
                                         <span className={styles.dot} style={{ background: "#FF5C5C" }} />
-                                        HIGH
+                                        {t("admin.moderationPage.detail.severity")}
                                     </span>
                                 )}
                                 <span className={styles.detailMetaText}>
@@ -331,30 +383,30 @@ const AdminModerationPage = () => {
                             </div>
 
                             <div className={styles.detailSection}>
-                                <div className={styles.detailSectionLabel}>REASON</div>
+                                <div className={styles.detailSectionLabel}>{t("admin.moderationPage.detail.reason")}</div>
                                 <div className={styles.detailReason}>{selected.reason}</div>
                             </div>
 
                             {selected.adminResolutionNote && (
                                 <div className={styles.detailSection}>
-                                    <div className={styles.detailSectionLabel}>RESOLUTION NOTE</div>
+                                    <div className={styles.detailSectionLabel}>{t("admin.moderationPage.detail.resolutionNote")}</div>
                                     <div className={styles.detailResNote}>{selected.adminResolutionNote}</div>
                                 </div>
                             )}
 
                             <div className={styles.detailFoot}>
                                 <Link to={`/builds/${selected.reportedEntityId}`} className={styles.btnGhost}>
-                                    View content →
+                                    {t("admin.moderationPage.detail.viewContent")}
                                 </Link>
                                 {selected.status === ReportStatus.Pending && (
                                     <button type="button" className={styles.btnPrimary} onClick={() => setResolvingReport(selected)}>
-                                        Resolve
+                                        {t("admin.moderationPage.detail.resolve")}
                                     </button>
                                 )}
                             </div>
                         </>
                     ) : !loading ? (
-                        <div className={styles.detailEmpty}>Select a report to review.</div>
+                        <div className={styles.detailEmpty}>{t("admin.moderationPage.detail.noReport")}</div>
                     ) : null}
                 </div>
             </div>

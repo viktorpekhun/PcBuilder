@@ -36,7 +36,7 @@ namespace Moderation.Application.Handlers
             {
                 UserId = request.UserId,
                 BanType = request.BanType,
-                Reason = request.Reason,
+                ReasonCode = request.ReasonCode,
                 IssuedByAdminId = request.AdminId,
                 IssuedAt = DateTime.UtcNow
             };
@@ -57,7 +57,7 @@ namespace Moderation.Application.Handlers
                 request.BanType == BanType.Comment ? NotificationTypes.CommentWarning : NotificationTypes.PostWarning,
                 new Dictionary<string, string>
                 {
-                    ["reason"] = request.Reason,
+                    ["reason"] = request.ReasonCode,
                     ["warningsCount"] = recentWarnings.ToString()
                 }), cancellationToken);
 
@@ -81,7 +81,8 @@ namespace Moderation.Application.Handlers
                     new Dictionary<string, string>
                     {
                         ["banUntil"] = banUntil.ToString("O"),
-                        ["reason"] = $"Automatic ban after {recentWarnings} warnings"
+                        ["reason"] = "AUTO_BAN_WARNINGS",
+                        ["warningsCount"] = recentWarnings.ToString()
                     }), cancellationToken);
             }
 

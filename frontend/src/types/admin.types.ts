@@ -34,6 +34,7 @@ export interface IAdminWarning {
     id: string;
     banType: BanTypeValue;
     reason: string;
+    reasonCode?: string;
     issuedByAdminUsername?: string | null;
     issuedAt: string;
 }
@@ -130,6 +131,7 @@ export interface IReportsQuery {
 export interface IResolveReportRequest {
     action: ReportResolutionActionValue;
     reason?: string;
+    reasonCode?: string;
     banType?: BanTypeValue;
     banDurationDays?: number;
 }

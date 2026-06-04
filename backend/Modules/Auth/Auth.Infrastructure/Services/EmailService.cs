@@ -1,6 +1,8 @@
 using Auth.Application.Interfaces;
 using MailKit.Net.Smtp;
 using MailKit.Security;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Configuration;
 using MimeKit;
 
@@ -9,61 +11,104 @@ namespace Auth.Infrastructure.Services
     public class EmailService : IEmailService
     {
         private readonly IConfiguration _configuration;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public EmailService(IConfiguration configuration)
+        public EmailService(IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
         {
             _configuration = configuration;
+            _httpContextAccessor = httpContextAccessor;
+        }
+
+        private string GetLanguage()
+        {
+            var feature = _httpContextAccessor.HttpContext?
+                .Features.Get<IRequestCultureFeature>();
+            var culture = feature?.RequestCulture.UICulture.TwoLetterISOLanguageName ?? "en";
+            return culture == "uk" ? "uk" : "en";
         }
 
         public async Task SendVerificationEmailAsync(string toEmail, string verificationToken, CancellationToken cancellationToken = default)
         {
+            var lang = GetLanguage();
             var frontendUrl = _configuration["Email:FrontendUrl"];
             var verificationLink = $"{frontendUrl}/verify-email?token={verificationToken}";
 
-            var body = BuildEmailHtml(
-                eyebrow: "account setup",
-                heading: "Verify your email",
-                description: "Thank you for registering at PcBuilder. Click the button below to verify your email address and activate your account.",
-                actionUrl: verificationLink,
-                actionLabel: "Verify Email",
-                footer: "This link expires in 24 hours. If you did not create a PcBuilder account, you can safely ignore this email."
-            );
+            var (subject, eyebrow, heading, description, actionLabel, footer) = lang == "uk"
+                ? (
+                    "Підтвердіть ваш email в PcBuilder",
+                    "налаштування акаунту",
+                    "Підтвердження email",
+                    "Дякуємо за реєстрацію в PcBuilder. Натисніть кнопку нижче, щоб підтвердити адресу електронної пошти та активувати акаунт.",
+                    "Підтвердити Email",
+                    "Посилання дійсне 24 години. Якщо ви не створювали акаунт в PcBuilder, просто проігноруйте цей лист."
+                )
+                : (
+                    "Verify your PcBuilder email",
+                    "account setup",
+                    "Verify your email",
+                    "Thank you for registering at PcBuilder. Click the button below to verify your email address and activate your account.",
+                    "Verify Email",
+                    "This link expires in 24 hours. If you did not create a PcBuilder account, you can safely ignore this email."
+                );
 
-            await SendAsync(toEmail, "Verify your PcBuilder email", body, cancellationToken);
+            var body = BuildEmailHtml(lang, eyebrow, heading, description, verificationLink, actionLabel, footer);
+            await SendAsync(toEmail, subject, body, cancellationToken);
         }
 
         public async Task SendPasswordResetEmailAsync(string toEmail, string resetToken, CancellationToken cancellationToken = default)
         {
+            var lang = GetLanguage();
             var frontendUrl = _configuration["Email:FrontendUrl"];
             var resetLink = $"{frontendUrl}/reset-password?token={resetToken}";
 
-            var body = BuildEmailHtml(
-                eyebrow: "security",
-                heading: "Reset your password",
-                description: "You requested a password reset for your PcBuilder account. Click the button below to choose a new password.",
-                actionUrl: resetLink,
-                actionLabel: "Reset Password",
-                footer: "This link expires in 1 hour. If you did not request a password reset, you can safely ignore this email."
-            );
+            var (subject, eyebrow, heading, description, actionLabel, footer) = lang == "uk"
+                ? (
+                    "Скидання пароля PcBuilder",
+                    "безпека",
+                    "Скидання пароля",
+                    "Ви запросили скидання пароля для вашого акаунту PcBuilder. Натисніть кнопку нижче, щоб встановити новий пароль.",
+                    "Скинути пароль",
+                    "Посилання дійсне 1 годину. Якщо ви не запитували скидання пароля, просто проігноруйте цей лист."
+                )
+                : (
+                    "Reset your PcBuilder password",
+                    "security",
+                    "Reset your password",
+                    "You requested a password reset for your PcBuilder account. Click the button below to choose a new password.",
+                    "Reset Password",
+                    "This link expires in 1 hour. If you did not request a password reset, you can safely ignore this email."
+                );
 
-            await SendAsync(toEmail, "Reset your PcBuilder password", body, cancellationToken);
+            var body = BuildEmailHtml(lang, eyebrow, heading, description, resetLink, actionLabel, footer);
+            await SendAsync(toEmail, subject, body, cancellationToken);
         }
 
-        public async Task SendAccountDeletionEmailAsync(string toEmail, CancellationToken cancellationToken = default)
+        public async Task SendAccountDeletionEmailAsync(string toEmail, string language = "en", CancellationToken cancellationToken = default)
         {
-            var body = BuildEmailHtml(
-                eyebrow: "account",
-                heading: "Account deleted",
-                description: "Your PcBuilder account has been deleted by an administrator. All your builds, reviews, and personal data have been removed.",
-                actionUrl: null,
-                actionLabel: null,
-                footer: "If you believe this was done in error, please contact our support team."
-            );
+            var lang = language == "uk" ? "uk" : "en";
 
-            await SendAsync(toEmail, "Your PcBuilder account has been deleted", body, cancellationToken);
+            var (subject, eyebrow, heading, description, footer) = lang == "uk"
+                ? (
+                    "Ваш акаунт PcBuilder видалено",
+                    "акаунт",
+                    "Акаунт видалено",
+                    "Ваш акаунт PcBuilder був видалений адміністратором. Усі ваші збірки, відгуки та особисті дані було видалено.",
+                    "Якщо ви вважаєте, що це сталося помилково, будь ласка, зв'яжіться з нашою службою підтримки."
+                )
+                : (
+                    "Your PcBuilder account has been deleted",
+                    "account",
+                    "Account deleted",
+                    "Your PcBuilder account has been deleted by an administrator. All your builds, reviews, and personal data have been removed.",
+                    "If you believe this was done in error, please contact our support team."
+                );
+
+            var body = BuildEmailHtml(lang, eyebrow, heading, description, null, null, footer);
+            await SendAsync(toEmail, subject, body, cancellationToken);
         }
 
         private static string BuildEmailHtml(
+            string lang,
             string eyebrow,
             string heading,
             string description,
@@ -71,6 +116,11 @@ namespace Auth.Infrastructure.Services
             string? actionLabel,
             string footer)
         {
+            var htmlLang = lang == "uk" ? "uk" : "en";
+            var bottomMeta = lang == "uk"
+                ? "PcBuilder &mdash; автоматичне повідомлення, не відповідайте"
+                : "PcBuilder &mdash; automated message, do not reply";
+
             var actionBlock = actionUrl is not null ? $"""
                 <tr>
                   <td style="padding:0 24px 24px;">
@@ -84,7 +134,7 @@ namespace Auth.Infrastructure.Services
 
             return $"""
                 <!DOCTYPE html>
-                <html lang="en">
+                <html lang="{htmlLang}">
                 <head>
                   <meta charset="UTF-8" />
                   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -102,7 +152,7 @@ namespace Auth.Infrastructure.Services
                           <tr>
                             <td style="padding-bottom:20px;">
                               <span style="font-family:'IBM Plex Mono','Courier New',monospace;font-size:16px;font-weight:600;letter-spacing:-0.02em;color:#ECECEE;">
-                                <span style="color:#4A4A52;">[</span>PC<span style="color:#AECF55;">/</span>BUILDER<span style="color:#4A4A52;">]</span>
+                                <span style="color:#4A4A52;">[</span>pcbuilder<span style="color:#AECF55;">/</span><span style="color:#4A4A52;">]</span>
                               </span>
                             </td>
                           </tr>
@@ -153,7 +203,7 @@ namespace Auth.Infrastructure.Services
                           <tr>
                             <td style="padding-top:20px;">
                               <p style="margin:0;font-family:'IBM Plex Mono','Courier New',monospace;font-size:10px;letter-spacing:0.04em;color:#4A4A52;">
-                                PcBuilder &mdash; automated message, do not reply
+                                {bottomMeta}
                               </p>
                             </td>
                           </tr>

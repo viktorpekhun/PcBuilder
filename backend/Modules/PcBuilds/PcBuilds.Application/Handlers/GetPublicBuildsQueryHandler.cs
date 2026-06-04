@@ -113,7 +113,8 @@ namespace PcBuilds.Application.Handlers
                             b.PcBuild_Fans.Count,
                         CommentCount = b.Reviews.Count,
                         RatingCount = b.Reviews.Count,
-                        Socket = b.Cpu != null ? b.Cpu.Socket : null
+                        Socket = b.Cpu != null ? b.Cpu.Socket : null,
+                        PhotoUrl = b.PhotoUrl
                     },
                     RamTypes = b.PcBuild_Rams.Select(r => r.Ram.Type).ToList(),
                     FormFactors = b.PcCase != null

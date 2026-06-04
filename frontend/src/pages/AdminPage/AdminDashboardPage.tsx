@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { adminService } from "../../api/admin.service";
 import { Pagination } from "../../components/Pagination/Pagination";
+import { useTranslation } from "react-i18next";
 import type { IAdminActivityLog, IAdminStats, IPaginationHeader } from "../../types/admin.types";
 import styles from "./AdminDashboardPage.module.css";
 
@@ -15,13 +16,6 @@ const componentGlyphs: Record<string, string> = {
     ssd: "SSD", hdd: "HDD", cpuCooler: "CLR", fan: "FAN",
     pcCase: "CSE", powerSupply: "PSU",
 };
-
-const STAT_CARDS = [
-    { key: "totalUsers",     label: "Total users",     color: "#6FB1FC", renderHint: (s: IAdminStats) => <><span className={styles.statHintUp}>▲ +{s.newUsersLast7Days}</span> in last 7 days</> },
-    { key: "totalBuilds",    label: "Total builds",    color: "#AECF55", renderHint: (s: IAdminStats) => <>{s.publishedBuilds} published · {Math.round(s.publishedBuilds / Math.max(1, s.totalBuilds) * 100)}%</> },
-    { key: "totalReviews",   label: "Total reviews",   color: "#7AE07A", renderHint: () => <>across all components</> },
-    { key: "pendingReports", label: "Pending reports", color: "#FF5C5C", renderHint: (s: IAdminStats) => <>{s.activeBannedUsers} active ban{s.activeBannedUsers === 1 ? "" : "s"}</> },
-];
 
 const fmtNum = (n: number) => n.toLocaleString("en-US").replace(/,/g, " ");
 
@@ -44,7 +38,6 @@ const fmtOccurred = (iso: string) => {
 };
 
 type Span = "1" | "7" | "30";
-const SPAN_LABELS: Record<Span, string> = { "1": "24h", "7": "7d", "30": "30d" };
 const PAGE_SIZE = 10;
 
 // ── Segmented control ────────────────────────────────────────────────────────
@@ -67,6 +60,7 @@ function Seg<T extends string>({ value, onChange, options }: { value: T; onChang
 }
 
 const AdminDashboardPage = () => {
+    const { t } = useTranslation();
     const [stats, setStats] = useState<IAdminStats | null>(null);
     const [statsLoading, setStatsLoading] = useState(true);
     const [statsError, setStatsError] = useState<string | null>(null);
@@ -81,10 +75,10 @@ const AdminDashboardPage = () => {
         let cancelled = false;
         adminService.getStats()
             .then(res => { if (!cancelled) setStats(res.data); })
-            .catch(() => { if (!cancelled) setStatsError("Failed to load stats."); })
+            .catch(() => { if (!cancelled) setStatsError(t("admin.dashboardPage.loadStatsFailed")); })
             .finally(() => { if (!cancelled) setStatsLoading(false); });
         return () => { cancelled = true; };
-    }, []);
+    }, [t]);
 
     const fetchActivity = useCallback(async (daysBack: number, pageNumber: number) => {
         setActivityLoading(true);
@@ -104,8 +98,40 @@ const AdminDashboardPage = () => {
 
     const handleSpanChange = (next: Span) => { setSpan(next); setPage(1); };
 
-    if (statsLoading) return <div className={styles.page}><div className={styles.loading}>LOADING STATS…</div></div>;
-    if (statsError || !stats) return <div className={styles.page}><div className={styles.error}>{statsError ?? "No data."}</div></div>;
+    const STAT_CARDS = [
+        {
+            key: "totalUsers",
+            label: t("admin.dashboardPage.statCards.totalUsers"),
+            color: "#6FB1FC",
+            renderHint: (s: IAdminStats) => <><span className={styles.statHintUp}>{t("admin.dashboardPage.statCards.newUsersHint", { count: s.newUsersLast7Days })}</span></>,
+        },
+        {
+            key: "totalBuilds",
+            label: t("admin.dashboardPage.statCards.totalBuilds"),
+            color: "#AECF55",
+            renderHint: (s: IAdminStats) => <>{t("admin.dashboardPage.statCards.buildsHint", { published: s.publishedBuilds, pct: Math.round(s.publishedBuilds / Math.max(1, s.totalBuilds) * 100) })}</>,
+        },
+        {
+            key: "totalReviews",
+            label: t("admin.dashboardPage.statCards.totalReviews"),
+            color: "#7AE07A",
+            renderHint: () => <>{t("admin.dashboardPage.statCards.reviewsHint")}</>,
+        },
+        {
+            key: "pendingReports",
+            label: t("admin.dashboardPage.statCards.pendingReports"),
+            color: "#FF5C5C",
+            renderHint: (s: IAdminStats) => <>{t("admin.dashboardPage.statCards.bansHint_other", { count: s.activeBannedUsers })}</>,
+        },
+    ];
+
+    const SPAN_OPTIONS = (["1", "7", "30"] as Span[]).map(v => ({
+        value: v,
+        label: t(`admin.dashboardPage.activity.spans.${v}`),
+    }));
+
+    if (statsLoading) return <div className={styles.page}><div className={styles.loading}>{t("admin.dashboardPage.loadingStats")}</div></div>;
+    if (statsError || !stats) return <div className={styles.page}><div className={styles.error}>{statsError ?? t("admin.dashboardPage.noData")}</div></div>;
 
     const totalParts = Object.values(stats.componentCounts).reduce((a, b) => a + b, 0);
 
@@ -126,8 +152,8 @@ const AdminDashboardPage = () => {
             {/* Component catalog */}
             <section className={styles.section}>
                 <div className={styles.sectionHead}>
-                    <h2 className={styles.sectionTitle}>Component catalog</h2>
-                    <span className={styles.sectionMeta}>{fmtNum(totalParts)} parts indexed · {Object.keys(stats.componentCounts).length} categories</span>
+                    <h2 className={styles.sectionTitle}>{t("admin.dashboardPage.catalog.title")}</h2>
+                    <span className={styles.sectionMeta}>{t("admin.dashboardPage.catalog.meta", { count: fmtNum(totalParts), cats: Object.keys(stats.componentCounts).length })}</span>
                 </div>
                 <div className={styles.tiles}>
                     {Object.entries(stats.componentCounts).map(([key, count]) => (
@@ -145,23 +171,21 @@ const AdminDashboardPage = () => {
             {/* Activity feed */}
             <section className={styles.section}>
                 <div className={styles.sectionHead}>
-                    <h2 className={styles.sectionTitle}>Recent activity</h2>
+                    <h2 className={styles.sectionTitle}>{t("admin.dashboardPage.activity.title")}</h2>
                     <div className={styles.sectionHeadRight}>
                         {activityPagination && (
-                            <span className={styles.sectionMeta}>{activityPagination.totalCount} event{activityPagination.totalCount === 1 ? "" : "s"}</span>
+                            <span className={styles.sectionMeta}>
+                                {t("admin.dashboardPage.activity.event_other", { count: activityPagination.totalCount })}
+                            </span>
                         )}
-                        <Seg
-                            value={span}
-                            onChange={handleSpanChange}
-                            options={(Object.entries(SPAN_LABELS) as [Span, string][]).map(([value, label]) => ({ value, label }))}
-                        />
+                        <Seg value={span} onChange={handleSpanChange} options={SPAN_OPTIONS} />
                     </div>
                 </div>
                 <div className={styles.feed}>
                     {activityLoading ? (
-                        <div className={styles.feedEmpty}>LOADING…</div>
+                        <div className={styles.feedEmpty}>{t("admin.dashboardPage.activity.loading")}</div>
                     ) : activity.length === 0 ? (
-                        <div className={styles.feedEmpty}>No activity in this timespan.</div>
+                        <div className={styles.feedEmpty}>{t("admin.dashboardPage.activity.empty")}</div>
                     ) : (
                         activity.map(a => (
                             <div className={styles.feedRow} key={a.id}>

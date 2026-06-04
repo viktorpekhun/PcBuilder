@@ -320,8 +320,11 @@
     background: var(--bg2);
     color: var(--fg1);
 }
-.typeReview { border-color: var(--bd2); color: var(--fg0); }
-.typeDeleted { color: var(--err); border-color: #4a1d1f; background: var(--err-soft); }
+.typeReview  { border-color: var(--bd-2); color: var(--fg-0); }
+.typeDeleted { color: var(--err);  border-color: #4a1d1f; background: var(--err-soft); }
+.typePrice   { color: var(--info); border-color: #1d3550; background: var(--info-soft); }
+.typeWarn    { color: var(--warn); border-color: #3A2A12; background: var(--warn-soft); }
+.typeBan     { color: var(--err);  border-color: #4a1d1f; background: var(--err-soft); }
 
 .stars {
     font-family: var(--font-mono);
@@ -444,7 +447,7 @@
 .alertHead,
 .alertRow {
     display: grid;
-    grid-template-columns: 44px 44px 1fr 140px 110px 110px 150px 90px;
+    grid-template-columns: 44px 44px 1fr 140px 110px 110px 150px auto;
     gap: 14px;
     align-items: center;
     padding: 12px 18px;
@@ -607,6 +610,7 @@
 .unsubBtn {
     all: unset;
     cursor: pointer;
+    white-space: nowrap;
     padding: 5px 9px;
     border: 1px solid var(--bd1);
     background: var(--bg1);
@@ -689,7 +693,7 @@
 /* ── Responsive ──────────────────────────────────────────────────── */
 @media (max-width: 1100px) {
     .alertHead,
-    .alertRow { grid-template-columns: 44px 44px 1fr 90px 90px 120px 80px; gap: 10px; }
+    .alertRow { grid-template-columns: 44px 44px 1fr 90px 90px 120px auto; gap: 10px; }
     .alertHead span:nth-child(4),
     .thrWrap { display: none; }
 }

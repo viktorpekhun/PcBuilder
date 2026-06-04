@@ -35,6 +35,7 @@ namespace Moderation.Application.Handlers
                     Id = w.Id,
                     BanType = w.BanType,
                     Reason = w.Reason,
+                    ReasonCode = w.ReasonCode,
                     IssuedAt = w.IssuedAt
                 })
                 .ToListAsync(cancellationToken);

@@ -249,11 +249,9 @@
 .desc p { margin: 0; }
 
 /* ── stats strip — compact label : value rows ───────────────── */
-/* 1px gap over the container background paints the grid lines; rows wrap to
-   1 or 2 columns depending on available width. */
 .stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: 1fr;
     border: 1px solid var(--bd-1);
     background: var(--bd-0);
     gap: 1px;
@@ -292,6 +290,24 @@
 .val .err { color: var(--err); }
 .val-of { color: var(--fg-3); font-weight: 400; }
 .val-note { color: var(--fg-3); font-weight: 400; font-size: 11px; letter-spacing: 0.04em; }
+
+/* ── spec tags ──────────────────────────────────────────────── */
+.tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.tag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    padding: 4px 10px;
+    background: var(--bg-2);
+    border: 1px solid var(--bd-0);
+    color: var(--fg-2);
+    text-transform: uppercase;
+}
 
 /* ── parts table ────────────────────────────────────────────── */
 .parts { border: 1px solid var(--bd-1); }
@@ -384,7 +400,7 @@
     flex: 0 0 auto;
 }
 
-.thumb-img { object-fit: cover; filter: saturate(0.7) brightness(0.92); display: block; }
+.thumb-img { object-fit: contain; background: var(--bg-1); filter: saturate(0.7) brightness(0.92); display: block; }
 .thumb-mat { background: var(--bg-2); filter: saturate(0.7) brightness(0.92); }
 .thumb-glint { position: absolute; inset: 0; pointer-events: none; }
 

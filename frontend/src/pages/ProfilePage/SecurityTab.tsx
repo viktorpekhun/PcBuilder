@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { profileService } from '../../api/profile.service';
 import type { IProfileResponse } from '../../types/profile.types';
 import { Badge } from './ProfileBadge';
@@ -11,6 +12,7 @@ function PwField({
     setValue: (v: string) => void; show: boolean; toggle: () => void;
     hint?: boolean; error?: string | null;
 }) {
+    const { t } = useTranslation();
     return (
         <div className={styles['field']}>
             <div className={styles['field-lbl']}>
@@ -27,15 +29,16 @@ function PwField({
                     autoComplete="new-password"
                 />
                 <button type="button" className={styles['pw-eye']} onClick={toggle}>
-                    {show ? 'HIDE' : 'SHOW'}
+                    {show ? t('profile.securityTab.hidePassword') : t('profile.securityTab.showPassword')}
                 </button>
             </div>
-            {hint && <span className={styles['field-hint']}>USED ON /LOGIN AND BEFORE DESTRUCTIVE ACTIONS</span>}
+            {hint && <span className={styles['field-hint']}>{t('profile.securityTab.pwHint')}</span>}
         </div>
     );
 }
 
 export function SecurityTab({ profile, onUpdate }: { profile: IProfileResponse; onUpdate: (p: IProfileResponse) => void }) {
+    const { t } = useTranslation();
     const [cur, setCur] = useState('');
     const [next, setNext] = useState('');
     const [conf, setConf] = useState('');
@@ -61,7 +64,7 @@ export function SecurityTab({ profile, onUpdate }: { profile: IProfileResponse; 
             setCur(''); setNext(''); setConf('');
         } catch (err: any) {
             const data = err?.response?.data;
-            const msg: string = data?.errors?.[0] ?? data?.message ?? 'Error changing password';
+            const msg: string = data?.errors?.[0] ?? data?.message ?? t('profile.securityTab.changeFailed');
             setErr(msg);
         } finally { setSaving(false); }
     };
@@ -76,9 +79,16 @@ export function SecurityTab({ profile, onUpdate }: { profile: IProfileResponse; 
             setNext(''); setConf('');
             onUpdate({ ...profile, hasPassword: true });
         } catch (err: any) {
-            setErr(err?.response?.data?.message ?? 'Error setting password');
+            setErr(err?.response?.data?.message ?? t('profile.securityTab.changeFailed'));
         } finally { setSaving(false); }
     };
+
+    const pwRules = [
+        t('profile.securityTab.pwRule1'),
+        t('profile.securityTab.pwRule2'),
+        t('profile.securityTab.pwRule3'),
+        t('profile.securityTab.pwRule4'),
+    ];
 
     return (
         <div className={styles['grid']}>
@@ -86,7 +96,7 @@ export function SecurityTab({ profile, onUpdate }: { profile: IProfileResponse; 
                 <div className={styles['card']}>
                     <div className={styles['card-h']}>
                         <span className={styles['card-ttl']}>
-                            {profile.hasPassword ? 'Change password' : 'Set password'}
+                            {profile.hasPassword ? t('profile.securityTab.changePasswordTitle') : t('profile.securityTab.setPasswordTitle')}
                         </span>
                         <span className={styles['card-aux']}>
                             {profile.hasPassword ? 'POST /API/PROFILE/CHANGE-PASSWORD' : 'POST /API/PROFILE/SET-PASSWORD'}
@@ -94,37 +104,35 @@ export function SecurityTab({ profile, onUpdate }: { profile: IProfileResponse; 
                     </div>
                     <div className={styles['card-b']}>
                         {!profile.hasPassword && (
-                            <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--fg-1)', lineHeight: 1.5 }}>
-                                Your account uses <b style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-0)' }}>Google SSO</b> only.
-                                Setting a password lets you sign in with e-mail as a backup.
-                            </p>
+                            <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--fg-1)', lineHeight: 1.5 }}
+                               dangerouslySetInnerHTML={{ __html: t('profile.securityTab.googleSsoNote') }} />
                         )}
                         {err && <div className={styles['error-banner']}>{err}</div>}
                         <form onSubmit={profile.hasPassword ? handleChangePassword : handleSetPassword}>
                             {profile.hasPassword && (
-                                <PwField id="cur" label="CURRENT PASSWORD" value={cur} setValue={setCur}
+                                <PwField id="cur" label={t('profile.securityTab.currentPasswordLabel')} value={cur} setValue={setCur}
                                     show={showCur} toggle={() => setShowCur(s => !s)} />
                             )}
-                            <PwField id="next" label="NEW PASSWORD" value={next} setValue={setNext}
+                            <PwField id="next" label={t('profile.securityTab.newPasswordLabel')} value={next} setValue={setNext}
                                 show={showNext} toggle={() => setShowNext(s => !s)} hint />
-                            <PwField id="conf" label="CONFIRM NEW PASSWORD" value={conf} setValue={setConf}
+                            <PwField id="conf" label={t('profile.securityTab.confirmPasswordLabel')} value={conf} setValue={setConf}
                                 show={showConf} toggle={() => setShowConf(s => !s)}
-                                error={mismatch ? 'PASSWORDS DO NOT MATCH' : null} />
+                                error={mismatch ? t('profile.securityTab.passwordMismatch') : null} />
 
                             <div className={styles['form-actions']}>
                                 <button className={styles['btn-pri']} type="submit" disabled={!canSubmit || saving}>
-                                    {profile.hasPassword ? '✓ Update password' : '✓ Set password'}
+                                    {profile.hasPassword ? t('profile.securityTab.updatePassword') : t('profile.securityTab.setPassword')}
                                 </button>
                                 <button className={styles['btn-ghost']} type="button"
                                     onClick={() => { setCur(''); setNext(''); setConf(''); setErr(''); }}>
-                                    ← Clear
+                                    {t('profile.securityTab.clearFields')}
                                 </button>
                                 {saved && (
                                     <span className={styles['saved-msg']}>
-                                        <span className={styles['saved-dot']} />SAVED
+                                        <span className={styles['saved-dot']} />{t('profile.securityTab.savedMsg')}
                                     </span>
                                 )}
-                                <span className={styles['pw-rules-hint']}>MIN 8 · UPPER · LOWER · DIGIT</span>
+                                <span className={styles['pw-rules-hint']}>{t('profile.securityTab.pwRulesHint')}</span>
                             </div>
                         </form>
                     </div>
@@ -132,7 +140,7 @@ export function SecurityTab({ profile, onUpdate }: { profile: IProfileResponse; 
 
                 <div className={styles['card']}>
                     <div className={styles['card-h']}>
-                        <span className={styles['card-ttl']}>Sign-in methods</span>
+                        <span className={styles['card-ttl']}>{t('profile.securityTab.signInMethodsTitle')}</span>
                         <span className={styles['card-aux']}>
                             {[profile.hasPassword ? 'EMAIL' : null, profile.googleLinked ? 'GOOGLE' : null]
                                 .filter((x): x is string => x !== null).join(' + ') || 'NONE'}
@@ -143,24 +151,24 @@ export function SecurityTab({ profile, onUpdate }: { profile: IProfileResponse; 
                             <div className={styles['linked-row']}>
                                 <span className={styles['linked-gly']}>@</span>
                                 <div className={styles['linked-nm']}>
-                                    <span className={styles['linked-name']}>E-mail &amp; password</span>
+                                    <span className={styles['linked-name']}>{t('profile.securityTab.emailPasswordMethod')}</span>
                                     <span className={styles['linked-sub']}>{profile.email}</span>
                                 </div>
                                 {profile.hasPassword
-                                    ? <Badge variant="ok">ACTIVE</Badge>
-                                    : <Badge variant="muted">NOT SET</Badge>}
+                                    ? <Badge variant="ok">{t('profile.securityTab.badgeActive')}</Badge>
+                                    : <Badge variant="muted">{t('profile.securityTab.badgeNotSet')}</Badge>}
                             </div>
                             <div className={styles['linked-row']}>
                                 <span className={styles['linked-gly']}>G</span>
                                 <div className={styles['linked-nm']}>
-                                    <span className={styles['linked-name']}>Google</span>
+                                    <span className={styles['linked-name']}>{t('profile.securityTab.googleMethod')}</span>
                                     <span className={styles['linked-sub']}>
-                                        {profile.googleLinked ? `Linked · ${profile.email}` : 'Not linked'}
+                                        {profile.googleLinked ? t('profile.securityTab.googleLinkedSub', { email: profile.email }) : t('profile.securityTab.googleNotLinked')}
                                     </span>
                                 </div>
                                 {profile.googleLinked
-                                    ? <Badge variant="ok">LINKED</Badge>
-                                    : <Badge variant="muted">UNLINKED</Badge>}
+                                    ? <Badge variant="ok">{t('profile.securityTab.badgeLinked')}</Badge>
+                                    : <Badge variant="muted">{t('profile.securityTab.badgeUnlinked')}</Badge>}
                             </div>
                         </div>
                     </div>
@@ -168,20 +176,20 @@ export function SecurityTab({ profile, onUpdate }: { profile: IProfileResponse; 
 
                 <div className={styles['card']}>
                     <div className={styles['card-h']}>
-                        <span className={styles['card-ttl']}>Active sessions</span>
-                        <span className={styles['card-aux']}>1 DEVICE</span>
+                        <span className={styles['card-ttl']}>{t('profile.securityTab.activeSessionsTitle')}</span>
+                        <span className={styles['card-aux']}>{t('profile.securityTab.activeSessionsAux')}</span>
                     </div>
                     <div className={`${styles['card-b']} ${styles['card-b-tight']}`}>
                         <div className={styles['session-row']}>
                             <span className={styles['session-gly']}>▣</span>
                             <div className={styles['session-nm']}>
-                                <div className={styles['session-name']}>This browser</div>
-                                <div className={styles['session-sub']}>CURRENT SESSION</div>
+                                <div className={styles['session-name']}>{t('profile.securityTab.thisBrowser')}</div>
+                                <div className={styles['session-sub']}>{t('profile.securityTab.currentSession')}</div>
                             </div>
-                            <Badge variant="live">ACTIVE</Badge>
+                            <Badge variant="live">{t('profile.securityTab.badgeActive')}</Badge>
                         </div>
                         <p className={styles['session-foot']}>
-                            SESSION REVOCATION ISN'T EXPOSED BY /API/PROFILE — SIGNING OUT CLEARS THE REFRESH-TOKEN COOKIE ON THIS DEVICE ONLY.
+                            {t('profile.securityTab.sessionNote')}
                         </p>
                     </div>
                 </div>
@@ -190,37 +198,37 @@ export function SecurityTab({ profile, onUpdate }: { profile: IProfileResponse; 
             <aside className={styles['side']}>
                 <div className={styles['card']}>
                     <div className={styles['card-h']}>
-                        <span className={styles['card-ttl']}>Auth surface</span>
-                        <span className={styles['card-aux']}>SUMMARY</span>
+                        <span className={styles['card-ttl']}>{t('profile.securityTab.authSurfaceTitle')}</span>
+                        <span className={styles['card-aux']}>{t('profile.securityTab.authSurfaceAux')}</span>
                     </div>
                     <div className={`${styles['card-b']} ${styles['card-b-tight']}`}>
                         <div className={styles['kv']}>
                             <div className={styles['kv-row']}>
-                                <span className={styles['kv-k']}>Password</span>
+                                <span className={styles['kv-k']}>{t('profile.securityTab.passwordLabel')}</span>
                                 <span className={styles['kv-v']}>
                                     {profile.hasPassword
-                                        ? <Badge variant="ok">SET</Badge>
-                                        : <Badge variant="muted">NOT SET</Badge>}
+                                        ? <Badge variant="ok">{t('profile.securityTab.badgeActive')}</Badge>
+                                        : <Badge variant="muted">{t('profile.securityTab.badgeNotSet')}</Badge>}
                                 </span>
                             </div>
                             <div className={styles['kv-row']}>
-                                <span className={styles['kv-k']}>Google SSO</span>
+                                <span className={styles['kv-k']}>{t('profile.securityTab.googleSsoLabel')}</span>
                                 <span className={styles['kv-v']}>
                                     {profile.googleLinked
-                                        ? <Badge variant="ok">LINKED</Badge>
-                                        : <Badge variant="muted">UNLINKED</Badge>}
+                                        ? <Badge variant="ok">{t('profile.securityTab.badgeLinked')}</Badge>
+                                        : <Badge variant="muted">{t('profile.securityTab.badgeUnlinked')}</Badge>}
                                 </span>
                             </div>
                             <div className={styles['kv-row']}>
-                                <span className={styles['kv-k']}>E-mail</span>
+                                <span className={styles['kv-k']}>{t('profile.securityTab.emailStatusLabel')}</span>
                                 <span className={styles['kv-v']}>
                                     {profile.emailVerified
-                                        ? <Badge variant="ok">VERIFIED</Badge>
-                                        : <Badge variant="warn">UNVERIFIED</Badge>}
+                                        ? <Badge variant="ok">{t('profile.sideCards.badgeVerified')}</Badge>
+                                        : <Badge variant="warn">{t('profile.sideCards.badgeUnverified')}</Badge>}
                                 </span>
                             </div>
                             <div className={styles['kv-row']}>
-                                <span className={styles['kv-k']}>Active sessions</span>
+                                <span className={styles['kv-k']}>{t('profile.securityTab.activeSessionsLabel')}</span>
                                 <span className={styles['kv-v']}>1</span>
                             </div>
                         </div>
@@ -229,12 +237,12 @@ export function SecurityTab({ profile, onUpdate }: { profile: IProfileResponse; 
 
                 <div className={styles['card']}>
                     <div className={styles['card-h']}>
-                        <span className={styles['card-ttl']}>Password rules</span>
-                        <span className={styles['card-aux']}>SERVER-SIDE</span>
+                        <span className={styles['card-ttl']}>{t('profile.securityTab.passwordRulesTitle')}</span>
+                        <span className={styles['card-aux']}>{t('profile.securityTab.passwordRulesAux')}</span>
                     </div>
                     <div className={`${styles['card-b']} ${styles['card-b-tight']}`}>
                         <ul className={styles['pw-rules-list']}>
-                            {['Minimum 8 characters', 'At least one uppercase letter', 'At least one lowercase letter', 'At least one digit'].map(r => (
+                            {pwRules.map(r => (
                                 <li key={r}>
                                     <span className={styles['pw-rules-chk']}>[✓]</span>
                                     <span>{r}</span>

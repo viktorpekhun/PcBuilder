@@ -29,6 +29,7 @@ namespace Auth.Domain.Entities
 
         public string? AvatarUrl { get; set; }
         public string? Bio { get; set; }
+        public string PreferredLanguage { get; set; } = "en";
 
         public DateTime CommentBanUntil { get; set; }
         public DateTime PostBanUntil { get; set; }

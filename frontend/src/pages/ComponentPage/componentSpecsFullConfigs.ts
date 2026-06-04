@@ -1,3 +1,5 @@
+import type { TFunction } from 'i18next';
+
 // --- Spec config types ---
 
 interface SimpleSpec {
@@ -47,457 +49,468 @@ interface SectionHeaderSpec {
 export type FullSpecConfig = SimpleSpec | ListSpec | SeparateRowsListSpec | MultiKeySpec | SectionHeaderSpec;
 
 // LocalizedString from backend: { uk: string, en?: string }
-function loc(v: unknown): string {
-    if (!v || typeof v !== 'object') return '';
-    const o = v as Record<string, unknown>;
-    return String(o['en'] ?? o['uk'] ?? '');
+function makeLoc(lang: string) {
+    return function loc(v: unknown): string {
+        if (!v || typeof v !== 'object') return '';
+        const o = v as Record<string, unknown>;
+        const primary = lang.startsWith('uk') ? 'uk' : 'en';
+        const fallback = primary === 'uk' ? 'en' : 'uk';
+        return String(o[primary] ?? o[fallback] ?? '');
+    };
 }
 
-export const componentSpecFullConfigs: Record<string, FullSpecConfig[]> = {
+export function getComponentSpecFullConfigs(t: TFunction, lang: string): Record<string, FullSpecConfig[]> {
+    const s = (key: string) => t(`components.componentPage.specs.${key}`);
+    const loc = makeLoc(lang);
 
-    // ── CPU ─────────────────────────────────────────────────────
-    Cpu: [
-        { type: 'sectionHeader', label: 'Core architecture' },
-        { key: 'brand',          label: 'Brand',          unit: '' },
-        { key: 'socket',         label: 'Socket',         unit: '' },
-        { key: 'basicFrequency', label: 'Base frequency', unit: 'GHz' },
-        { key: 'maxFrequency',   label: 'Max boost',      unit: 'GHz' },
-        { key: 'cores',          label: 'Cores',          unit: '' },
-        { key: 'threads',        label: 'Threads',        unit: '' },
-        { key: 'cache',          label: 'L3 cache',       unit: 'MB' },
-        { key: 'techprocess',    label: 'Process node',   unit: 'nm' },
+    return {
 
-        { type: 'sectionHeader', label: 'Other' },
-        { key: 'dimmType',       label: 'Memory type',    unit: '' },
-        { key: 'tdp',            label: 'TDP',            unit: 'W' },
-        { key: 'integratedGraphics', label: 'Has iGPU',   unit: '' },
-        { key: 'complectation',  label: 'Packaging',      unit: '' },
+        // ── CPU ─────────────────────────────────────────────────────
+        Cpu: [
+            { type: 'sectionHeader', label: s('coreArch') },
+            { key: 'brand',          label: s('brand'),         unit: '' },
+            { key: 'socket',         label: s('socket'),        unit: '' },
+            { key: 'basicFrequency', label: s('baseFreq'),      unit: 'GHz' },
+            { key: 'maxFrequency',   label: s('maxBoost'),      unit: 'GHz' },
+            { key: 'cores',          label: s('cores'),         unit: '' },
+            { key: 'threads',        label: s('threads'),       unit: '' },
+            { key: 'cache',          label: s('l3Cache'),       unit: 'MB' },
+            { key: 'techprocess',    label: s('processNode'),   unit: 'nm' },
 
-    ],
+            { type: 'sectionHeader', label: s('other') },
+            { key: 'dimmType',       label: s('memType'),       unit: '' },
+            { key: 'tdp',            label: s('tdp'),           unit: 'W' },
+            { key: 'integratedGraphics', label: s('hasIgpu'),   unit: '' },
+            { key: 'complectation',  label: s('packaging'),     unit: '' },
+        ],
 
-    // ── GPU ─────────────────────────────────────────────────────
-    Gpu: [
-        { type: 'sectionHeader', label: 'Chip' },
-        { key: 'brand',           label: 'Brand',          unit: '' },
-        { key: 'gpuManufacturer', label: 'Chip vendor',    unit: '' },
-        { key: 'gpuModel',        label: 'GPU model',      unit: '' },
-        { key: 'maxFrequency',    label: 'Boost clock',    unit: 'MHz' },
-        { key: 'cudaCores',       label: 'Shader units',   unit: '' },
+        // ── GPU ─────────────────────────────────────────────────────
+        Gpu: [
+            { type: 'sectionHeader', label: s('chip') },
+            { key: 'brand',           label: s('brand'),        unit: '' },
+            { key: 'gpuManufacturer', label: s('chipVendor'),   unit: '' },
+            { key: 'gpuModel',        label: s('gpuModel'),     unit: '' },
+            { key: 'maxFrequency',    label: s('boostClock'),   unit: 'MHz' },
+            { key: 'cudaCores',       label: s('shaderUnits'),  unit: '' },
 
-        { type: 'sectionHeader', label: 'Memory' },
-        { key: 'memory',          label: 'VRAM',           unit: 'GB' },
-        { key: 'memoryType',      label: 'Memory type',    unit: '' },
-        { key: 'memoryBus',       label: 'Memory bus',     unit: 'bit' },
-        { key: 'memorySpeed',     label: 'Memory speed',   unit: 'GB/s' },
+            { type: 'sectionHeader', label: s('memory') },
+            { key: 'memory',          label: s('vram'),         unit: 'GB' },
+            { key: 'memoryType',      label: s('memType'),      unit: '' },
+            { key: 'memoryBus',       label: s('memBus'),       unit: 'bit' },
+            { key: 'memorySpeed',     label: s('memSpeed'),     unit: 'GB/s' },
 
-        { type: 'sectionHeader', label: 'Interface' },
-        {
-            keys: ['pcleVersion', 'pcleLane'],
-            label: 'PCIe interface', unit: '',
-            format: (v) => {
-                if (v['pcleVersion'] && v['pcleLane']) return `PCIe ${v['pcleVersion']}.0 x${v['pcleLane']}`;
-                if (v['pcleVersion']) return `PCIe ${v['pcleVersion']}.0`;
-                return '';
+            { type: 'sectionHeader', label: s('interfaceSection') },
+            {
+                keys: ['pcleVersion', 'pcleLane'],
+                label: s('pcieIface'), unit: '',
+                format: (v) => {
+                    if (v['pcleVersion'] && v['pcleLane']) return `PCIe ${v['pcleVersion']}.0 x${v['pcleLane']}`;
+                    if (v['pcleVersion']) return `PCIe ${v['pcleVersion']}.0`;
+                    return '';
+                },
             },
-        },
-        {
-            key: 'gpuPowerConnectors', label: 'Power connectors', unit: '', isList: true,
-            formatItem: (item) => `${item['quantity']}× ${item['pins']}-pin`,
-            formatList: (items) => items.join(', '),
-        },
-
-        { type: 'sectionHeader', label: 'Power & size' },
-        { key: 'wattage',         label: 'TDP',            unit: 'W' },
-        { key: 'psuReccomended',  label: 'Recommended PSU', unit: 'W' },
-        {
-            keys: ['sizeLength', 'sizeWidth', 'sizeHeight'],
-            label: 'Dimensions', unit: 'mm',
-            format: (v) => {
-                if (v['sizeLength'] && v['sizeWidth'] && v['sizeHeight']) return `${v['sizeLength']} × ${v['sizeWidth']} × ${v['sizeHeight']}`;
-                if (v['sizeLength'] && v['sizeWidth']) return `${v['sizeLength']} × ${v['sizeWidth']}`;
-                return '';
+            {
+                key: 'gpuPowerConnectors', label: s('powerConn'), unit: '', isList: true,
+                formatItem: (item) => `${item['quantity']}× ${item['pins']}-pin`,
+                formatList: (items) => items.join(', '),
             },
-        },
-    ],
 
-    // ── RAM ─────────────────────────────────────────────────────
-    Ram: [
-        { type: 'sectionHeader', label: 'Specifications' },
-        { key: 'brand',          label: 'Brand',          unit: '' },
-        { key: 'type',           label: 'Memory type',    unit: '' },
-        { key: 'frequency',      label: 'Speed',          unit: 'MHz' },
-        {
-            keys: ['capacity', 'moduleQuantity'],
-            label: 'Capacity', unit: '',
-            format: (v) => {
-                if (v['capacity'] && v['moduleQuantity']) return `${v['moduleQuantity']}× ${v['capacity']} GB`;
-                if (v['capacity']) return `${v['capacity']} GB`;
-                return '';
+            { type: 'sectionHeader', label: s('powerAndSize') },
+            { key: 'wattage',         label: s('tdp'),          unit: 'W' },
+            { key: 'psuReccomended',  label: s('recPsu'),       unit: 'W' },
+            {
+                keys: ['sizeLength', 'sizeWidth', 'sizeHeight'],
+                label: s('dimensions'), unit: 'mm',
+                format: (v) => {
+                    if (v['sizeLength'] && v['sizeWidth'] && v['sizeHeight']) return `${v['sizeLength']} × ${v['sizeWidth']} × ${v['sizeHeight']}`;
+                    if (v['sizeLength'] && v['sizeWidth']) return `${v['sizeLength']} × ${v['sizeWidth']}`;
+                    return '';
+                },
             },
-        },
-        { key: 'timings',        label: 'Timings',        unit: '' },
-        { key: 'voltage',        label: 'Voltage',        unit: 'V' },
+        ],
 
-        { type: 'sectionHeader', label: 'Features' },
-        { key: 'xmp',            label: 'XMP',            unit: '' },
-        { key: 'expo',           label: 'EXPO',           unit: '' },
-        { key: 'ecc',            label: 'ECC',            unit: '' },
-        { key: 'bufferization',  label: 'Buffering',      unit: '' },
-        {
-            keys: ['color'],
-            label: 'Color', unit: '',
-            format: (v) => loc(v['color']),
-        },
-
-        { type: 'sectionHeader', label: 'Power' },
-        { key: 'wattage',        label: 'Power draw',     unit: 'W' },
-    ],
-
-    // ── Motherboard ─────────────────────────────────────────────
-    Motherboard: [
-        { type: 'sectionHeader', label: 'Platform' },
-        { key: 'brand',          label: 'Brand',          unit: '' },
-        { key: 'socket',         label: 'Socket',         unit: '' },
-        { key: 'chipset',        label: 'Chipset',        unit: '' },
-        { key: 'formFactor',     label: 'Form factor',    unit: '' },
-        {
-            keys: ['sizeDimentions'],
-            label: 'Size', unit: 'mm',
-            format: (v) => v['sizeDimentions']
-                ? String(v['sizeDimentions']).replace(/\s*мм\s*/gi, '').replace(/[хx]/gi, '×')
-                : '',
-        },
-
-        { type: 'sectionHeader', label: 'Memory' },
-        { key: 'dimmType',       label: 'RAM type',       unit: '' },
-        { key: 'dimmSlots',      label: 'DIMM slots',     unit: '' },
-        { key: 'dimmFrequency',  label: 'Max frequency',  unit: 'MHz' },
-        { key: 'dimmCapacity',   label: 'Max capacity',   unit: 'GB' },
-
-        { type: 'sectionHeader', label: 'Expansion slots' },
-        {
-            key: 'pcleSlots', label: 'PCIe x16 slots', unit: '', isList: true,
-            formatItem: (item) => `PCIe ${item['version']}.0 x${item['lane']}`,
-            formatList: (items) => items.join(', '),
-        },
-        { key: 'pcleX1Quantity', label: 'PCIe x1 slots',  unit: '' },
-        {
-            key: 'm2Slots', label: 'M.2 slots', unit: '', isList: true,
-            formatItem: (item) => `PCIe ${item['version']}.0 x${item['lane']}`,
-            formatList: (items) => items.join(', '),
-        },
-        { key: 'sata3Count',     label: 'SATA ports',     unit: '' },
-
-        { type: 'sectionHeader', label: 'Power' },
-        {
-            keys: ['powerMotherboard'],
-            label: 'ATX connector', unit: '',
-            format: (v) => v['powerMotherboard'] ? `${v['powerMotherboard']}-pin` : '',
-        },
-        {
-            key: 'cpuPowerConnectors', label: 'CPU power', unit: '', isList: true,
-            formatItem: (item) => `${item['quantity']}× ${item['pins']}-pin`,
-            formatList: (items) => items.join(', '),
-        },
-
-        { type: 'sectionHeader', label: 'Connectivity' },
-        { key: 'ethernet',       label: 'Ethernet',       unit: '' },
-        { key: 'wifi',           label: 'Wi-Fi',          unit: '' },
-        { key: 'bluetooth',      label: 'Bluetooth',      unit: '' },
-        { key: 'audio',          label: 'Audio codec',    unit: '' },
-        { key: 'videoPorts',     label: 'Video outputs',  unit: '' },
-
-        { type: 'sectionHeader', label: 'Rear ports' },
-        {
-            key: 'rearPorts', label: '', unit: '', isList: true, renderAsSeparateRows: true,
-            getLabelFromItem: (item) => String(item['type']),
-            getValueFromItem: (item) => item['quantity'],
-        },
-
-        { type: 'sectionHeader', label: 'Internal connectors' },
-        {
-            key: 'innerPorts', label: '', unit: '', isList: true, renderAsSeparateRows: true,
-            getLabelFromItem: (item) => String(item['type']),
-            getValueFromItem: (item) => item['value'],
-        },
-    ],
-
-    // ── CPU Cooler ───────────────────────────────────────────────
-    CpuCooler: [
-        { type: 'sectionHeader', label: 'General' },
-        { key: 'brand',              label: 'Brand',           unit: '' },
-        { key: 'type',               label: 'Cooling type',    unit: '' },
-        {
-            keys: ['radiatorMaterial'],
-            label: 'Radiator', unit: '',
-            format: (v) => loc(v['radiatorMaterial']),
-        },
-        { key: 'fanCount',           label: 'Fan count',       unit: '' },
-        { key: 'fanSize',            label: 'Fan size',        unit: 'mm' },
-        { key: 'powerConnector',     label: 'Connector',       unit: '' },
-        { key: 'speedControl',       label: 'Speed control',   unit: '' },
-
-        { type: 'sectionHeader', label: 'Performance' },
-        { key: 'maxPowerDissipation', label: 'TDP rating',     unit: 'W' },
-        { key: 'maxSpeed',           label: 'Max fan speed',   unit: 'RPM' },
-        { key: 'minSpeed',           label: 'Min fan speed',   unit: 'RPM' },
-        { key: 'noiseLevelDb',       label: 'Noise level',     unit: 'dB' },
-        { key: 'airflowCfm',         label: 'Airflow',         unit: 'CFM' },
-
-        { type: 'sectionHeader', label: 'Compatibility' },
-        {
-            key: 'cpuCoolerSockets', label: 'Supported sockets', unit: '', isList: true,
-            formatItem: (item) => String(item['socketType']),
-            formatList: (items) => items.join(', '),
-        },
-
-        { type: 'sectionHeader', label: 'Dimensions & power' },
-        {
-            keys: ['length', 'width', 'height'],
-            label: 'Dimensions', unit: 'mm',
-            format: (v) => {
-                if (v['length'] && v['width'] && v['height']) return `${v['length']} × ${v['width']} × ${v['height']}`;
-                if (v['length'] && v['width']) return `${v['length']} × ${v['width']}`;
-                return '';
+        // ── RAM ─────────────────────────────────────────────────────
+        Ram: [
+            { type: 'sectionHeader', label: s('specifications') },
+            { key: 'brand',          label: s('brand'),         unit: '' },
+            { key: 'type',           label: s('memType'),       unit: '' },
+            { key: 'frequency',      label: s('speed'),         unit: 'MHz' },
+            {
+                keys: ['capacity', 'moduleQuantity'],
+                label: s('capacity'), unit: '',
+                format: (v) => {
+                    if (v['capacity'] && v['moduleQuantity']) return `${v['moduleQuantity']}× ${v['capacity']} GB`;
+                    if (v['capacity']) return `${v['capacity']} GB`;
+                    return '';
+                },
             },
-        },
-        { key: 'weight',             label: 'Weight',          unit: 'g' },
-        { key: 'voltage',            label: 'Voltage',         unit: 'V' },
-        { key: 'wattage',            label: 'Power draw',      unit: 'W' },
-        { key: 'lifespan',           label: 'Lifespan',        unit: 'h' },
-    ],
+            { key: 'timings',        label: s('timings'),       unit: '' },
+            { key: 'voltage',        label: s('voltage'),       unit: 'V' },
 
-    // ── PC Case ──────────────────────────────────────────────────
-    PcCase: [
-        { type: 'sectionHeader', label: 'General' },
-        { key: 'brand',          label: 'Brand',           unit: '' },
-        { key: 'sizeStandard',   label: 'Case class',      unit: '' },
-        {
-            key: 'pcCaseFormFactors', label: 'Supported form factors', unit: '', isList: true,
-            formatItem: (item) => String(item['name']),
-            formatList: (items) => items.join(', '),
-        },
-        {
-            keys: ['psuLocation'],
-            label: 'PSU location', unit: '',
-            format: (v) => loc(v['psuLocation']),
-        },
-        { key: 'hasDustFilters', label: 'Dust filters',    unit: '' },
-
-        { type: 'sectionHeader', label: 'Clearances' },
-        { key: 'maxGpuLength',       label: 'Max GPU length',     unit: 'mm' },
-        { key: 'maxCpuCoolerHeight', label: 'Max cooler height',  unit: 'mm' },
-
-        { type: 'sectionHeader', label: 'Bays' },
-        { key: 'slot25Quant',        label: '2.5″ bays',          unit: '' },
-        { key: 'slot35Quant',        label: '3.5″ bays',          unit: '' },
-        { key: 'slot525Quant',       label: '5.25″ bays',         unit: '' },
-        { key: 'expansionSlotQuant', label: 'Expansion slots',    unit: '' },
-
-        { type: 'sectionHeader', label: 'Fans' },
-        {
-            keys: ['builtInFans'],
-            label: 'Included fans', unit: '',
-            format: (v) => loc(v['builtInFans']),
-            fullWidth: true,
-        },
-        {
-            keys: ['additionalFanPlaces'],
-            label: 'Fan mounts', unit: '',
-            format: (v) => loc(v['additionalFanPlaces']),
-            fullWidth: true,
-        },
-        {
-            key: 'pcCaseFanLocations', label: 'Fan locations', unit: '', isList: true,
-            formatItem: (item) => {
-                const name = typeof item['name'] === 'object' ? loc(item['name']) : String(item['name'] ?? '');
-                return `${name} ${item['fanSize']}mm ×${item['maxFans']}`;
+            { type: 'sectionHeader', label: s('features') },
+            { key: 'xmp',            label: s('xmp'),           unit: '' },
+            { key: 'expo',           label: s('expo'),          unit: '' },
+            { key: 'ecc',            label: s('ecc'),           unit: '' },
+            { key: 'bufferization',  label: s('buffering'),     unit: '' },
+            {
+                keys: ['color'],
+                label: s('color'), unit: '',
+                format: (v) => loc(v['color']),
             },
-            formatList: (items) => items.join(', '),
-            fullWidth: true,
-        },
 
-        { type: 'sectionHeader', label: 'I/O panel' },
-        { key: 'usb',            label: 'Front USB',       unit: '' },
-        { key: 'hasHeadphones',  label: 'Headphone jack',  unit: '' },
-        { key: 'hasMicrophone',  label: 'Mic jack',        unit: '' },
+            { type: 'sectionHeader', label: s('power') },
+            { key: 'wattage',        label: s('powerDraw'),     unit: 'W' },
+        ],
 
-        { type: 'sectionHeader', label: 'Physical' },
-        {
-            keys: ['sizeDimentions'],
-            label: 'Dimensions', unit: 'mm',
-            format: (v) => v['sizeDimentions']
-                ? String(v['sizeDimentions']).replace(/\s*мм\s*/gi, '')
-                : '',
-        },
-        { key: 'weight',         label: 'Weight',          unit: 'kg' },
-    ],
-
-    // ── Power Supply ─────────────────────────────────────────────
-    PowerSupply: [
-        { type: 'sectionHeader', label: 'General' },
-        { key: 'brand',              label: 'Brand',          unit: '' },
-        { key: 'formFactor',         label: 'Form factor',    unit: '' },
-        { key: 'wattage',            label: 'Wattage',        unit: 'W' },
-        {
-            keys: ['modularity'],
-            label: 'Modularity', unit: '',
-            format: (v) => loc(v['modularity']),
-        },
-
-        { type: 'sectionHeader', label: 'Efficiency' },
-        { key: 'efficiencyStandart', label: '80 PLUS rating', unit: '' },
-        {
-            keys: ['efficiencyPercent'],
-            label: 'Efficiency', unit: '',
-            format: (v) => v['efficiencyPercent'] ? `${v['efficiencyPercent']}%` : '',
-        },
-        { key: 'hasApcf',            label: 'Active PFC',     unit: '' },
-
-        { type: 'sectionHeader', label: 'Connectors' },
-        {
-            key: 'powerSupplyMotherboardPowerConnectors', label: 'Motherboard', unit: '', isList: true,
-            formatItem: (item) => `${item['quantity']}× ${item['pins']}-pin`,
-            formatList: (items) => items.join(', '),
-        },
-        {
-            key: 'powerSupplyCpuPowerConnectors', label: 'CPU', unit: '', isList: true,
-            formatItem: (item) => {
-                const base = `${item['quantity']}× ${item['pins']}`;
-                return item['additionalPins'] != null ? `${base}+${item['additionalPins']}-pin` : `${base}-pin`;
+        // ── Motherboard ─────────────────────────────────────────────
+        Motherboard: [
+            { type: 'sectionHeader', label: s('platform') },
+            { key: 'brand',          label: s('brand'),         unit: '' },
+            { key: 'socket',         label: s('socket'),        unit: '' },
+            { key: 'chipset',        label: s('chipset'),       unit: '' },
+            { key: 'formFactor',     label: s('formFactor'),    unit: '' },
+            {
+                keys: ['sizeDimentions'],
+                label: s('size'), unit: 'mm',
+                format: (v) => v['sizeDimentions']
+                    ? String(v['sizeDimentions']).replace(/\s*мм\s*/gi, '').replace(/[хx]/gi, '×')
+                    : '',
             },
-            formatList: (items) => items.join(', '),
-        },
-        {
-            key: 'powerSupplyGpuPowerConnectors', label: 'GPU', unit: '', isList: true,
-            formatItem: (item) => {
-                const base = `${item['quantity']}× ${item['pins']}`;
-                return item['additionalPins'] != null ? `${base}+${item['additionalPins']}-pin` : `${base}-pin`;
+
+            { type: 'sectionHeader', label: s('memory') },
+            { key: 'dimmType',       label: s('ramType'),       unit: '' },
+            { key: 'dimmSlots',      label: s('dimmSlots'),     unit: '' },
+            { key: 'dimmFrequency',  label: s('maxFreq'),       unit: 'MHz' },
+            { key: 'dimmCapacity',   label: s('maxCapacity'),   unit: 'GB' },
+
+            { type: 'sectionHeader', label: s('expansionSlots') },
+            {
+                key: 'pcleSlots', label: s('pcieX16'), unit: '', isList: true,
+                formatItem: (item) => `PCIe ${item['version']}.0 x${item['lane']}`,
+                formatList: (items) => items.join(', '),
             },
-            formatList: (items) => items.join(', '),
-        },
-        { key: 'molexCount',         label: 'Molex',          unit: '' },
-        { key: 'sataCount',          label: 'SATA',           unit: '' },
-        { key: 'fddCount',           label: 'FDD',            unit: '' },
-
-        { type: 'sectionHeader', label: 'Input' },
-        {
-            keys: ['inputMinVoltage', 'inputMaxVoltage'],
-            label: 'Input voltage', unit: 'V',
-            format: (v) => {
-                if (v['inputMinVoltage'] && v['inputMaxVoltage']) return `${v['inputMinVoltage']} – ${v['inputMaxVoltage']}`;
-                if (v['inputMinVoltage']) return String(v['inputMinVoltage']);
-                return '';
+            { key: 'pcleX1Quantity', label: s('pcieX1'),        unit: '' },
+            {
+                key: 'm2Slots', label: s('m2Slots'), unit: '', isList: true,
+                formatItem: (item) => `PCIe ${item['version']}.0 x${item['lane']}`,
+                formatList: (items) => items.join(', '),
             },
-        },
+            { key: 'sata3Count',     label: s('sataPorts'),     unit: '' },
 
-        { type: 'sectionHeader', label: 'Physical' },
-        { key: 'noiseLevelMaxDb',    label: 'Max noise',      unit: 'dB' },
-        { key: 'size',               label: 'Dimensions',     unit: '' },
-    ],
-
-    // ── SSD ──────────────────────────────────────────────────────
-    Ssd: [
-        { type: 'sectionHeader', label: 'General' },
-        { key: 'brand',          label: 'Brand',           unit: '' },
-        { key: 'capacity',       label: 'Capacity',        unit: 'GB' },
-        { key: 'interface',      label: 'Interface',       unit: '' },
-        { key: 'formFactor',     label: 'Form factor',     unit: '' },
-        { key: 'nandType',       label: 'NAND type',       unit: '' },
-        { key: 'isTrimmSupported', label: 'TRIM',          unit: '' },
-
-        { type: 'sectionHeader', label: 'Performance' },
-        {
-            keys: ['maxReadSpeed', 'maxWriteSpeed'],
-            label: 'Sequential read / write', unit: 'MB/s',
-            format: (v) => {
-                if (v['maxReadSpeed'] && v['maxWriteSpeed']) return `${v['maxReadSpeed']} / ${v['maxWriteSpeed']}`;
-                if (v['maxReadSpeed']) return String(v['maxReadSpeed']);
-                return '';
+            { type: 'sectionHeader', label: s('power') },
+            {
+                keys: ['powerMotherboard'],
+                label: s('atxConn'), unit: '',
+                format: (v) => v['powerMotherboard'] ? `${v['powerMotherboard']}-pin` : '',
             },
-        },
-        {
-            keys: ['randomReadSpeed', 'randomWriteSpeed'],
-            label: 'Random read / write', unit: 'IOPS',
-            format: (v) => {
-                if (v['randomReadSpeed'] && v['randomWriteSpeed']) return `${v['randomReadSpeed']} / ${v['randomWriteSpeed']}`;
-                if (v['randomReadSpeed']) return String(v['randomReadSpeed']);
-                return '';
+            {
+                key: 'cpuPowerConnectors', label: s('cpuPower'), unit: '', isList: true,
+                formatItem: (item) => `${item['quantity']}× ${item['pins']}-pin`,
+                formatList: (items) => items.join(', '),
             },
-        },
-        { key: 'writingRecource', label: 'Write endurance', unit: 'TBW' },
-        { key: 'averageLifeTime', label: 'MTBF',           unit: 'h' },
 
-        { type: 'sectionHeader', label: 'Physical' },
-        { key: 'size',           label: 'Dimensions',      unit: '' },
-        { key: 'weight',         label: 'Weight',          unit: 'g' },
-        { key: 'wattage',        label: 'Power draw',      unit: 'W' },
-    ],
+            { type: 'sectionHeader', label: s('connectivity') },
+            { key: 'ethernet',       label: s('ethernet'),      unit: '' },
+            { key: 'wifi',           label: s('wifi'),          unit: '' },
+            { key: 'bluetooth',      label: s('bluetooth'),     unit: '' },
+            { key: 'audio',          label: s('audioCodec'),    unit: '' },
+            { key: 'videoPorts',     label: s('videoOutputs'),  unit: '' },
 
-    // ── HDD ──────────────────────────────────────────────────────
-    Hdd: [
-        { type: 'sectionHeader', label: 'General' },
-        { key: 'brand',          label: 'Brand',           unit: '' },
-        { key: 'capacity',       label: 'Capacity',        unit: 'GB' },
-        { key: 'interface',      label: 'Interface',       unit: '' },
-        { key: 'formFactor',     label: 'Form factor',     unit: '' },
-
-        { type: 'sectionHeader', label: 'Performance' },
-        { key: 'spindleSpeed',   label: 'Spindle speed',   unit: 'RPM' },
-        { key: 'cache',          label: 'Cache',           unit: 'MB' },
-        { key: 'speed',          label: 'Transfer speed',  unit: 'MB/s' },
-        { key: 'writingTechnology', label: 'Write technology', unit: '' },
-
-        { type: 'sectionHeader', label: 'Physical' },
-        { key: 'noiceDb',        label: 'Noise level',     unit: 'dB' },
-        { key: 'wattage',        label: 'Power draw',      unit: 'W' },
-    ],
-
-    // ── Fan ──────────────────────────────────────────────────────
-    Fan: [
-        { type: 'sectionHeader', label: 'General' },
-        { key: 'brand',          label: 'Brand',           unit: '' },
-        { key: 'moduleCount',    label: 'Pack count',      unit: '' },
-        {
-            keys: ['bearingType'],
-            label: 'Bearing type', unit: '',
-            format: (v) => loc(v['bearingType']),
-        },
-        { key: 'connector',      label: 'Connector',       unit: '' },
-        { key: 'speedControl',   label: 'Speed control',   unit: '' },
-        {
-            keys: ['color'],
-            label: 'Color', unit: '',
-            format: (v) => loc(v['color']),
-        },
-
-        { type: 'sectionHeader', label: 'Performance' },
-        {
-            keys: ['minSpeed', 'maxSpeed'],
-            label: 'Fan speed', unit: 'RPM',
-            format: (v) => {
-                if (v['minSpeed'] && v['maxSpeed']) return `${v['minSpeed']} – ${v['maxSpeed']}`;
-                if (v['maxSpeed']) return String(v['maxSpeed']);
-                return '';
+            { type: 'sectionHeader', label: s('rearPorts') },
+            {
+                key: 'rearPorts', label: '', unit: '', isList: true, renderAsSeparateRows: true,
+                getLabelFromItem: (item) => String(item['type']),
+                getValueFromItem: (item) => item['quantity'],
             },
-        },
-        { key: 'airflowCfm',     label: 'Airflow',         unit: 'CFM' },
-        { key: 'noiseLevelDb',   label: 'Noise level',     unit: 'dB' },
-        { key: 'voltage',        label: 'Voltage',         unit: 'V' },
 
-        { type: 'sectionHeader', label: 'Physical' },
-        {
-            keys: ['sizeLength', 'sizeWidth', 'sizeHeight'],
-            label: 'Dimensions', unit: 'mm',
-            format: (v) => {
-                if (v['sizeLength'] && v['sizeWidth'] && v['sizeHeight']) return `${v['sizeLength']} × ${v['sizeWidth']} × ${v['sizeHeight']}`;
-                if (v['sizeLength'] && v['sizeWidth']) return `${v['sizeLength']} × ${v['sizeWidth']}`;
-                return '';
+            { type: 'sectionHeader', label: s('internalConn') },
+            {
+                key: 'innerPorts', label: '', unit: '', isList: true, renderAsSeparateRows: true,
+                getLabelFromItem: (item) => String(item['type']),
+                getValueFromItem: (item) => item['value'],
             },
-        },
-        { key: 'weight',         label: 'Weight',          unit: 'g' },
-        { key: 'wattage',        label: 'Power draw',      unit: 'W' },
-    ],
+        ],
 
-    default: [],
-};
+        // ── CPU Cooler ───────────────────────────────────────────────
+        CpuCooler: [
+            { type: 'sectionHeader', label: s('general') },
+            { key: 'brand',              label: s('brand'),          unit: '' },
+            { key: 'type',               label: s('coolingType'),    unit: '' },
+            {
+                keys: ['radiatorMaterial'],
+                label: s('radiator'), unit: '',
+                format: (v) => loc(v['radiatorMaterial']),
+            },
+            { key: 'fanCount',           label: s('fanCount'),       unit: '' },
+            { key: 'fanSize',            label: s('fanSize'),        unit: 'mm' },
+            { key: 'powerConnector',     label: s('connector'),      unit: '' },
+            { key: 'speedControl',       label: s('speedControl'),   unit: '' },
+
+            { type: 'sectionHeader', label: s('performance') },
+            { key: 'maxPowerDissipation', label: s('tdpRating'),     unit: 'W' },
+            { key: 'maxSpeed',           label: s('maxFanSpeed'),    unit: 'RPM' },
+            { key: 'minSpeed',           label: s('minFanSpeed'),    unit: 'RPM' },
+            { key: 'noiseLevelDb',       label: s('noiseLevel'),     unit: 'dB' },
+            { key: 'airflowCfm',         label: s('airflow'),        unit: 'CFM' },
+
+            { type: 'sectionHeader', label: s('compatibility') },
+            {
+                key: 'cpuCoolerSockets', label: s('supportedSockets'), unit: '', isList: true,
+                formatItem: (item) => String(item['socketType']),
+                formatList: (items) => items.join(', '),
+            },
+
+            { type: 'sectionHeader', label: s('dimsAndPower') },
+            {
+                keys: ['length', 'width', 'height'],
+                label: s('dimensions'), unit: 'mm',
+                format: (v) => {
+                    if (v['length'] && v['width'] && v['height']) return `${v['length']} × ${v['width']} × ${v['height']}`;
+                    if (v['length'] && v['width']) return `${v['length']} × ${v['width']}`;
+                    return '';
+                },
+            },
+            { key: 'weight',             label: s('weight'),         unit: 'g' },
+            { key: 'voltage',            label: s('voltage'),        unit: 'V' },
+            { key: 'wattage',            label: s('powerDraw'),      unit: 'W' },
+            { key: 'lifespan',           label: s('lifespan'),       unit: 'h' },
+        ],
+
+        // ── PC Case ──────────────────────────────────────────────────
+        PcCase: [
+            { type: 'sectionHeader', label: s('general') },
+            { key: 'brand',          label: s('brand'),          unit: '' },
+            { key: 'sizeStandard',   label: s('caseClass'),      unit: '' },
+            {
+                key: 'pcCaseFormFactors', label: s('supportedFF'), unit: '', isList: true,
+                formatItem: (item) => String(item['name']),
+                formatList: (items) => items.join(', '),
+            },
+            {
+                keys: ['psuLocation'],
+                label: s('psuLocation'), unit: '',
+                format: (v) => loc(v['psuLocation']),
+            },
+            { key: 'hasDustFilters', label: s('dustFilters'),    unit: '' },
+
+            { type: 'sectionHeader', label: s('clearances') },
+            { key: 'maxGpuLength',       label: s('maxGpuLength'),   unit: 'mm' },
+            { key: 'maxCpuCoolerHeight', label: s('maxCoolerH'),     unit: 'mm' },
+
+            { type: 'sectionHeader', label: s('bays') },
+            { key: 'slot25Quant',        label: s('bays25'),          unit: '' },
+            { key: 'slot35Quant',        label: s('bays35'),          unit: '' },
+            { key: 'slot525Quant',       label: s('bays525'),         unit: '' },
+            { key: 'expansionSlotQuant', label: s('expansionSlots'),  unit: '' },
+
+            { type: 'sectionHeader', label: s('fans') },
+            {
+                keys: ['builtInFans'],
+                label: s('includedFans'), unit: '',
+                format: (v) => loc(v['builtInFans']),
+                fullWidth: true,
+            },
+            {
+                keys: ['additionalFanPlaces'],
+                label: s('fanMounts'), unit: '',
+                format: (v) => loc(v['additionalFanPlaces']),
+                fullWidth: true,
+            },
+            {
+                key: 'pcCaseFanLocations', label: s('fanLocations'), unit: '', isList: true,
+                formatItem: (item) => {
+                    const name = typeof item['name'] === 'object' ? loc(item['name']) : String(item['name'] ?? '');
+                    return `${name} ${item['fanSize']}mm ×${item['maxFans']}`;
+                },
+                formatList: (items) => items.join(', '),
+                fullWidth: true,
+            },
+
+            { type: 'sectionHeader', label: s('ioPanel') },
+            { key: 'usb',            label: s('frontUsb'),       unit: '' },
+            { key: 'hasHeadphones',  label: s('headphoneJack'),  unit: '' },
+            { key: 'hasMicrophone',  label: s('micJack'),        unit: '' },
+
+            { type: 'sectionHeader', label: s('physical') },
+            {
+                keys: ['sizeDimentions'],
+                label: s('dimensions'), unit: 'mm',
+                format: (v) => v['sizeDimentions']
+                    ? String(v['sizeDimentions']).replace(/\s*мм\s*/gi, '')
+                    : '',
+            },
+            { key: 'weight',         label: s('weight'),         unit: 'kg' },
+        ],
+
+        // ── Power Supply ─────────────────────────────────────────────
+        PowerSupply: [
+            { type: 'sectionHeader', label: s('general') },
+            { key: 'brand',              label: s('brand'),         unit: '' },
+            { key: 'formFactor',         label: s('formFactor'),    unit: '' },
+            { key: 'wattage',            label: s('wattage'),       unit: 'W' },
+            {
+                keys: ['modularity'],
+                label: s('modularity'), unit: '',
+                format: (v) => loc(v['modularity']),
+            },
+
+            { type: 'sectionHeader', label: s('efficiency') },
+            { key: 'efficiencyStandart', label: s('80plusRating'),  unit: '' },
+            {
+                keys: ['efficiencyPercent'],
+                label: s('efficiencyPct'), unit: '',
+                format: (v) => v['efficiencyPercent'] ? `${v['efficiencyPercent']}%` : '',
+            },
+            { key: 'hasApcf',            label: s('activePfc'),     unit: '' },
+
+            { type: 'sectionHeader', label: s('connectors') },
+            {
+                key: 'powerSupplyMotherboardPowerConnectors', label: s('motherboard'), unit: '', isList: true,
+                formatItem: (item) => `${item['quantity']}× ${item['pins']}-pin`,
+                formatList: (items) => items.join(', '),
+            },
+            {
+                key: 'powerSupplyCpuPowerConnectors', label: s('cpu'), unit: '', isList: true,
+                formatItem: (item) => {
+                    const base = `${item['quantity']}× ${item['pins']}`;
+                    return item['additionalPins'] != null ? `${base}+${item['additionalPins']}-pin` : `${base}-pin`;
+                },
+                formatList: (items) => items.join(', '),
+            },
+            {
+                key: 'powerSupplyGpuPowerConnectors', label: s('gpu'), unit: '', isList: true,
+                formatItem: (item) => {
+                    const base = `${item['quantity']}× ${item['pins']}`;
+                    return item['additionalPins'] != null ? `${base}+${item['additionalPins']}-pin` : `${base}-pin`;
+                },
+                formatList: (items) => items.join(', '),
+            },
+            { key: 'molexCount',         label: s('molex'),         unit: '' },
+            { key: 'sataCount',          label: s('sata'),          unit: '' },
+            { key: 'fddCount',           label: s('fdd'),           unit: '' },
+
+            { type: 'sectionHeader', label: s('input') },
+            {
+                keys: ['inputMinVoltage', 'inputMaxVoltage'],
+                label: s('inputVoltage'), unit: 'V',
+                format: (v) => {
+                    if (v['inputMinVoltage'] && v['inputMaxVoltage']) return `${v['inputMinVoltage']} – ${v['inputMaxVoltage']}`;
+                    if (v['inputMinVoltage']) return String(v['inputMinVoltage']);
+                    return '';
+                },
+            },
+
+            { type: 'sectionHeader', label: s('physical') },
+            { key: 'noiseLevelMaxDb',    label: s('maxNoise'),      unit: 'dB' },
+            { key: 'size',               label: s('dimensions'),    unit: '' },
+        ],
+
+        // ── SSD ──────────────────────────────────────────────────────
+        Ssd: [
+            { type: 'sectionHeader', label: s('general') },
+            { key: 'brand',          label: s('brand'),          unit: '' },
+            { key: 'capacity',       label: s('capacity'),       unit: 'GB' },
+            { key: 'interface',      label: s('interface'),      unit: '' },
+            { key: 'formFactor',     label: s('formFactor'),     unit: '' },
+            { key: 'nandType',       label: s('nandType'),       unit: '' },
+            { key: 'isTrimmSupported', label: s('trim'),         unit: '' },
+
+            { type: 'sectionHeader', label: s('performance') },
+            {
+                keys: ['maxReadSpeed', 'maxWriteSpeed'],
+                label: s('seqReadWrite'), unit: 'MB/s',
+                format: (v) => {
+                    if (v['maxReadSpeed'] && v['maxWriteSpeed']) return `${v['maxReadSpeed']} / ${v['maxWriteSpeed']}`;
+                    if (v['maxReadSpeed']) return String(v['maxReadSpeed']);
+                    return '';
+                },
+            },
+            {
+                keys: ['randomReadSpeed', 'randomWriteSpeed'],
+                label: s('randReadWrite'), unit: 'IOPS',
+                format: (v) => {
+                    if (v['randomReadSpeed'] && v['randomWriteSpeed']) return `${v['randomReadSpeed']} / ${v['randomWriteSpeed']}`;
+                    if (v['randomReadSpeed']) return String(v['randomReadSpeed']);
+                    return '';
+                },
+            },
+            { key: 'writingRecource', label: s('writeEndurance'), unit: 'TBW' },
+            { key: 'averageLifeTime', label: s('mtbf'),           unit: 'h' },
+
+            { type: 'sectionHeader', label: s('physical') },
+            { key: 'size',           label: s('dimensions'),     unit: '' },
+            { key: 'weight',         label: s('weight'),         unit: 'g' },
+            { key: 'wattage',        label: s('powerDraw'),      unit: 'W' },
+        ],
+
+        // ── HDD ──────────────────────────────────────────────────────
+        Hdd: [
+            { type: 'sectionHeader', label: s('general') },
+            { key: 'brand',          label: s('brand'),          unit: '' },
+            { key: 'capacity',       label: s('capacity'),       unit: 'GB' },
+            { key: 'interface',      label: s('interface'),      unit: '' },
+            { key: 'formFactor',     label: s('formFactor'),     unit: '' },
+
+            { type: 'sectionHeader', label: s('performance') },
+            { key: 'spindleSpeed',   label: s('spindleSpeed'),   unit: 'RPM' },
+            { key: 'cache',          label: s('cache'),          unit: 'MB' },
+            { key: 'speed',          label: s('transferSpeed'),  unit: 'MB/s' },
+            { key: 'writingTechnology', label: s('writeTech'),   unit: '' },
+
+            { type: 'sectionHeader', label: s('physical') },
+            { key: 'noiceDb',        label: s('noiseLevel'),     unit: 'dB' },
+            { key: 'wattage',        label: s('powerDraw'),      unit: 'W' },
+        ],
+
+        // ── Fan ──────────────────────────────────────────────────────
+        Fan: [
+            { type: 'sectionHeader', label: s('general') },
+            { key: 'brand',          label: s('brand'),          unit: '' },
+            { key: 'moduleCount',    label: s('packCount'),      unit: '' },
+            {
+                keys: ['bearingType'],
+                label: s('bearingType'), unit: '',
+                format: (v) => loc(v['bearingType']),
+            },
+            { key: 'connector',      label: s('connector'),      unit: '' },
+            { key: 'speedControl',   label: s('speedControl'),   unit: '' },
+            {
+                keys: ['color'],
+                label: s('color'), unit: '',
+                format: (v) => loc(v['color']),
+            },
+
+            { type: 'sectionHeader', label: s('performance') },
+            {
+                keys: ['minSpeed', 'maxSpeed'],
+                label: s('fanSpeed'), unit: 'RPM',
+                format: (v) => {
+                    if (v['minSpeed'] && v['maxSpeed']) return `${v['minSpeed']} – ${v['maxSpeed']}`;
+                    if (v['maxSpeed']) return String(v['maxSpeed']);
+                    return '';
+                },
+            },
+            { key: 'airflowCfm',     label: s('airflow'),        unit: 'CFM' },
+            { key: 'noiseLevelDb',   label: s('noiseLevel'),     unit: 'dB' },
+            { key: 'voltage',        label: s('voltage'),        unit: 'V' },
+
+            { type: 'sectionHeader', label: s('physical') },
+            {
+                keys: ['sizeLength', 'sizeWidth', 'sizeHeight'],
+                label: s('dimensions'), unit: 'mm',
+                format: (v) => {
+                    if (v['sizeLength'] && v['sizeWidth'] && v['sizeHeight']) return `${v['sizeLength']} × ${v['sizeWidth']} × ${v['sizeHeight']}`;
+                    if (v['sizeLength'] && v['sizeWidth']) return `${v['sizeLength']} × ${v['sizeWidth']}`;
+                    return '';
+                },
+            },
+            { key: 'weight',         label: s('weight'),         unit: 'g' },
+            { key: 'wattage',        label: s('powerDraw'),      unit: 'W' },
+        ],
+
+        default: [],
+    };
+}
+
+// Keep the old export for any code that still imports it (will be removed after migration)
+export const componentSpecFullConfigs: Record<string, FullSpecConfig[]> = {};

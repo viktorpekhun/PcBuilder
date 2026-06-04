@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import useAuth from "../../hooks/useAuth";
 import { priceAlertService } from "../../api/priceAlert.service";
 import type { ComponentType } from "../../types/component.types";
@@ -23,6 +24,7 @@ function normalizeComponentType(raw: string): ComponentType {
 }
 
 export default function PriceAlertButton({ componentId, componentType: rawComponentType }: Props) {
+    const { t } = useTranslation();
     const componentType = normalizeComponentType(rawComponentType);
     const { auth } = useAuth();
     const [alert, setAlert] = useState<IPriceAlert | null>(null);
@@ -66,7 +68,7 @@ export default function PriceAlertButton({ componentId, componentType: rawCompon
     }, [showForm]);
 
     const handleSubscribe = async () => {
-        if (threshold <= 0 || threshold > 100) { setError("Enter a value between 0.1 and 100"); return; }
+        if (threshold <= 0 || threshold > 100) { setError(t('components.componentPage.priceAlert.errorThreshold')); return; }
         setBusy(true); setError(null);
         try {
             await priceAlertService.subscribe({ componentId, componentType, thresholdPercent: threshold });
@@ -74,7 +76,7 @@ export default function PriceAlertButton({ componentId, componentType: rawCompon
             setAlert(refreshed);
             setShowForm(false);
         } catch {
-            setError("Failed to subscribe. Try again later.");
+            setError(t('components.componentPage.priceAlert.errorSubscribe'));
         } finally { setBusy(false); }
     };
 
@@ -86,16 +88,16 @@ export default function PriceAlertButton({ componentId, componentType: rawCompon
             setAlert(null);
             setThreshold(DEFAULT_THRESHOLD);
         } catch {
-            setError("Failed to unsubscribe.");
+            setError(t('components.componentPage.priceAlert.errorUnsubscribe'));
         } finally { setBusy(false); }
     };
 
     if (!isLoggedIn || loading) return (
         <div className={styles.panel}>
             <div className={styles.panelHead}>
-                <span className={styles.eyebrow}>Price alert</span>
+                <span className={styles.eyebrow}>{t('components.componentPage.priceAlert.eyebrow')}</span>
             </div>
-            <p className={styles.desc}>Sign in to track price drops for this component.</p>
+            <p className={styles.desc}>{t('components.componentPage.priceAlert.signInPrompt')}</p>
         </div>
     );
 
@@ -105,34 +107,32 @@ export default function PriceAlertButton({ componentId, componentType: rawCompon
         return (
             <div className={styles.panel}>
                 <div className={styles.panelHead}>
-                    <span className={styles.eyebrow}>Price alert</span>
-                    <span className={styles.statusActive}><span className={styles.statusDot} /> ACTIVE</span>
+                    <span className={styles.eyebrow}>{t('components.componentPage.priceAlert.eyebrow')}</span>
+                    <span className={styles.statusActive}><span className={styles.statusDot} /> {t('components.componentPage.priceAlert.statusActive')}</span>
                 </div>
 
-                <p className={styles.desc}>
-                    Notify you any time the <strong>lowest live price</strong> across tracked stores drops below today's.
-                </p>
+                <p className={styles.desc}>{t('components.componentPage.priceAlert.descActive')}</p>
 
                 <div className={styles.statsRow}>
                     <div className={styles.statBox}>
-                        <span className={styles.statLabel}>Watching</span>
+                        <span className={styles.statLabel}>{t('components.componentPage.priceAlert.watching')}</span>
                         <span className={styles.statVal}>₴ {watchingPrice.toLocaleString()}</span>
                     </div>
                     <div className={styles.statBox}>
-                        <span className={styles.statLabel}>Threshold</span>
+                        <span className={styles.statLabel}>{t('components.componentPage.priceAlert.threshold')}</span>
                         <span className={styles.statVal}>±{alert.thresholdPercent}%</span>
                     </div>
                 </div>
 
                 <div className={styles.trackingRow}>
                     <span className={styles.trackingDot} />
-                    Alert is active for this component
+                    {t('components.componentPage.priceAlert.trackingActive')}
                 </div>
 
                 {error && <div className={styles.error}>{error}</div>}
 
                 <button className={styles.btnUnsub} onClick={handleUnsubscribe} disabled={busy}>
-                    × {busy ? 'Removing…' : 'Unsubscribe'}
+                    {busy ? t('components.componentPage.priceAlert.unsubscribing') : t('components.componentPage.priceAlert.unsubscribe')}
                 </button>
             </div>
         );
@@ -142,22 +142,20 @@ export default function PriceAlertButton({ componentId, componentType: rawCompon
     return (
         <div className={styles.panel} ref={formRef}>
             <div className={styles.panelHead}>
-                <span className={styles.eyebrow}>Price alert</span>
-                <span className={styles.statusInactive}>INACTIVE</span>
+                <span className={styles.eyebrow}>{t('components.componentPage.priceAlert.eyebrow')}</span>
+                <span className={styles.statusInactive}>{t('components.componentPage.priceAlert.statusInactive')}</span>
             </div>
 
-            <p className={styles.desc}>
-                Get notified when the price drops below your target threshold.
-            </p>
+            <p className={styles.desc}>{t('components.componentPage.priceAlert.descInactive')}</p>
 
             {!showForm ? (
                 <button className={styles.btnSetAlert} onClick={() => setShowForm(true)}>
-                    <span className={styles.toolGly}>△</span> Set price alert
+                    {t('components.componentPage.priceAlert.setAlert')}
                 </button>
             ) : (
                 <div className={styles.form}>
                     <label className={styles.label}>
-                        <span className={styles.labelText}>Alert threshold %</span>
+                        <span className={styles.labelText}>{t('components.componentPage.priceAlert.thresholdLabel')}</span>
                         <input
                             type="number"
                             min={0.1} max={100} step={0.1}
@@ -170,10 +168,10 @@ export default function PriceAlertButton({ componentId, componentType: rawCompon
                     {error && <div className={styles.error}>{error}</div>}
                     <div className={styles.formActions}>
                         <button className={styles.btnCancel} onClick={() => { setShowForm(false); setError(null); }}>
-                            Cancel
+                            {t('components.componentPage.priceAlert.cancel')}
                         </button>
                         <button className={styles.btnConfirm} onClick={handleSubscribe} disabled={busy}>
-                            {busy ? 'Saving…' : 'Confirm'}
+                            {busy ? t('components.componentPage.priceAlert.saving') : t('components.componentPage.priceAlert.confirm')}
                         </button>
                     </div>
                 </div>

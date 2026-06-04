@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import styles from './UserBuildsPage.module.css';
 import useAuth from '../../hooks/useAuth';
 import { BuildCover } from '../../components/BuildCover/BuildCover';
@@ -14,19 +15,19 @@ interface SingleConfig { key: keyof Pick<IPcBuildRequest, SingleKey>; slot: stri
 interface MultiConfig  { key: keyof Pick<IPcBuildRequest, MultiKey>;  slot: string; label: string; urlType: string }
 
 const SINGLE_COMPONENTS: SingleConfig[] = [
-    { key: 'cpu',          slot: 'CPU', label: 'Processor',    urlType: 'cpu'          },
-    { key: 'gpu',          slot: 'GPU', label: 'Graphics',     urlType: 'gpu'          },
-    { key: 'motherboard',  slot: 'M/B', label: 'Motherboard',  urlType: 'motherboard'  },
-    { key: 'powerSupply',  slot: 'PSU', label: 'Power supply', urlType: 'powerSupply'  },
-    { key: 'cpuCooler',    slot: 'CLR', label: 'CPU cooler',   urlType: 'cpuCooler'    },
-    { key: 'pcCase',       slot: 'CSE', label: 'Case',         urlType: 'pcCase'       },
+    { key: 'cpu',          slot: 'CPU', label: 'buildDetail.slotLabels.cpu',         urlType: 'cpu'          },
+    { key: 'gpu',          slot: 'GPU', label: 'buildDetail.slotLabels.gpu',         urlType: 'gpu'          },
+    { key: 'motherboard',  slot: 'M/B', label: 'buildDetail.slotLabels.motherboard', urlType: 'motherboard'  },
+    { key: 'powerSupply',  slot: 'PSU', label: 'buildDetail.slotLabels.powerSupply', urlType: 'powerSupply'  },
+    { key: 'cpuCooler',    slot: 'CLR', label: 'buildDetail.slotLabels.cpuCooler',   urlType: 'cpuCooler'    },
+    { key: 'pcCase',       slot: 'CSE', label: 'buildDetail.slotLabels.pcCase',      urlType: 'pcCase'       },
 ];
 
 const MULTI_COMPONENTS: MultiConfig[] = [
-    { key: 'rams', slot: 'RAM', label: 'Memory',       urlType: 'ram' },
-    { key: 'ssds', slot: 'SSD', label: 'NVMe storage', urlType: 'ssd' },
-    { key: 'hdds', slot: 'HDD', label: 'Hard drive',   urlType: 'hdd' },
-    { key: 'fans', slot: 'FAN', label: 'Case fans',    urlType: 'fan' },
+    { key: 'rams', slot: 'RAM', label: 'buildDetail.slotLabels.rams', urlType: 'ram' },
+    { key: 'ssds', slot: 'SSD', label: 'buildDetail.slotLabels.ssds', urlType: 'ssd' },
+    { key: 'hdds', slot: 'HDD', label: 'buildDetail.slotLabels.hdds', urlType: 'hdd' },
+    { key: 'fans', slot: 'FAN', label: 'buildDetail.slotLabels.fans', urlType: 'fan' },
 ];
 
 // --- Helpers ---
@@ -44,8 +45,7 @@ function shortDate(iso?: string) {
     if (!iso) return '—';
     const d = new Date(iso);
     if (isNaN(d.getTime())) return iso;
-    const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-    return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+    return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase();
 }
 
 // --- State types ---
@@ -77,17 +77,18 @@ function BuildList({
     query: string;
     setQuery: (q: string) => void;
 }) {
+    const { t } = useTranslation();
     return (
         <div className={styles['ub-list']}>
             <div className={styles['ub-list-head']}>
-                <span className={styles['lbl']}>YOUR BUILDS</span>
-                <span className={styles['count']}>{builds.length} ITEMS</span>
+                <span className={styles['lbl']}>{t('savedBuilds.yourBuilds')}</span>
+                <span className={styles['count']}>{t('savedBuilds.items', { count: builds.length })}</span>
             </div>
             <div className={styles['list-search']}>
                 <span className={styles['search-ic']}>⌕</span>
                 <input
                     className={styles['search-input']}
-                    placeholder="Filter list…"
+                    placeholder={t('savedBuilds.filterPlaceholder')}
                     value={query}
                     onChange={e => setQuery(e.target.value)}
                 />
@@ -108,10 +109,10 @@ function BuildList({
                             <span className={styles['item-row2']}>
                                 <span className={b.isPublished ? styles['status-pub'] : styles['status-priv']}>
                                     <span className={styles['status-dot']} />
-                                    {b.isPublished ? 'PUBLISHED' : 'PRIVATE'}
+                                    {b.isPublished ? t('savedBuilds.buildDetail.published') : t('savedBuilds.buildDetail.private')}
                                 </span>
                                 <span className={styles['item-sep']}>·</span>
-                                <span>{b.componentCount} PARTS</span>
+                                <span>{b.componentCount} {t('savedBuilds.buildDetail.slot')}</span>
                                 <span className={styles['item-sep']}>·</span>
                                 <span>{shortDate(b.updatedAt)}</span>
                             </span>
@@ -120,14 +121,14 @@ function BuildList({
                 })}
                 {builds.length === 0 && (
                     <div className={styles['list-empty']}>
-                        NO BUILDS MATCH<br />
-                        <span>TRY CLEARING THE FILTER</span>
+                        {t('savedBuilds.noMatchBuilds')}<br />
+                        <span>{t('savedBuilds.clearFilter')}</span>
                     </div>
                 )}
             </div>
             <div className={styles['ub-list-foot']}>
                 <button className={styles['list-foot-btn']} onClick={() => window.location.assign('/')}>
-                    ＋ Create new build
+                    {t('savedBuilds.createNewBuild')}
                 </button>
             </div>
         </div>
@@ -150,10 +151,12 @@ function Cover({
     const [uploadError, setUploadError] = useState<string | null>(null);
     const fileRef = useRef<HTMLInputElement>(null);
 
+    const { t } = useTranslation();
+
     const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        if (file.size > 10 * 1024 * 1024) { setUploadError('File too large (max 10 MB).'); return; }
+        if (file.size > 10 * 1024 * 1024) { setUploadError(t('savedBuilds.buildDetail.fileTooLarge')); return; }
         try {
             setUploading(true);
             setUploadError(null);
@@ -161,7 +164,7 @@ function Cover({
             onPhotoUploaded(data.photoUrl);
             setPopOpen(false);
         } catch {
-            setUploadError('Upload failed. Please try again.');
+            setUploadError(t('savedBuilds.buildDetail.uploadFailed'));
         } finally {
             setUploading(false);
             if (fileRef.current) fileRef.current.value = '';
@@ -176,7 +179,7 @@ function Cover({
             onPhotoDeleted();
             setPopOpen(false);
         } catch {
-            setUploadError('Remove failed. Please try again.');
+            setUploadError(t('savedBuilds.buildDetail.removeFailed'));
         } finally {
             setUploading(false);
         }
@@ -191,7 +194,7 @@ function Cover({
 
             <span className={`${styles['cover-pin']} ${build.isPublished ? styles['pub'] : ''}`}>
                 <span className={styles['dot']} />
-                {build.isPublished ? 'PUBLISHED' : 'PRIVATE'}
+                {build.isPublished ? t('savedBuilds.buildDetail.published') : t('savedBuilds.buildDetail.private')}
             </span>
 
             <div className={styles['cover-actions']}>
@@ -200,29 +203,29 @@ function Cover({
                     onClick={() => { setUploadError(null); setPopOpen(p => !p); }}
                     disabled={uploading}
                 >
-                    {uploading ? '…' : build.photoUrl ? '✎ Change cover' : '↑ Add cover'}
+                    {uploading ? '…' : build.photoUrl ? t('savedBuilds.buildDetail.changeCover') : t('savedBuilds.buildDetail.uploadCover')}
                 </button>
             </div>
 
             {popOpen && (
                 <div className={styles['cover-pop']} onClick={e => e.stopPropagation()}>
                     <div className={styles['cover-pop-ttl']}>
-                        <span>COVER · {build.name.slice(0, 18).toUpperCase()}</span>
+                        <span>{t('savedBuilds.buildDetail.coverTitle', { name: build.name.slice(0, 18).toUpperCase() })}</span>
                         <span className={styles['cover-pop-x']} onClick={() => setPopOpen(false)}>×</span>
                     </div>
                     <div className={styles['cover-pop-opt']} onClick={() => fileRef.current?.click()}>
                         <span className={styles['cover-pop-gly']}>↑</span>
                         <div className={styles['cover-pop-col']}>
-                            <span>Upload image</span>
-                            <span className={styles['cover-pop-desc']}>JPEG / PNG / WEBP · MAX 10 MB · 16:9 RECOMMENDED</span>
+                            <span>{t('savedBuilds.buildDetail.uploadImage')}</span>
+                            <span className={styles['cover-pop-desc']}>{t('savedBuilds.buildDetail.uploadDesc')}</span>
                         </div>
                     </div>
                     {build.photoUrl && (
                         <div className={styles['cover-pop-opt']} onClick={handleRemove}>
                             <span className={`${styles['cover-pop-gly']} ${styles['cover-pop-gly-err']}`}>×</span>
                             <div className={styles['cover-pop-col']}>
-                                <span>Remove cover</span>
-                                <span className={styles['cover-pop-desc']}>FALL BACK TO PROCEDURAL COVER</span>
+                                <span>{t('savedBuilds.buildDetail.removeCover')}</span>
+                                <span className={styles['cover-pop-desc']}>{t('savedBuilds.buildDetail.removeCoverDesc')}</span>
                             </div>
                         </div>
                     )}
@@ -243,26 +246,27 @@ function Cover({
 // --- Parts table ---
 
 function PartsTable({ build }: { build: IPcBuildRequest }) {
+    const { t } = useTranslation();
     const rows: { slot: string; label: string; comp: IComponentPreview | IMultiComponentPreview; urlType: string; isMulti?: boolean }[] = [];
 
     for (const { key, slot, label, urlType } of SINGLE_COMPONENTS) {
         const c = build[key] as IComponentPreview | undefined;
-        if (c) rows.push({ slot, label, comp: c, urlType });
+        if (c) rows.push({ slot, label: t(label), comp: c, urlType });
     }
     for (const { key, slot, label, urlType } of MULTI_COMPONENTS) {
         const items = build[key] as IMultiComponentPreview[];
-        for (const c of items) rows.push({ slot, label, comp: c, urlType, isMulti: true });
+        for (const c of items) rows.push({ slot, label: t(label), comp: c, urlType, isMulti: true });
     }
 
     return (
         <div className={styles['ub-parts']}>
             <div className={styles['parts-head']}>
-                <span>SLOT</span>
+                <span>{t('savedBuilds.buildDetail.slot')}</span>
                 <span />
-                <span>COMPONENT</span>
-                <span>STORE</span>
-                <span className={styles['r']}>PRICE · ₴</span>
-                <span className={styles['r']}>OFFER</span>
+                <span>{t('savedBuilds.buildDetail.component')}</span>
+                <span>{t('savedBuilds.buildDetail.store')}</span>
+                <span className={styles['r']}>{t('savedBuilds.buildDetail.price')}</span>
+                <span className={styles['r']}>{t('savedBuilds.buildDetail.offer')}</span>
             </div>
             {rows.map((r, i) => {
                 const multi = r.comp as IMultiComponentPreview;
@@ -284,7 +288,7 @@ function PartsTable({ build }: { build: IPcBuildRequest }) {
                                 </Link>
                                 {qty > 1 && <span className={styles['row-qty']}>× {qty}</span>}
                             </div>
-                            <div className={styles['row-meta']}>{r.label}{isCarried ? ' · CARRIED' : ''}</div>
+                            <div className={styles['row-meta']}>{r.label}{isCarried ? ` · ${t('savedBuilds.buildDetail.carried')}` : ''}</div>
                         </div>
                         <div className={styles['row-store']}>
                             {isCarried ? (
@@ -296,7 +300,7 @@ function PartsTable({ build }: { build: IPcBuildRequest }) {
                             )}
                         </div>
                         {isCarried ? (
-                            <div className={`${styles['row-price']} ${styles['carried']}`}>CARRIED</div>
+                            <div className={`${styles['row-price']} ${styles['carried']}`}>{t('savedBuilds.buildDetail.carried')}</div>
                         ) : (
                             <div className={styles['row-price']}>
                                 <span className={styles['ccy']}>₴</span>{fmt(price)}
@@ -306,7 +310,7 @@ function PartsTable({ build }: { build: IPcBuildRequest }) {
                             <span className={styles['row-ghost']}>—</span>
                         ) : offerUrl ? (
                             <a href={offerUrl} target="_blank" rel="noopener noreferrer" className={styles['row-open']}>
-                                ↗ BUY
+                                {t('savedBuilds.buildDetail.buy')}
                             </a>
                         ) : (
                             <span className={styles['row-ghost']}>—</span>
@@ -336,6 +340,7 @@ function BuildDetail({
     postBanUntil: string | null;
     deleteError: string | null;
 }) {
+    const { t } = useTranslation();
     const [editingDesc, setEditingDesc] = useState(false);
     const [descDraft, setDescDraft] = useState('');
     const [descSaving, setDescSaving] = useState(false);
@@ -371,7 +376,7 @@ function BuildDetail({
             onDescriptionSaved(descDraft.trim());
             setEditingDesc(false);
         } catch {
-            setDescError('Failed to save. Try again.');
+            setDescError(t('savedBuilds.buildDetail.descSaveFailed'));
         } finally {
             setDescSaving(false);
         }
@@ -386,13 +391,13 @@ function BuildDetail({
                     <div className={styles['ub-hero-body']}>
                         <h2 className={styles['hero-title']}>{build.name}</h2>
                         <div className={styles['hero-meta']}>
-                            <span>◴ CREATED {shortDate(build.createdAt)}</span>
+                            <span>{t('savedBuilds.buildDetail.createdDate', { date: shortDate(build.createdAt) })}</span>
                             <span className={styles['sep']}>·</span>
-                            <span>UPDATED {shortDate(build.updatedAt)}</span>
+                            <span>{t('savedBuilds.buildDetail.updatedDate', { date: shortDate(build.updatedAt) })}</span>
                             {build.isPublished && build.publishedAt && (
                                 <>
                                     <span className={styles['sep']}>·</span>
-                                    <span className={styles['pub-label']}>↗ PUBLISHED {shortDate(build.publishedAt)}</span>
+                                    <span className={styles['pub-label']}>{t('savedBuilds.buildDetail.publishedDate', { date: shortDate(build.publishedAt) })}</span>
                                 </>
                             )}
                         </div>
@@ -400,7 +405,7 @@ function BuildDetail({
                     <div className={styles['hero-actions']}>
                         {deleteError && <span className={styles['err-inline']}>{deleteError}</span>}
                         {postBanUntil && !build.isPublished && (
-                            <span className={styles['ban-chip']} title={`Banned until ${new Date(postBanUntil).toLocaleString('uk-UA')}`}>
+                            <span className={styles['ban-chip']} title={`Banned until ${new Date(postBanUntil).toLocaleString()}`}>
                                 ⚿ BANNED
                             </span>
                         )}
@@ -409,13 +414,13 @@ function BuildDetail({
                             onClick={onPublishToggle}
                             disabled={publishLoading || (!build.isPublished && !!postBanUntil)}
                         >
-                            {publishLoading ? '…' : build.isPublished ? 'Unpublish' : '↗ Publish'}
+                            {publishLoading ? '…' : build.isPublished ? t('savedBuilds.buildDetail.unpublish') : t('savedBuilds.buildDetail.publish')}
                         </button>
                         <button className={`${styles['btn']} ${styles['btn-sec']}`} onClick={onEdit}>
-                            ✎ Edit
+                            {t('savedBuilds.buildDetail.editBuild')}
                         </button>
                         <button className={`${styles['btn']} ${styles['btn-dng']}`} onClick={onDelete}>
-                            × Delete
+                            {t('savedBuilds.buildDetail.deleteBuild')}
                         </button>
                     </div>
                 </div>
@@ -424,7 +429,7 @@ function BuildDetail({
             {/* Stats strip */}
             <div className={styles['ub-stats']}>
                 <div className={styles['stat-cell']}>
-                    <span className={styles['stat-lbl']}>TOTAL</span>
+                    <span className={styles['stat-lbl']}>{t('savedBuilds.buildDetail.total')}</span>
                     <span className={styles['stat-val']}>
                         <span style={{ color: 'var(--ub-fg3)', marginRight: 4 }}>₴</span>
                         {fmt(build.price)}
@@ -432,25 +437,25 @@ function BuildDetail({
                 </div>
                 {build.estimatedPower != null && (
                     <div className={styles['stat-cell']}>
-                        <span className={styles['stat-lbl']}>EST. POWER</span>
+                        <span className={styles['stat-lbl']}>{t('savedBuilds.buildDetail.estPower')}</span>
                         <span className={styles['stat-val']}>
                             {fmt(build.estimatedPower)}
                             <span style={{ color: 'var(--ub-fg3)', marginLeft: 4, fontSize: 11 }}>W</span>
                         </span>
                         {build.psuWattage && (
                             <span className={styles['stat-sub']}>
-                                PSU {build.psuWattage} W · {Math.round((build.estimatedPower / build.psuWattage) * 100)}% LOAD
+                                {t('savedBuilds.buildDetail.psuLoad', { psu: build.psuWattage, load: Math.round((build.estimatedPower / build.psuWattage) * 100) })}
                             </span>
                         )}
                     </div>
                 )}
                 <div className={styles['stat-cell']}>
-                    <span className={styles['stat-lbl']}>STATUS</span>
+                    <span className={styles['stat-lbl']}>{t('savedBuilds.buildDetail.status')}</span>
                     <span className={`${styles['stat-val']} ${build.isPublished ? styles['ok'] : styles['warn']}`}>
-                        {build.isPublished ? 'PUBLISHED' : 'PRIVATE'}
+                        {build.isPublished ? t('savedBuilds.buildDetail.published') : t('savedBuilds.buildDetail.private')}
                     </span>
                     <span className={styles['stat-sub']}>
-                        {build.isPublished ? 'VISIBLE IN GALLERY' : 'ONLY YOU CAN SEE THIS'}
+                        {build.isPublished ? t('savedBuilds.buildDetail.visibleInGallery') : t('savedBuilds.buildDetail.onlyYouCanSee')}
                     </span>
                 </div>
             </div>
@@ -458,10 +463,10 @@ function BuildDetail({
             {/* Description */}
             <div className={styles['ub-desc']}>
                 <div className={styles['desc-head']}>
-                    <span className={styles['eyebrow']}>DESCRIPTION</span>
+                    <span className={styles['eyebrow']}>{t('savedBuilds.buildDetail.description')}</span>
                     {!editingDesc && (
                         <button className={styles['desc-edit-btn']} onClick={startDescEdit}>
-                            ✎ {build.description ? 'Edit' : 'Add'}
+                            ✎ {build.description ? t('savedBuilds.buildDetail.edit') : t('savedBuilds.buildDetail.add')}
                         </button>
                     )}
                 </div>
@@ -471,7 +476,7 @@ function BuildDetail({
                             className={styles['desc-textarea']}
                             value={descDraft}
                             onChange={e => setDescDraft(e.target.value)}
-                            placeholder="Add a description…"
+                            placeholder={t('savedBuilds.buildDetail.addDescPlaceholder')}
                             rows={4}
                             autoFocus
                         />
@@ -482,35 +487,35 @@ function BuildDetail({
                                 onClick={() => setEditingDesc(false)}
                                 disabled={descSaving}
                             >
-                                Cancel
+                                {t('savedBuilds.buildDetail.cancel')}
                             </button>
                             <button
                                 className={`${styles['btn']} ${styles['btn-pri']}`}
                                 onClick={saveDesc}
                                 disabled={descSaving}
                             >
-                                {descSaving ? '…' : 'Save'}
+                                {descSaving ? '…' : t('savedBuilds.buildDetail.save')}
                             </button>
                         </div>
                     </div>
                 ) : build.description ? (
                     <p className={styles['desc-text']}>{build.description}</p>
                 ) : (
-                    <p className={styles['desc-empty']}>No description — click Edit to add one.</p>
+                    <p className={styles['desc-empty']}>{t('savedBuilds.buildDetail.noDescription')}</p>
                 )}
             </div>
 
             {/* Parts table */}
             <div className={styles['ub-parts-wrap']}>
                 <div className={styles['parts-wrap-head']}>
-                    <span className={styles['eyebrow']}>COMPONENTS · {countParts(build)}</span>
+                    <span className={styles['eyebrow']}>{t('savedBuilds.buildDetail.components', { count: countParts(build) })}</span>
                     <span className={styles['parts-subtotal']}>
-                        SUBTOTAL <strong>₴ {fmt(build.price)}</strong>
+                        {t('savedBuilds.buildDetail.subtotal')} <strong>₴ {fmt(build.price)}</strong>
                     </span>
                 </div>
                 <PartsTable build={build} />
                 <div className={styles['parts-foot']}>
-                    <span className={styles['parts-foot-ttl']}>FINAL PRICE</span>
+                    <span className={styles['parts-foot-ttl']}>{t('savedBuilds.buildDetail.finalPrice')}</span>
                     <span className={styles['parts-foot-num']}>
                         <span className={styles['ccy']}>₴</span>{fmt(build.price)}
                     </span>
@@ -530,26 +535,27 @@ function DeleteModal({
     onConfirm: () => void;
     loading: boolean;
 }) {
+    const { t } = useTranslation();
     return (
         <>
             <div className={styles['del-overlay']} onClick={onCancel} />
             <div className={styles['del-modal']} role="dialog" aria-modal="true">
                 <div className={styles['dm-head']}>
-                    <span className={styles['dm-ttl']}>× DELETE BUILD</span>
+                    <span className={styles['dm-ttl']}>{t('savedBuilds.deleteModal.title')}</span>
                     <span className={styles['dm-x']} onClick={onCancel}>×</span>
                 </div>
                 <div className={styles['dm-body']}>
-                    <p>Delete <strong>{build.name}</strong>?</p>
+                    <p><strong>{build.name}</strong>?</p>
                     <p className={styles['dm-sub']}>
-                        This removes the build from your saved list. This cannot be undone.
+                        {t('savedBuilds.deleteModal.subText')}
                     </p>
                 </div>
                 <div className={styles['dm-foot']}>
                     <button className={`${styles['btn']} ${styles['btn-sec']}`} onClick={onCancel}>
-                        Cancel
+                        {t('savedBuilds.deleteModal.cancel')}
                     </button>
                     <button className={`${styles['btn']} ${styles['btn-dng']}`} onClick={onConfirm} disabled={loading}>
-                        {loading ? '…' : '× Delete build'}
+                        {loading ? '…' : t('savedBuilds.deleteModal.confirm')}
                     </button>
                 </div>
             </div>
@@ -560,6 +566,7 @@ function DeleteModal({
 // --- Main page ---
 
 function UserBuildsPage() {
+    const { t } = useTranslation();
     const [builds, setBuilds] = useState<IPcBuildList[]>([]);
     const [selectedBuild, setSelectedBuild] = useState<IPcBuildRequest | null>(null);
     const [selectedBuildId, setSelectedBuildId] = useState<string | null>(null);
@@ -595,7 +602,7 @@ function UserBuildsPage() {
                 if (data.length > 0) setSelectedBuildId(data[0]!.id);
                 setError(null);
             } catch {
-                setError('Failed to load your builds. Please try again later.');
+                setError(t('savedBuilds.loadFailed'));
             } finally {
                 setLoading(false);
             }
@@ -604,7 +611,7 @@ function UserBuildsPage() {
         profileService.getBans().then(res => {
             setPostBanUntil(res.data.isPostBanned ? res.data.postBanUntil : null);
         }).catch(() => {});
-    }, [auth?.accessToken]);
+    }, [auth?.accessToken, t]);
 
     useEffect(() => {
         if (!selectedBuildId) return;
@@ -628,7 +635,7 @@ function UserBuildsPage() {
             setDeleteModal({ isOpen: false, buildId: null, buildName: '' });
         } catch (err: unknown) {
             const msg = (err as { response?: { data?: { message?: string } } })
-                ?.response?.data?.message || 'Failed to delete build.';
+                ?.response?.data?.message || t('savedBuilds.deleteModal.deleteFailed');
             setDeleteStatus({ loading: false, error: msg });
         }
     };
@@ -700,7 +707,7 @@ function UserBuildsPage() {
         ? builds.find(b => b.id === deleteModal.buildId) ?? null
         : null;
 
-    if (loading) return <div className={styles['loading']}>Loading your builds…</div>;
+    if (loading) return <div className={styles['loading']}>{t('savedBuilds.loading')}</div>;
 
     return (
         <div className={styles['ub-page']}>
@@ -717,24 +724,24 @@ function UserBuildsPage() {
                 <div className={styles['ub-head']}>
                     <div>
                         <span className={styles['eyebrow']}>
-                            USER · {builds.length} SAVED BUILDS
+                            {t('savedBuilds.eyebrow', { count: builds.length })}
                         </span>
-                        <h1 className={styles['ub-h1']}>Saved builds</h1>
+                        <h1 className={styles['ub-h1']}>{t('savedBuilds.heading')}</h1>
                         <div className={styles['head-meta']}>
-                            <span>{publishedCount} PUBLISHED</span>
+                            <span>{t('savedBuilds.published', { count: publishedCount })}</span>
                             <span className={styles['sep']}>·</span>
-                            <span>{builds.length - publishedCount} PRIVATE</span>
+                            <span>{t('savedBuilds.private', { count: builds.length - publishedCount })}</span>
                         </div>
                     </div>
                     <div className={styles['head-actions']}>
                         <Link to="/gallery">
-                            <button className={`${styles['btn']} ${styles['btn-ghost']}`}>↗ Browse gallery</button>
+                            <button className={`${styles['btn']} ${styles['btn-ghost']}`}>{t('savedBuilds.browseGallery')}</button>
                         </Link>
                         <button
                             className={`${styles['btn']} ${styles['btn-pri']}`}
                             onClick={() => { localStorage.removeItem('selectedComponents'); localStorage.removeItem('editingBuild'); navigate('/'); }}
                         >
-                            ＋ New build
+                            {t('savedBuilds.newBuild')}
                         </button>
                     </div>
                 </div>
@@ -743,14 +750,14 @@ function UserBuildsPage() {
 
                 {builds.length === 0 && !error ? (
                     <div className={styles['ub-empty']}>
-                        <span className={styles['eyebrow']}>NO BUILDS</span>
-                        <h2>You haven't saved any builds yet</h2>
-                        <p>Go to the composer and save your first build.</p>
+                        <span className={styles['eyebrow']}>{t('savedBuilds.noBuilds.eyebrow')}</span>
+                        <h2>{t('savedBuilds.noBuilds.title')}</h2>
+                        <p>{t('savedBuilds.noBuilds.body')}</p>
                         <button
                             className={`${styles['btn']} ${styles['btn-pri']}`}
                             onClick={() => { localStorage.removeItem('selectedComponents'); localStorage.removeItem('editingBuild'); navigate('/'); }}
                         >
-                            ＋ New build
+                            {t('savedBuilds.noBuilds.cta')}
                         </button>
                     </div>
                 ) : (
@@ -778,8 +785,8 @@ function UserBuildsPage() {
                         ) : (
                             <div className={styles['ub-detail']}>
                                 <div className={styles['ub-empty']}>
-                                    <span className={styles['eyebrow']}>SELECT A BUILD</span>
-                                    <h2>Choose a build from the list</h2>
+                                    <span className={styles['eyebrow']}>{t('savedBuilds.selectBuild.eyebrow')}</span>
+                                    <h2>{t('savedBuilds.selectBuild.title')}</h2>
                                 </div>
                             </div>
                         )}

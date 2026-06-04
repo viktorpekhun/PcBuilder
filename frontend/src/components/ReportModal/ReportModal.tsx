@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { reportService } from "../../api/report.service";
 import type { ReportTargetType } from "../../types/report.types";
 import styles from "./ReportModal.module.css";
@@ -10,27 +11,10 @@ interface ReportModalProps {
     onClose: () => void;
 }
 
-const REASON_OPTIONS: Record<ReportTargetType, string[]> = {
-    build: [
-        "Спам або реклама",
-        "Неприйнятний вміст",
-        "Шахрайство або введення в оману",
-        "Порушення авторських прав",
-        "Дублікат збірки",
-        "Інше",
-    ],
-    review: [
-        "Спам або реклама",
-        "Образлива поведінка",
-        "Неприйнятний вміст",
-        "Недостовірна інформація",
-        "Інше",
-    ],
-};
-
 const MAX_REASON = 500;
 
 function ReportModal({ isOpen, targetType, targetId, onClose }: ReportModalProps) {
+    const { t } = useTranslation();
     const [selected, setSelected] = useState<string | null>(null);
     const [details, setDetails] = useState("");
     const [submitting, setSubmitting] = useState(false);
@@ -39,15 +23,18 @@ function ReportModal({ isOpen, targetType, targetId, onClose }: ReportModalProps
 
     if (!isOpen) return null;
 
-    const options = REASON_OPTIONS[targetType];
-    // "Інше" requires the free-text field; for everything else it's optional.
-    const requiresDetails = selected === "Інше";
+    const other = t("report.other");
+    const options: string[] = t(
+        targetType === "review" ? "report.reasonsReview" : "report.reasonsBuild",
+        { returnObjects: true }
+    ) as string[];
+
+    const requiresDetails = selected === other;
     const canSubmit = !!selected && (!requiresDetails || details.trim().length > 0) && !submitting;
 
     const buildReason = () => {
         const detail = details.trim();
         if (!selected) return "";
-        // For "Інше" the detail IS the reason; otherwise append it as extra context.
         const composed = requiresDetails
             ? detail
             : detail
@@ -78,7 +65,7 @@ function ReportModal({ isOpen, targetType, targetId, onClose }: ReportModalProps
         } catch (err) {
             const msg =
                 (err as { response?: { data?: { message?: string } } })?.response
-                    ?.data?.message || "Не вдалося надіслати скаргу.";
+                    ?.data?.message || t("report.submitFailed");
             setError(msg);
         } finally {
             setSubmitting(false);
@@ -93,28 +80,28 @@ function ReportModal({ isOpen, targetType, targetId, onClose }: ReportModalProps
         onClose();
     };
 
-    const title = targetType === "review" ? "Поскаржитись на відгук" : "Поскаржитись на збірку";
+    const title = targetType === "review" ? t("report.titleReview") : t("report.titleBuild");
 
     return (
         <div className={styles.overlay} onMouseDown={handleClose}>
             <div className={styles.modal} onMouseDown={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
                 <div className={styles.head}>
-                    <span className={styles.eyebrow}>СКАРГА · МОДЕРАЦІЯ</span>
+                    <span className={styles.eyebrow}>{t("report.eyebrow")}</span>
                     <h2 className={styles.title}>{title}</h2>
                 </div>
 
                 {success ? (
                     <div className={styles.success}>
-                        <span className={styles.successGlyph}>✓</span>
-                        Скаргу надіслано. Дякуємо за повідомлення.
+                        <span className={styles.successGlyph}>{t("report.successGlyph")}</span>
+                        {t("report.successMessage")}
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit}>
                         <p className={styles.description}>
-                            Оберіть причину скарги. Модератори розглянуть ваше повідомлення.
+                            {t("report.description")}
                         </p>
 
-                        <div className={styles.options} role="radiogroup" aria-label="Причина скарги">
+                        <div className={styles.options} role="radiogroup" aria-label={t("report.reasonsGroupLabel")}>
                             {options.map((opt) => {
                                 const active = selected === opt;
                                 return (
@@ -134,13 +121,13 @@ function ReportModal({ isOpen, targetType, targetId, onClose }: ReportModalProps
                         </div>
 
                         <label className={styles.fieldLabel}>
-                            {requiresDetails ? "ОПИШІТЬ ПРИЧИНУ" : "ДЕТАЛІ (НЕОБОВ’ЯЗКОВО)"}
+                            {requiresDetails ? t("report.fieldLabelRequired") : t("report.fieldLabelOptional")}
                         </label>
                         <textarea
                             className={styles.textarea}
                             value={details}
                             onChange={(e) => setDetails(e.target.value)}
-                            placeholder={requiresDetails ? "Опишіть причину скарги…" : "Додаткові деталі для адміністраторів…"}
+                            placeholder={requiresDetails ? t("report.placeholderRequired") : t("report.placeholderOptional")}
                             maxLength={MAX_REASON}
                             rows={3}
                         />
@@ -155,14 +142,14 @@ function ReportModal({ isOpen, targetType, targetId, onClose }: ReportModalProps
                                 onClick={handleClose}
                                 disabled={submitting}
                             >
-                                Скасувати
+                                {t("report.cancel")}
                             </button>
                             <button
                                 type="submit"
                                 className={`${styles.btn} ${styles.btnDanger}`}
                                 disabled={!canSubmit}
                             >
-                                {submitting ? "Надсилання…" : "Надіслати скаргу"}
+                                {submitting ? t("report.submitting") : t("report.submit")}
                             </button>
                         </div>
                     </form>

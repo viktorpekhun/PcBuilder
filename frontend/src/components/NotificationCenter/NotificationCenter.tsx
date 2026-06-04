@@ -1,17 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import useNotifications from "../../hooks/useNotifications";
 import type { INotification } from "../../types/notification.types";
 import styles from "./NotificationCenter.module.css";
 
 /* ── helpers ── */
-function relTime(iso: string): string {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function translateReason(reason: string, warningsCount: string | undefined, t: (k: string, o?: any) => string): string {
+    if (reason === "AUTO_BAN_WARNINGS")
+        return t("notifications.row.autoBanWarnings", { count: Number(warningsCount) || 0 });
+    return reason.replace(/_/g, " ").toLowerCase();
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function relTime(iso: string, t: (k: string, o?: any) => string): string {
     const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
-    if (mins < 1) return "JUST NOW";
-    if (mins < 60) return `${mins}m AGO`;
+    if (mins < 1) return t("notifications.row.justNow");
+    if (mins < 60) return t("notifications.row.minutesAgo", { count: mins });
     const hrs = Math.round(mins / 60);
-    if (hrs < 24) return `${hrs}h AGO`;
-    return `${Math.round(hrs / 24)}d AGO`;
+    if (hrs < 24) return t("notifications.row.hoursAgo", { count: hrs });
+    return t("notifications.row.daysAgo", { count: Math.round(hrs / 24) });
 }
 
 function dayKey(iso: string): string {
@@ -19,15 +28,15 @@ function dayKey(iso: string): string {
     return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 }
 
-function dayLabel(iso: string): string {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function dayLabel(iso: string, t: (k: string, o?: any) => string, locale: string): string {
     const d = new Date(iso);
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
     const dd = new Date(d); dd.setHours(0, 0, 0, 0);
-    if (dd.getTime() === today.getTime()) return "TODAY";
-    if (dd.getTime() === yesterday.getTime()) return "YESTERDAY";
-    const m = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-    return `${m[d.getMonth()]} ${d.getDate()}`;
+    if (dd.getTime() === today.getTime()) return t("notifications.row.today");
+    if (dd.getTime() === yesterday.getTime()) return t("notifications.row.yesterday");
+    return new Intl.DateTimeFormat(locale, { day: "2-digit", month: "short" }).format(d).toUpperCase();
 }
 
 /* ── bell icon ── */
@@ -40,22 +49,20 @@ const BellIcon = () => (
 );
 
 /* ── type tag metadata ── */
-type TagKind = "review" | "deleted" | "price" | "warn";
+type TagKind = "review" | "deleted" | "price" | "warn" | "ban";
 
 function getTagKind(type: string): TagKind {
     if (type === "NewReview") return "review";
     if (type === "ReviewDeleted" || type === "BuildDeleted") return "deleted";
     if (type === "PriceAlert") return "price";
+    if (type === "CommentBanned" || type === "PostBanned") return "ban";
     return "warn";
 }
 
-function getTagLabel(type: string): string {
-    if (type === "NewReview") return "REVIEW";
-    if (type === "ReviewDeleted" || type === "BuildDeleted") return "DELETED";
-    if (type === "PriceAlert") return "PRICE ▼";
-    if (type === "CommentBanned" || type === "PostBanned") return "BAN";
-    if (type === "CommentUnbanned" || type === "PostUnbanned") return "UNBANNED";
-    return "NOTICE";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getTagLabel(type: string, t: (k: string, o?: any) => string): string {
+    const key = type.charAt(0).toLowerCase() + type.slice(1);
+    return t(`notifications.row.types.${key}`, { defaultValue: type.toUpperCase() });
 }
 
 const tagKindClass: Record<TagKind, string | undefined> = {
@@ -63,38 +70,42 @@ const tagKindClass: Record<TagKind, string | undefined> = {
     deleted: styles.typeTagDeleted,
     price:   styles.typeTagPrice,
     warn:    styles.typeTagWarn,
+    ban:     styles.typeTagBan,
 };
 
 /* ── notification path ── */
 function notifPath(n: INotification): string {
     const p = n.payload;
     if (n.type === "PriceAlert") {
-        const t = (p.componentType || "").toLowerCase();
-        return `/components/${t}/${p.componentId || ""}`;
+        const ct = (p.componentType || "").toLowerCase();
+        return `/components/${ct}/${p.componentId || ""}`;
     }
     return `/builds/${p.buildId || ""}`;
 }
 
 /* ── notification text (rich) ── */
 function NotifText({ n }: { n: INotification }) {
+    const { t, i18n } = useTranslation();
     const p = n.payload;
     if (n.type === "NewReview") {
-        const rating = Number(p.rating) || 0;
         return (
             <>
-                <strong>{p.reviewerUsername ?? "Someone"}</strong> left a{" "}
-                <strong>{rating}-star</strong> review on{" "}
+                <strong>{p.reviewerUsername ?? "Someone"}</strong>
+                {t("notifications.row.leftReview")}
+                {t("notifications.row.reviewOn")}
                 <span className={styles.textLink}>/{p.buildName ?? "a build"}</span>
             </>
         );
     }
     if (n.type === "ReviewDeleted" || n.type === "BuildDeleted") {
-        const label = n.type === "BuildDeleted" ? "build" : "review";
+        const label = n.type === "BuildDeleted" ? "build" : t("notifications.row.review").toLowerCase();
         return (
             <>
-                Your {label} <span className={styles.textLink}>/{p.buildName ?? ""}</span> was removed by moderation
+                Your {label}{" "}
+                <span className={styles.textLink}>/{p.buildName ?? ""}</span>
+                {" "}was removed by moderation
                 {p.reason && (
-                    <span className={styles.reason}> · {p.reason.replace(/_/g, " ").toLowerCase()}</span>
+                    <span className={styles.reason}> · {translateReason(p.reason, p.warningsCount, t)}</span>
                 )}
             </>
         );
@@ -107,8 +118,8 @@ function NotifText({ n }: { n: INotification }) {
         const fmt = (v: number) => v.toLocaleString("uk-UA", { maximumFractionDigits: 0 });
         return (
             <>
-                <strong>{p.componentName ?? "Component"}</strong> price{" "}
-                {p.direction === "down" ? "dropped" : "rose"}
+                <strong>{p.componentName ?? "Component"}</strong>{" "}
+                price {p.direction === "down" ? "dropped" : "rose"}
                 {deltaPct && <span className={styles.drop}> ▼ {deltaPct}%</span>}
                 {hasNums && (
                     <>
@@ -121,15 +132,19 @@ function NotifText({ n }: { n: INotification }) {
         );
     }
     if (n.type === "CommentBanned" || n.type === "PostBanned") {
-        const until = p.banUntil ? new Date(p.banUntil).toLocaleDateString() : "an unknown date";
-        const scope = n.type === "CommentBanned" ? "commenting" : "posting";
-        return <>You have been restricted from {scope} until <strong>{until}</strong>{p.reason && <span className={styles.reason}> · {p.reason.replace(/_/g, " ").toLowerCase()}</span>}</>;
+        const until = p.banUntil
+            ? new Intl.DateTimeFormat(i18n.language, { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(p.banUntil))
+            : t("notifications.row.unknownDate");
+        const restrictedKey = n.type === "CommentBanned"
+            ? "notifications.row.restrictedFromCommenting"
+            : "notifications.row.restrictedFromPosting";
+        return <>{t(restrictedKey, { date: until })}{p.reason && p.reason !== "AUTO_BAN_WARNINGS" && <span className={styles.reason}> · {p.reason.replace(/_/g, " ").toLowerCase()}</span>}</>;
     }
-    if (n.type === "CommentUnbanned") return <>Your comment restriction has been lifted.</>;
-    if (n.type === "PostUnbanned") return <>Your posting restriction has been lifted.</>;
-    if (n.type === "CommentWarning") return <>Your comment was removed for violating community rules.</>;
-    if (n.type === "PostWarning") return <>Your build was removed from active posts for violating community rules.</>;
-    return <>You have a new notification.</>;
+    if (n.type === "CommentUnbanned") return <>{t("notifications.row.commentUnbanned")}</>;
+    if (n.type === "PostUnbanned") return <>{t("notifications.row.postUnbanned")}</>;
+    if (n.type === "CommentWarning") return <>{t("notifications.row.commentWarning")}</>;
+    if (n.type === "PostWarning") return <>{t("notifications.row.postWarning")}</>;
+    return <>{t("notifications.row.newNotification")}</>;
 }
 
 /* ── item ── */
@@ -138,6 +153,7 @@ function Item({ n, onMarkRead, onNavigate }: {
     onMarkRead: (id: string) => void;
     onNavigate: (n: INotification) => void;
 }) {
+    const { t } = useTranslation();
     const kind = getTagKind(n.type);
     const rating = n.type === "NewReview" ? Number(n.payload.rating) || 0 : 0;
 
@@ -149,14 +165,14 @@ function Item({ n, onMarkRead, onNavigate }: {
             <span className={styles.bullet} aria-hidden="true">{n.isRead ? "○" : "●"}</span>
             <div className={styles.main}>
                 <div className={styles.line1}>
-                    <span className={`${styles.typeTag} ${tagKindClass[kind]}`}>{getTagLabel(n.type)}</span>
+                    <span className={`${styles.typeTag} ${tagKindClass[kind]}`}>{getTagLabel(n.type, t)}</span>
                     {n.type === "NewReview" && rating > 0 && (
                         <span className={styles.stars}>
                             {"★".repeat(rating)}
                             <span className={styles.starsDim}>{"★".repeat(5 - rating)}</span>
                         </span>
                     )}
-                    <span className={styles.time}>{relTime(n.createdAt)}</span>
+                    <span className={styles.time}>{relTime(n.createdAt, t)}</span>
                 </div>
 
                 <div className={styles.text}>
@@ -169,10 +185,10 @@ function Item({ n, onMarkRead, onNavigate }: {
                         {!n.isRead && (
                             <button className={styles.miniBtn}
                                     onClick={e => { e.stopPropagation(); onMarkRead(n.id); }}>
-                                ✓ READ
+                                {t("notifications.row.markRead")}
                             </button>
                         )}
-                        <span className={styles.openHint}>OPEN ↗</span>
+                        <span className={styles.openHint}>{t("notifications.row.open")}</span>
                     </span>
                 </div>
             </div>
@@ -186,14 +202,17 @@ function List({ items, onMarkRead, onNavigate }: {
     onMarkRead: (id: string) => void;
     onNavigate: (n: INotification) => void;
 }) {
+    const { t, i18n } = useTranslation();
+
     const groups = useMemo(() => {
         const map = new Map<string, { label: string; items: INotification[] }>();
         items.forEach(n => {
             const k = dayKey(n.createdAt);
-            if (!map.has(k)) map.set(k, { label: dayLabel(n.createdAt), items: [] });
+            if (!map.has(k)) map.set(k, { label: dayLabel(n.createdAt, t, i18n.language), items: [] });
             map.get(k)!.items.push(n);
         });
         return Array.from(map.entries());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [items]);
 
     return (
@@ -216,19 +235,18 @@ function List({ items, onMarkRead, onNavigate }: {
 
 /* ── empty state ── */
 function EmptyState({ filter }: { filter: "all" | "unread" }) {
+    const { t } = useTranslation();
     return (
         <div className={styles.empty}>
             <div className={styles.emptyCard}>
                 <span className={styles.emptyEyebrow}>
-                    {filter === "unread" ? "INBOX ZERO" : "NO NOTIFICATIONS"}
+                    {filter === "unread" ? t("notifications.empty.inboxZeroEyebrow") : t("notifications.empty.noNotifsEyebrow")}
                 </span>
                 <h3 className={styles.emptyTitle}>
-                    {filter === "unread" ? "You're all caught up." : "Nothing yet."}
+                    {filter === "unread" ? t("notifications.empty.inboxZeroTitle") : t("notifications.empty.noNotifsTitle")}
                 </h3>
                 <p className={styles.emptyDesc}>
-                    {filter === "unread"
-                        ? "New reviews, moderation notices and price-drop alerts will land here."
-                        : "Publish a build and subscribe to a part to start a feed."}
+                    {filter === "unread" ? t("notifications.empty.inboxZeroBody") : t("notifications.empty.noNotifsBody")}
                 </p>
                 <span className={styles.emptyDots}>{"●  ●  ●"}</span>
             </div>
@@ -238,6 +256,7 @@ function EmptyState({ filter }: { filter: "all" | "unread" }) {
 
 /* ── root ── */
 export default function NotificationCenter() {
+    const { t } = useTranslation();
     const {
         notifications,
         unreadCount,
@@ -251,7 +270,6 @@ export default function NotificationCenter() {
     const mountRef = useRef<HTMLDivElement>(null);
     const [filter, setFilter] = useState<"all" | "unread">("all");
 
-    // close on outside click or Escape
     useEffect(() => {
         if (!isOpen) return;
         const onDown = (e: MouseEvent) => {
@@ -297,7 +315,7 @@ export default function NotificationCenter() {
             <button
                 className={`${styles.bell} ${isOpen ? styles.open : ""}`}
                 onClick={handleBellClick}
-                aria-label="Notifications"
+                aria-label={t("notifications.heading")}
                 aria-expanded={isOpen}
             >
                 <BellIcon />
@@ -307,15 +325,15 @@ export default function NotificationCenter() {
             </button>
 
             {isOpen && (
-                <div className={styles.pop} role="dialog" aria-label="Notification center">
+                <div className={styles.pop} role="dialog" aria-label={t("notifications.heading")}>
                     {/* header */}
                     <div className={styles.head}>
                         <div className={styles.titleWrap}>
-                            <h2 className={styles.title}>Notifications</h2>
+                            <h2 className={styles.title}>{t("notifications.heading")}</h2>
                         </div>
                         <span className={styles.spacer} />
                         <button className={styles.markAllBtn} onClick={markAllRead} disabled={unreadCount === 0}>
-                            ✓ Mark all read
+                            {t("notifications.markAllRead")}
                         </button>
                     </div>
 
@@ -326,7 +344,7 @@ export default function NotificationCenter() {
                             onClick={() => setFilter("all")}
                         >
                             <span className={styles.chipDot} style={{ background: "var(--bd-2)" }} />
-                            ALL <span className={styles.chipNum}>{notifications.length}</span>
+                            {t("notifications.filter.all")} <span className={styles.chipNum}>{notifications.length}</span>
                         </button>
                         <button
                             className={`${styles.chip} ${filter === "unread" ? styles.chipActive : ""}`}
@@ -334,10 +352,10 @@ export default function NotificationCenter() {
                         >
                             <span className={styles.chipDot}
                                   style={{ background: unreadCount > 0 ? "var(--acc)" : "var(--bd-2)" }} />
-                            UNREAD <span className={styles.chipNum}>{unreadCount}</span>
+                            {t("notifications.filter.unread")} <span className={styles.chipNum}>{unreadCount}</span>
                         </button>
                         <span className={styles.live}>
-                            <span className={styles.liveDot} />LIVE
+                            <span className={styles.liveDot} />{t("notifications.tabs.feedConnected")}
                         </span>
                     </div>
 
@@ -350,14 +368,16 @@ export default function NotificationCenter() {
                     {/* footer */}
                     <div className={styles.footBar}>
                         <span className={styles.summary}>
-                            <span className={styles.summaryNum}>{unreadCount}</span> unread ·{" "}
-                            <span className={styles.summaryNum}>{notifications.length}</span> total
+                            <span className={styles.summaryNum}>{unreadCount}</span>{" "}
+                            unread ·{" "}
+                            <span className={styles.summaryNum}>{notifications.length}</span>{" "}
+                            total
                         </span>
                         <button
                             className={styles.viewAll}
                             onClick={() => { navigate("/notifications"); setIsOpen(false); }}
                         >
-                            View all <span className={styles.viewAllArrow}>→</span>
+                            {t("notifications.tabs.notifications")} <span className={styles.viewAllArrow}>→</span>
                         </button>
                     </div>
                 </div>

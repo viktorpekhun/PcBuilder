@@ -25,7 +25,7 @@ namespace PcBuilds.Application.Handlers
                 .Include(b => b.Gpu)
                 .Include(b => b.Motherboard)
                 .Include(b => b.CpuCooler)
-                .Include(b => b.PcCase)
+                .Include(b => b.PcCase).ThenInclude(c => c!.PcCaseFormFactors)
                 .Include(b => b.PowerSupply)
                 .Include(b => b.PcBuild_Rams).ThenInclude(r => r.Ram)
                 .Include(b => b.PcBuild_Ssds).ThenInclude(s => s.Ssd)
@@ -152,6 +152,17 @@ namespace PcBuilds.Application.Handlers
                 f => (f.FanId, f.ProductOfferId, f.Quantity, f.Fan),
                 id => _context.Set<Fan>().FirstOrDefaultAsync(f => f.Id == id, cancellationToken),
                 cancellationToken);
+
+            var tags = new List<string>();
+            if (!string.IsNullOrWhiteSpace(build.Cpu?.Socket))
+                tags.Add(build.Cpu.Socket);
+            var ramType = build.PcBuild_Rams.Select(r => r.Ram?.Type).FirstOrDefault(t => !string.IsNullOrWhiteSpace(t));
+            if (!string.IsNullOrWhiteSpace(ramType))
+                tags.Add(ramType!);
+            var formFactor = build.PcCase?.PcCaseFormFactors.Select(f => f.Name).FirstOrDefault(f => !string.IsNullOrWhiteSpace(f));
+            if (!string.IsNullOrWhiteSpace(formFactor))
+                tags.Add(formFactor!);
+            buildDto.Tags = tags.Distinct(StringComparer.OrdinalIgnoreCase).Take(3).ToList();
 
             return Result.Success(buildDto);
         }

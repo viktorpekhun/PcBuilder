@@ -16,6 +16,9 @@ namespace Moderation.Domain.Entities
         [MaxLength(500, ErrorMessage = "Reason can't have more than 500 characters.")]
         public string Reason { get; set; } = string.Empty;
 
+        [MaxLength(50)]
+        public string? ReasonCode { get; set; }
+
         public Guid? IssuedByAdminId { get; set; }
         public User? IssuedByAdmin { get; set; }
 

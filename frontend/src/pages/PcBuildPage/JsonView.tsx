@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import styles from "./PcBuildPage.module.css";
 import type { ComponentDataState } from "./types";
 import { MULTI_TYPES, SINGLE_TYPES } from "./types";
@@ -8,6 +9,8 @@ interface JsonViewProps {
 }
 
 export default function JsonView({ componentData }: JsonViewProps) {
+    const { t } = useTranslation();
+
     const json = useMemo(() => {
         const build: Record<string, unknown> = {};
 
@@ -47,9 +50,9 @@ export default function JsonView({ componentData }: JsonViewProps) {
     return (
         <div className={styles.jsonView}>
             <div className={styles.jvHead}>
-                <span className={styles.scEyebrow}>BUILD · JSON</span>
+                <span className={styles.scEyebrow}>{t("pcBuildPage.jsonView.eyebrow")}</span>
                 <button className={styles.jvCopy} onClick={handleCopy}>
-                    {copied ? "✓ COPIED" : "COPY →"}
+                    {copied ? t("pcBuildPage.jsonView.copied") : t("pcBuildPage.jsonView.copy")}
                 </button>
             </div>
             <pre className={styles.jvPre}>{jsonStr}</pre>

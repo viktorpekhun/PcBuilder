@@ -3,6 +3,8 @@ import styles from './BuildCover.module.css';
 interface BuildCoverProps {
     /** Build title used as the deterministic seed for the generated graphic. */
     title: string;
+    /** When provided, renders the actual uploaded cover image instead of the generated graphic. */
+    coverUrl?: string | undefined;
     /** Optional small tag rendered top-left (e.g. socket). */
     tag?: string;
     /** Whether to render the bottom slug/ID stamp. */
@@ -19,13 +21,13 @@ function hash(seed: string): number {
  * Hashes the title into dual radial blooms + a 1px grid + a mono slug stamp,
  * so every build gets a distinct but on-brand graphic.
  */
-export function BuildCover({ title, tag, stamp = true, className = '' }: BuildCoverProps) {
+export function BuildCover({ title, coverUrl, tag, stamp = true, className = '' }: BuildCoverProps) {
     const seed = title || 'untitled';
+
     const h = hash(seed);
     const hue = h % 360;
     const hue2 = (hue + 60 + ((h >> 3) % 80)) % 360;
 
-    // bloom positions deterministically derived from the hash
     const ax = 18 + (h % 40);
     const ay = 30 + ((h >> 5) % 35);
     const bx = 60 + ((h >> 7) % 35);
@@ -33,8 +35,6 @@ export function BuildCover({ title, tag, stamp = true, className = '' }: BuildCo
     const ang = ((h >> 11) % 60) - 30;
 
     const parts = seed.split(/[-_/ ]+/).filter(Boolean);
-    // Multi-word/hyphenated titles → first letter of first two segments (e.g. "ryzen-am5" → "RA").
-    // Single-word titles → first two characters (e.g. "wewewdw" → "WE") so the cover isn't a lone glyph.
     const initials = (parts.length > 1
         ? parts.slice(0, 2).map(s => s[0]).join('')
         : seed.slice(0, 2)
@@ -56,9 +56,18 @@ export function BuildCover({ title, tag, stamp = true, className = '' }: BuildCo
                 className={styles['bc-bg']}
                 style={{ backgroundImage: bgImage, backgroundSize: '32px 32px, 32px 32px, auto, auto, auto, auto' }}
             />
-            <span className={styles['bc-ini']} aria-hidden="true">{initials}</span>
+            {coverUrl ? (
+                <img
+                    src={coverUrl}
+                    alt={seed}
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }}
+                    loading="lazy"
+                />
+            ) : (
+                <span className={styles['bc-ini']} aria-hidden="true">{initials}</span>
+            )}
             {tag && <span className={styles['bc-tag']}>{tag}</span>}
-            {stamp && (
+            {stamp && !coverUrl && (
                 <div className={styles['bc-stamp']}>
                     <span className={styles['bc-slug']}>{slugStamp}</span>
                 </div>

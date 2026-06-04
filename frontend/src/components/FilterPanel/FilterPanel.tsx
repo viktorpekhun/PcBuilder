@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { componentService } from "../../api/component.service";
 import type { ComponentType } from "../../types/component.types";
 import styles from './FilterPanel.module.css';
@@ -94,6 +95,7 @@ const DoubleRangeSlider = ({ min, max, step, value, onChange }: DoubleRangeSlide
 };
 
 const FilterPanel = ({ config, onFilterChange, onPrefilterChange, showPrefilterToggle = false }: FilterPanelProps) => {
+    const { t } = useTranslation();
     const [filterValues, setFilterValues] = useState<FilterValues>({});
     const [dynamicOptions, setDynamicOptions] = useState<Record<string, string[] | undefined>>({});
     const [isLoading, setIsLoading] = useState(false);
@@ -268,7 +270,7 @@ const FilterPanel = ({ config, onFilterChange, onPrefilterChange, showPrefilterT
                                     onClick={() => toggleFilterExpand(filter.id)}
                                     type="button"
                                 >
-                                    {isExpanded ? '— SHOW LESS' : `+ SHOW MORE (${(options ?? []).length - 6})`}
+                                    {isExpanded ? t('components.filterPanel.showLess') : t('components.filterPanel.showMore', { count: (options ?? []).length - 6 })}
                                 </button>
                             )}
                         </div>
@@ -372,8 +374,8 @@ const FilterPanel = ({ config, onFilterChange, onPrefilterChange, showPrefilterT
     return (
         <aside className={styles.filterPanel}>
             <div className={styles.head}>
-                <span className={styles.eyebrow}>FILTERS</span>
-                <span className={styles.resetLink} onClick={handleClearFilters}>RESET →</span>
+                <span className={styles.eyebrow}>{t('components.filterPanel.filters')}</span>
+                <span className={styles.resetLink} onClick={handleClearFilters}>{t('components.filterPanel.reset')}</span>
             </div>
 
             {showPrefilterToggle && (
@@ -387,15 +389,15 @@ const FilterPanel = ({ config, onFilterChange, onPrefilterChange, showPrefilterT
                         <div className={styles.toggleThumb} />
                     </div>
                     <div className={styles.toggleLabel}>
-                        <strong>Лише сумісні</strong>
-                        Показати компоненти, сумісні з поточним складанням
+                        <strong>{t('components.filterPanel.onlyCompatible')}</strong>
+                        {t('components.filterPanel.onlyCompatibleHint')}
                     </div>
                 </div>
             )}
 
             <div className={styles.body}>
                 {isLoading ? (
-                    <div className={styles.loading}>LOADING…</div>
+                    <div className={styles.loading}>{t('components.filterPanel.loading')}</div>
                 ) : (
                     config.filters.map(filter => renderFilter(filter))
                 )}

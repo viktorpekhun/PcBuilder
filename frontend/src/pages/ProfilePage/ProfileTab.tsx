@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { profileService } from '../../api/profile.service';
 import type { IProfileResponse, IUserBanStatus } from '../../types/profile.types';
 import { AvatarBox } from './ProfileAvatar';
@@ -7,6 +8,7 @@ import { BansCard, CompletenessCard, OverviewCard } from './ProfileSideCards';
 import styles from './ProfilePage.module.css';
 
 export function ProfileTab({ profile, onUpdate }: { profile: IProfileResponse; onUpdate: (p: IProfileResponse) => void }) {
+    const { t } = useTranslation();
     const [username, setUsername] = useState(profile.username);
     const [bio, setBio] = useState(profile.bio ?? '');
     const [saving, setSaving] = useState(false);
@@ -34,7 +36,7 @@ export function ProfileTab({ profile, onUpdate }: { profile: IProfileResponse; o
             setSaved(true);
             setTimeout(() => setSaved(false), 2200);
         } catch (err: any) {
-            setSaveErr(err?.response?.data?.message ?? 'Save error');
+            setSaveErr(err?.response?.data?.message ?? t('profile.profileTab.saveFailed'));
         } finally { setSaving(false); }
     };
 
@@ -49,7 +51,7 @@ export function ProfileTab({ profile, onUpdate }: { profile: IProfileResponse; o
             setAvatarUrl(res.data.avatarUrl);
             onUpdate({ ...profile, avatarUrl: res.data.avatarUrl });
         } catch (err: any) {
-            setSaveErr(err?.response?.data?.message ?? 'Upload error');
+            setSaveErr(err?.response?.data?.message ?? t('profile.profileTab.avatarUploadFailed'));
         } finally {
             setAvatarLoading(false);
             if (fileRef.current) fileRef.current.value = '';
@@ -63,7 +65,7 @@ export function ProfileTab({ profile, onUpdate }: { profile: IProfileResponse; o
             setAvatarUrl(undefined);
             const { avatarUrl: _, ...profileNoAvatar } = profile;
             onUpdate(profileNoAvatar as IProfileResponse);
-        } catch { setSaveErr('Remove error'); }
+        } catch { setSaveErr(t('profile.profileTab.avatarRemoveFailed')); }
         finally { setAvatarLoading(false); }
     };
 
@@ -76,8 +78,8 @@ export function ProfileTab({ profile, onUpdate }: { profile: IProfileResponse; o
             <div className={styles['col']}>
                 <div className={styles['card']}>
                     <div className={styles['card-h']}>
-                        <span className={styles['card-ttl']}>Profile photo</span>
-                        <span className={styles['card-aux']}>JPEG · PNG · WEBP · MAX 5 MB</span>
+                        <span className={styles['card-ttl']}>{t('profile.profileTab.photoCardTitle')}</span>
+                        <span className={styles['card-aux']}>{t('profile.profileTab.photoCardAux')}</span>
                     </div>
                     <div className={styles['card-b']}>
                         <div className={styles['avatar-row']}>
@@ -92,16 +94,16 @@ export function ProfileTab({ profile, onUpdate }: { profile: IProfileResponse; o
                                         onChange={handleAvatarChange}
                                     />
                                     <button className={styles['btn-sec']} onClick={() => fileRef.current?.click()} disabled={avatarLoading}>
-                                        ↑ Upload photo
+                                        {t('profile.profileTab.uploadPhoto')}
                                     </button>
                                     {avatarUrl && (
                                         <button className={styles['avatar-rm']} onClick={handleRemoveAvatar} disabled={avatarLoading}>
-                                            × Remove photo
+                                            {t('profile.profileTab.removePhoto')}
                                         </button>
                                     )}
                                 </div>
                                 <div className={styles['avatar-hint']}>
-                                    {avatarUrl ? 'CURRENT · CUSTOM PHOTO' : 'CURRENT · INITIALS FALLBACK · NO IMAGE'}
+                                    {avatarUrl ? t('profile.profileTab.currentCustomPhoto') : t('profile.profileTab.currentInitialsFallback')}
                                 </div>
                             </div>
                         </div>
@@ -110,28 +112,28 @@ export function ProfileTab({ profile, onUpdate }: { profile: IProfileResponse; o
 
                 <div className={styles['card']}>
                     <div className={styles['card-h']}>
-                        <span className={styles['card-ttl']}>General</span>
-                        <span className={styles['card-aux']}>PUT /API/PROFILE · {dirty ? 'UNSAVED' : 'IN SYNC'}</span>
+                        <span className={styles['card-ttl']}>{t('profile.profileTab.generalCardTitle')}</span>
+                        <span className={styles['card-aux']}>PUT /API/PROFILE · {dirty ? t('profile.profileTab.unsaved') : t('profile.profileTab.inSync')}</span>
                     </div>
                     <div className={styles['card-b']}>
                         {saveErr && <div className={styles['error-banner']}>{saveErr}</div>}
                         <form onSubmit={handleSave}>
                             <div className={styles['field']}>
                                 <div className={styles['field-lbl']}>
-                                    <span>E-MAIL</span>
-                                    <span className={styles['field-cnt']}>READ-ONLY</span>
+                                    <span>{t('profile.profileTab.emailLabel')}</span>
+                                    <span className={styles['field-cnt']}>{t('profile.profileTab.emailReadOnly')}</span>
                                 </div>
                                 <div className={styles['readonly']}>
                                     <span>{profile.email}</span>
                                     {profile.emailVerified
-                                        ? <Badge variant="ok">VERIFIED</Badge>
-                                        : <Badge variant="warn">UNVERIFIED · RESEND →</Badge>}
+                                        ? <Badge variant="ok">{t('profile.profileTab.emailVerified')}</Badge>
+                                        : <Badge variant="warn">{t('profile.profileTab.emailUnverified')}</Badge>}
                                 </div>
                             </div>
 
                             <div className={styles['field']}>
                                 <div className={styles['field-lbl']}>
-                                    <span>USERNAME <span className={styles['field-lbl-req']}>*</span></span>
+                                    <span>{t('profile.profileTab.usernameLabel')} <span className={styles['field-lbl-req']}>*</span></span>
                                     <span className={styles['field-cnt']}><b>{username.length}</b>/30</span>
                                 </div>
                                 <input
@@ -143,13 +145,13 @@ export function ProfileTab({ profile, onUpdate }: { profile: IProfileResponse; o
                                     onChange={e => { setUsername(e.target.value); setSaved(false); setSaveErr(''); }}
                                 />
                                 <span className={styles['field-hint']}>
-                                    USED ON YOUR PUBLIC PROFILE AND ON REVIEWS YOU LEAVE
+                                    {t('profile.profileTab.usernameHint')}
                                 </span>
                             </div>
 
                             <div className={styles['field']}>
                                 <div className={styles['field-lbl']}>
-                                    <span>BIO</span>
+                                    <span>{t('profile.profileTab.bioLabel')}</span>
                                     <span className={styles['field-cnt']}><b>{bio.length}</b>/200</span>
                                 </div>
                                 <textarea
@@ -157,14 +159,14 @@ export function ProfileTab({ profile, onUpdate }: { profile: IProfileResponse; o
                                     rows={3}
                                     maxLength={200}
                                     value={bio}
-                                    placeholder="A line or two about the rigs you build."
+                                    placeholder={t('profile.profileTab.bioPlaceholder')}
                                     onChange={e => { setBio(e.target.value); setSaved(false); setSaveErr(''); }}
                                 />
                             </div>
 
                             <div className={styles['form-actions']}>
                                 <button className={styles['btn-pri']} type="submit" disabled={!dirty || saving}>
-                                    {saving ? '...' : '✓ Save changes'}
+                                    {saving ? '...' : `✓ ${t('profile.profileTab.save')}`}
                                 </button>
                                 <button
                                     className={styles['btn-ghost']}
@@ -172,11 +174,11 @@ export function ProfileTab({ profile, onUpdate }: { profile: IProfileResponse; o
                                     disabled={!dirty}
                                     onClick={() => { setUsername(profile.username); setBio(profile.bio ?? ''); setSaveErr(''); }}
                                 >
-                                    ← Revert
+                                    {t('profile.profileTab.revert')}
                                 </button>
                                 {saved && (
                                     <span className={styles['saved-msg']}>
-                                        <span className={styles['saved-dot']} />SAVED
+                                        <span className={styles['saved-dot']} />{t('profile.profileTab.savedMsg')}
                                     </span>
                                 )}
                             </div>

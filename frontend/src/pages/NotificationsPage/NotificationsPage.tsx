@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { notificationService } from "../../api/notification.service";
 import { priceAlertService } from "../../api/priceAlert.service";
 import useNotifications from "../../hooks/useNotifications";
@@ -14,44 +15,29 @@ type Tab = "inbox" | "alerts";
 type Filter = "all" | "unread";
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
-const MONTHS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-
-function shortDate(iso: string) {
-    const d = new Date(iso);
-    return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+function shortDate(iso: string, locale: string) {
+    return new Intl.DateTimeFormat(locale, { day: "2-digit", month: "short", year: "numeric" }).format(new Date(iso));
 }
-function fullTime(iso: string) {
-    const d = new Date(iso);
-    const hh = String(d.getHours()).padStart(2, "0");
-    const mm = String(d.getMinutes()).padStart(2, "0");
-    return `${shortDate(iso)} ${hh}:${mm}`;
+function fullTime(iso: string, locale: string) {
+    return new Intl.DateTimeFormat(locale, { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(iso));
 }
 function dayKey(iso: string) {
     const d = new Date(iso);
     return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 }
-function relTime(iso: string) {
-    const d = new Date(iso);
-    const diffMs = Date.now() - d.getTime();
-    const mins = Math.round(diffMs / 60000);
-    if (mins < 1) return "JUST NOW";
-    if (mins < 60) return `${mins}m AGO`;
-    const hrs = Math.round(mins / 60);
-    if (hrs < 24) return `${hrs}h AGO`;
-    const days = Math.round(hrs / 24);
-    if (days < 30) return `${days}d AGO`;
-    return `${Math.round(days / 30)}mo AGO`;
-}
 function fmt(n: number) {
-    return n.toLocaleString("uk-UA").replace(/,/g, " ");
+    return n.toLocaleString("uk-UA").replace(/,/g, " ");
 }
 
-const COMPONENT_TYPE_LABEL: Record<string, string> = {
-    Cpu: "Processor", Gpu: "Graphics", Ram: "Memory",
-    Motherboard: "Motherboard", CpuCooler: "CPU cooler",
-    PcCase: "Case", PowerSupply: "Power supply",
-    Ssd: "SSD", Hdd: "HDD", Fan: "Fan",
-};
+type TagKind = "review" | "deleted" | "price" | "warn" | "ban";
+function getTagKind(type: string): TagKind {
+    if (type === "NewReview") return "review";
+    if (type === "ReviewDeleted" || type === "BuildDeleted") return "deleted";
+    if (type === "PriceAlert") return "price";
+    if (type === "CommentBanned" || type === "PostBanned") return "ban";
+    return "warn";
+}
+
 const COMPONENT_TYPE_SLOT: Record<string, string> = {
     Cpu: "CPU", Gpu: "GPU", Ram: "RAM", Motherboard: "M/B",
     CpuCooler: "CLR", PcCase: "CSE", PowerSupply: "PSU",
@@ -73,6 +59,7 @@ const Spark = ({ dir }: { dir: string }) => {
 
 /* ── NotificationsPage ───────────────────────────────────────────── */
 const NotificationsPage = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const { markRead: ctxMarkRead, markAllRead: ctxMarkAllRead } = useNotifications();
     const [tab, setTab] = useState<Tab>("inbox");
@@ -161,26 +148,26 @@ const NotificationsPage = () => {
             {/* ── Header ── */}
             <div className={styles.head}>
                 <div>
-                    <span className={styles.eyebrow}>USER · NOTIFICATIONS</span>
-                    <h1 className={styles.h1}>{tab === "inbox" ? "Notifications" : "Price alerts"}</h1>
+                    <span className={styles.eyebrow}>{t("notifications.eyebrow")}</span>
+                    <h1 className={styles.h1}>{tab === "inbox" ? t("notifications.heading") : t("notifications.priceAlertsHeading")}</h1>
                     <div className={styles.headMeta}>
                         {tab === "inbox" ? (
                             <>
                                 <span>
                                     <span className={`${styles.dot} ${unreadCount > 0 ? styles.dotAcc : styles.dotDim}`} />
-                                    {unreadCount} UNREAD
+                                    {t("notifications.unread", { count: unreadCount })}
                                 </span>
                                 <span className={styles.metaSep}>·</span>
-                                <span>○ {alerts.length} ACTIVE ALERTS</span>
+                                <span>{t("notifications.activeAlerts", { count: alerts.length })}</span>
                             </>
                         ) : (
                             <>
                                 <span>
                                     <span className={`${styles.dot} ${styles.dotAcc}`} />
-                                    {alerts.length} ACTIVE
+                                    {t("notifications.active", { count: alerts.length })}
                                 </span>
                                 <span className={styles.metaSep}>·</span>
-                                <span>○ {unreadCount} UNREAD INBOX</span>
+                                <span>{t("notifications.unreadInbox", { count: unreadCount })}</span>
                             </>
                         )}
                     </div>
@@ -193,7 +180,7 @@ const NotificationsPage = () => {
                             onClick={markAllRead}
                             disabled={allRead}
                         >
-                            ✓ Mark all read
+                            {t("notifications.markAllRead")}
                         </button>
                     )}
                 </div>
@@ -207,7 +194,7 @@ const NotificationsPage = () => {
                     onClick={() => setTab("inbox")}
                 >
                     <span className={styles.tabIc}>●</span>
-                    <span className={styles.tabLbl}>Notifications</span>
+                    <span className={styles.tabLbl}>{t("notifications.tabs.notifications")}</span>
                     <span className={styles.tabCount}>
                         {unreadCount > 0
                             ? <><b>{unreadCount}</b><span className={styles.tabCountOf}>/{pagination?.totalCount ?? items.length}</span></>
@@ -220,14 +207,10 @@ const NotificationsPage = () => {
                     onClick={() => setTab("alerts")}
                 >
                     <span className={styles.tabIc}>△</span>
-                    <span className={styles.tabLbl}>Price alerts</span>
+                    <span className={styles.tabLbl}>{t("notifications.tabs.priceAlerts")}</span>
                     <span className={styles.tabCount}>{alerts.length}</span>
                 </button>
                 <div className={styles.tabSpacer} />
-                <div className={styles.tabFoot}>
-                    <span className={`${styles.dot} ${styles.dotOk}`} />
-                    <span>FEED CONNECTED</span>
-                </div>
             </div>
 
             {/* ── Panel ── */}
@@ -277,6 +260,7 @@ interface InboxPanelProps {
 const InboxPanel = ({
     grouped, items, filter, onFilterChange, loading, onMarkRead, onItemClick,
 }: InboxPanelProps) => {
+    const { t } = useTranslation();
     const unreadCount = items.filter(n => !n.isRead).length;
     const totalCount = items.length;
 
@@ -291,7 +275,7 @@ const InboxPanel = ({
                         onClick={() => onFilterChange("all")}
                     >
                         <span className={`${styles.dot} ${styles.dotDim}`} />
-                        ALL <span className={styles.fchipNum}>{totalCount}</span>
+                        {t("notifications.filter.all")} <span className={styles.fchipNum}>{totalCount}</span>
                     </button>
                     <button
                         type="button"
@@ -299,22 +283,22 @@ const InboxPanel = ({
                         onClick={() => onFilterChange("unread")}
                     >
                         <span className={`${styles.dot} ${unreadCount > 0 ? styles.dotAcc : styles.dotDim}`} />
-                        UNREAD <span className={styles.fchipNum}>{unreadCount}</span>
+                        {t("notifications.filter.unread")} <span className={styles.fchipNum}>{unreadCount}</span>
                     </button>
                 </div>
-                <span className={styles.toolbarHint}>CLICK A ROW TO OPEN THE BUILD</span>
+                <span className={styles.toolbarHint}>{t("notifications.toolbar.clickToOpen")}</span>
             </div>
 
             {/* list */}
             {loading ? (
-                <div className={styles.empty}><span className={styles.emptyText}>LOADING…</span></div>
+                <div className={styles.empty}><span className={styles.emptyText}>{t("notifications.loading")}</span></div>
             ) : items.length === 0 ? (
                 <EmptyState
-                    eyebrow={filter === "unread" ? "INBOX ZERO" : "NO NOTIFICATIONS"}
-                    title={filter === "unread" ? "You're all caught up." : "Nothing yet."}
+                    eyebrow={filter === "unread" ? t("notifications.empty.inboxZeroEyebrow") : t("notifications.empty.noNotifsEyebrow")}
+                    title={filter === "unread" ? t("notifications.empty.inboxZeroTitle") : t("notifications.empty.noNotifsTitle")}
                     body={filter === "unread"
-                        ? "When someone reviews one of your published builds — or a review gets moderated — it lands here."
-                        : "Publish a build to the gallery and reviews will start showing up here."}
+                        ? t("notifications.empty.inboxZeroBody")
+                        : t("notifications.empty.noNotifsBody")}
                 />
             ) : (
                 <div className={styles.list}>
@@ -340,19 +324,20 @@ const InboxPanel = ({
 
 /* ── Day header ──────────────────────────────────────────────────── */
 const DayHeader = ({ iso, count }: { iso: string; count: number }) => {
+    const { t, i18n } = useTranslation();
     const d = new Date(iso);
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
     const dd = new Date(d); dd.setHours(0, 0, 0, 0);
     let label: string;
-    if (dd.getTime() === today.getTime()) label = "TODAY";
-    else if (dd.getTime() === yesterday.getTime()) label = "YESTERDAY";
-    else label = shortDate(iso).toUpperCase();
+    if (dd.getTime() === today.getTime()) label = t("notifications.row.today");
+    else if (dd.getTime() === yesterday.getTime()) label = t("notifications.row.yesterday");
+    else label = shortDate(iso, i18n.language).toUpperCase();
     return (
         <div className={styles.dayHeader}>
             <span className={styles.dayTitle}>{label}</span>
             <span className={styles.dayLine} />
-            <span className={styles.dayCnt}>{count} {count === 1 ? "ITEM" : "ITEMS"}</span>
+            <span className={styles.dayCnt}>{t("notifications.row.item", { count })}</span>
         </div>
     );
 };
@@ -367,9 +352,85 @@ const NotificationRow = ({
     onMarkRead: (id: string) => void;
     onClick: (n: INotification) => void;
 }) => {
+    const { t, i18n } = useTranslation();
     const isReview = n.type === "NewReview";
-    const isDeleted = n.type === "ReviewDeleted";
     const rating = isReview ? Math.min(5, Math.max(0, parseInt(n.payload?.rating ?? "0", 10))) : 0;
+    const tagKindClass: Record<TagKind, string> = {
+        review:  styles.typeReview!,
+        deleted: styles.typeDeleted!,
+        price:   styles.typePrice!,
+        warn:    styles.typeWarn!,
+        ban:     styles.typeBan!,
+    };
+
+    function relTime(iso: string) {
+        const d = new Date(iso);
+        const diffMs = Date.now() - d.getTime();
+        const mins = Math.round(diffMs / 60000);
+        if (mins < 1) return t("notifications.row.justNow");
+        if (mins < 60) return t("notifications.row.minutesAgo", { count: mins });
+        const hrs = Math.round(mins / 60);
+        if (hrs < 24) return t("notifications.row.hoursAgo", { count: hrs });
+        const days = Math.round(hrs / 24);
+        if (days < 30) return t("notifications.row.daysAgo", { count: days });
+        return t("notifications.row.monthsAgo", { count: Math.round(days / 30) });
+    }
+
+    const renderRowText = () => {
+        const reason = n.payload?.reason;
+        const reasonLabel = reason
+            ? t(`notifications.row.reasons.${reason}`, { defaultValue: reason.replace(/_/g, " ") })
+            : null;
+
+        switch (n.type) {
+            case "NewReview":
+                return <>
+                    <strong>{n.payload?.reviewerUsername ?? "Someone"}</strong>
+                    {t("notifications.row.leftReview")}
+                    {t("notifications.row.reviewOn")}
+                    <span className={styles.rowLink}>/{n.payload?.buildName ?? "a build"}</span>
+                </>;
+            case "ReviewDeleted":
+                return <>
+                    {t("notifications.row.reviewRemovedOn")}
+                    <span className={styles.rowLink}>/{n.payload?.buildName ?? "a build"}</span>
+                    {t("notifications.row.reviewRemovedBy")}
+                    {reason && <span className={styles.rowReason}> · {reasonLabel}</span>}
+                </>;
+            case "BuildDeleted":
+                return <>
+                    {t("notifications.row.buildDeletedOn")}
+                    <span className={styles.rowLink}>/{n.payload?.buildName ?? "a build"}</span>
+                    {t("notifications.row.buildDeletedBy")}
+                </>;
+            case "CommentBanned":
+            case "PostBanned":
+                return <>
+                    {n.type === "CommentBanned"
+                        ? t("notifications.row.restrictedFromCommenting", { date: n.payload?.banUntil ? fullTime(n.payload.banUntil, i18n.language) : t("notifications.row.unknownDate") })
+                        : t("notifications.row.restrictedFromPosting",    { date: n.payload?.banUntil ? fullTime(n.payload.banUntil, i18n.language) : t("notifications.row.unknownDate") })}
+                    {reason && reason !== "AUTO_BAN_WARNINGS" && <span className={styles.rowReason}> · {reasonLabel}</span>}
+                </>;
+            case "CommentUnbanned":
+                return <span>{t("notifications.row.commentUnbanned")}</span>;
+            case "PostUnbanned":
+                return <span>{t("notifications.row.postUnbanned")}</span>;
+            case "CommentWarning":
+            case "PostWarning":
+                return <>{n.type === "CommentWarning" ? t("notifications.row.commentWarning") : t("notifications.row.postWarning")}</>;
+            case "PriceAlert": {
+                const newPrice = n.payload?.newPrice ? fmt(Math.round(parseFloat(n.payload.newPrice))) : "?";
+                const dir = n.payload?.direction ?? "up";
+                return <>
+                    <strong>{n.payload?.componentName ?? "?"}</strong>
+                    {" "}{t(`notifications.row.priceDirection.${dir}`)}{" "}
+                    <strong>₴{newPrice}</strong>
+                </>;
+            }
+            default:
+                return <span>{n.type}</span>;
+        }
+    };
 
     return (
         <div
@@ -380,8 +441,8 @@ const NotificationRow = ({
                 {n.isRead ? "○" : "●"}
             </span>
             <div className={styles.rowGlyph}>
-                <span className={`${styles.rowType} ${isReview ? styles.typeReview : isDeleted ? styles.typeDeleted : ""}`}>
-                    {isReview ? "REVIEW" : isDeleted ? "DELETED" : n.type.toUpperCase()}
+                <span className={`${styles.rowType} ${tagKindClass[getTagKind(n.type)]}`}>
+                    {t(`notifications.row.types.${n.type.charAt(0).toLowerCase() + n.type.slice(1)}`, { defaultValue: n.type.toUpperCase() })}
                 </span>
                 {isReview && (
                     <span className={styles.stars}>
@@ -392,33 +453,18 @@ const NotificationRow = ({
             </div>
             <div className={styles.rowBody}>
                 <div className={styles.rowText}>
-                    {isReview && (
-                        <>
-                            <strong>{n.payload?.reviewerUsername ?? "Someone"}</strong>
-                            {" left a "}
-                            <strong>{rating}-star</strong>
-                            {" review on "}
-                            <span className={styles.rowLink}>/{n.payload?.buildName ?? "a build"}</span>
-                        </>
-                    )}
-                    {isDeleted && (
-                        <>
-                            {"A review on "}
-                            <span className={styles.rowLink}>/{n.payload?.buildName ?? "a build"}</span>
-                            {" was removed by moderation"}
-                            {n.payload?.reason && (
-                                <span className={styles.rowReason}> · {String(n.payload.reason).replace(/_/g, " ")}</span>
-                            )}
-                        </>
-                    )}
-                    {!isReview && !isDeleted && (
-                        <span>{n.payload?.buildName ?? n.type}</span>
-                    )}
+                    {renderRowText()}
                 </div>
                 <div className={styles.rowMeta}>
                     <span>◴ {relTime(n.createdAt)}</span>
                     <span className={styles.metaSep}>·</span>
-                    <span>{fullTime(n.createdAt)}</span>
+                    <span>{fullTime(n.createdAt, i18n.language)}</span>
+                    {(n.type === "CommentBanned" || n.type === "PostBanned") && n.payload?.banUntil && (
+                        <>
+                            <span className={styles.metaSep}>·</span>
+                            <span>{t("notifications.row.bannedUntil", { date: shortDate(n.payload.banUntil, i18n.language) })}</span>
+                        </>
+                    )}
                     {n.payload?.buildId && (
                         <>
                             <span className={styles.metaSep}>·</span>
@@ -434,10 +480,10 @@ const NotificationRow = ({
                         className={styles.actBtn}
                         onClick={e => { e.stopPropagation(); onMarkRead(n.id); }}
                     >
-                        ✓ MARK READ
+                        {t("notifications.row.markRead")}
                     </button>
                 )}
-                <span className={styles.openBtn}>↗ OPEN</span>
+                <span className={styles.openBtn}>{t("notifications.row.open")}</span>
             </div>
         </div>
     );
@@ -452,15 +498,16 @@ const AlertsPanel = ({
     loading: boolean;
     onUnsubscribe: (id: string) => void;
 }) => {
+    const { t } = useTranslation();
     if (loading) {
-        return <div className={styles.empty}><span className={styles.emptyText}>LOADING…</span></div>;
+        return <div className={styles.empty}><span className={styles.emptyText}>{t("notifications.loading")}</span></div>;
     }
     if (alerts.length === 0) {
         return (
             <EmptyState
-                eyebrow="NO SUBSCRIPTIONS"
-                title="You haven't subscribed to any component yet."
-                body="Open any component page and hit the ALERT chip on a row to track its average price. You'll get a notification when it moves more than your threshold."
+                eyebrow={t("notifications.empty.noAlertsEyebrow")}
+                title={t("notifications.empty.noAlertsTitle")}
+                body={t("notifications.empty.noAlertsBody")}
             />
         );
     }
@@ -468,29 +515,29 @@ const AlertsPanel = ({
     return (
         <>
             <div className={styles.alertsLegend}>
-                <span className={styles.alertsLegLbl}>SUBSCRIPTIONS · {alerts.length}</span>
-                <span className={styles.lgItem}><span className={styles.lgDown}>▼</span> AVG PRICE DROP (BUY SIGNAL)</span>
-                <span className={styles.lgItem}><span className={styles.lgUp}>▲</span> AVG PRICE UP</span>
-                <span className={styles.lgItem}><span>•</span> WITHIN THRESHOLD</span>
+                <span className={styles.alertsLegLbl}>{t("notifications.alerts.legend", { count: alerts.length })}</span>
+                <span className={styles.lgItem}><span className={styles.lgDown}>▼</span> {t("notifications.alerts.priceDown")}</span>
+                <span className={styles.lgItem}><span className={styles.lgUp}>▲</span> {t("notifications.alerts.priceUp")}</span>
+                <span className={styles.lgItem}><span>•</span> {t("notifications.alerts.withinThreshold")}</span>
             </div>
 
             <div className={styles.alertsTable}>
                 <div className={styles.alertHead}>
-                    <span>SLOT</span>
+                    <span>{t("notifications.alerts.headers.slot")}</span>
                     <span></span>
-                    <span>COMPONENT</span>
-                    <span>THRESHOLD</span>
-                    <span className={styles.r}>BASELINE · ₴</span>
-                    <span className={styles.r}>CURRENT · ₴</span>
-                    <span className={styles.r}>DELTA</span>
+                    <span>{t("notifications.alerts.headers.component")}</span>
+                    <span>{t("notifications.alerts.headers.threshold")}</span>
+                    <span className={styles.r}>{t("notifications.alerts.headers.baseline")}</span>
+                    <span className={styles.r}>{t("notifications.alerts.headers.current")}</span>
+                    <span className={styles.r}>{t("notifications.alerts.headers.delta")}</span>
                     <span></span>
                 </div>
                 {alerts.map(a => <AlertRow key={a.id} a={a} onUnsubscribe={onUnsubscribe} />)}
             </div>
 
             <div className={styles.alertsFoot}>
-                <span>NOTIFICATIONS FIRE WHEN |Δ| ≥ THRESHOLD · ROUNDED TO NEAREST HRYVNIA</span>
-                <span className={styles.alertsFootDim}>DATA REFRESHED HOURLY FROM PARTNER STORES</span>
+                <span>{t("notifications.alerts.foot")}</span>
+                <span className={styles.alertsFootDim}>{t("notifications.alerts.footRefresh")}</span>
             </div>
         </>
     );
@@ -503,8 +550,9 @@ const AlertRow = ({
     a: IUserPriceAlert;
     onUnsubscribe: (id: string) => void;
 }) => {
+    const { t, i18n } = useTranslation();
     const slot = COMPONENT_TYPE_SLOT[a.componentType] ?? "?";
-    const label = COMPONENT_TYPE_LABEL[a.componentType] ?? a.componentType;
+    const label = t(`autoBuilder.componentLabels.${a.componentType.charAt(0).toLowerCase() + a.componentType.slice(1)}`, { defaultValue: a.componentType });
     const current = a.currentAveragePrice;
     const baseline = a.initialPrice;
     const deltaPercent = current != null && baseline > 0
@@ -530,7 +578,11 @@ const AlertRow = ({
             <div className={styles.alertNm}>
                 <div className={styles.alertName}>{a.componentName ?? "—"}</div>
                 <div className={styles.alertNmMeta}>
-                    {label.toUpperCase()} · SUBSCRIBED {shortDate(a.createdAt)} · ±{a.thresholdPercent}%
+                    {t("notifications.alerts.subscribedMeta", {
+                        label: label.toUpperCase(),
+                        date: shortDate(a.createdAt, i18n.language),
+                        pct: a.thresholdPercent,
+                    })}
                 </div>
             </div>
             <div className={styles.thrWrap}>
@@ -546,7 +598,7 @@ const AlertRow = ({
             <div className={styles.alertPrice}>
                 {current != null
                     ? <><span className={styles.alertCcy}>₴</span>{fmt(Math.round(current))}</>
-                    : <span className={styles.alertGhost}>UNAVAIL.</span>}
+                    : <span className={styles.alertGhost}>{t("notifications.alerts.unavail")}</span>}
             </div>
             <div className={`${styles.delta} ${styles[`dir${dir.charAt(0).toUpperCase()}${dir.slice(1)}`]} ${overThreshold ? styles.deltaFire : ""}`}>
                 {dir === "n"
@@ -556,16 +608,16 @@ const AlertRow = ({
                         <span className={styles.deltaNum}>{Math.abs(deltaPercent ?? 0).toFixed(1)}%</span>
                         <Spark dir={dir} />
                     </>}
-                {overThreshold && <span className={styles.fireTag}>FIRES</span>}
+                {overThreshold && <span className={styles.fireTag}>{t("notifications.alerts.fires")}</span>}
             </div>
             <div className={styles.alertActs}>
                 <button
                     type="button"
                     className={styles.unsubBtn}
                     onClick={() => onUnsubscribe(a.id)}
-                    title="Unsubscribe"
+                    title={t("notifications.alerts.unsub")}
                 >
-                    × UNSUB
+                    {t("notifications.alerts.unsub")}
                 </button>
             </div>
         </div>

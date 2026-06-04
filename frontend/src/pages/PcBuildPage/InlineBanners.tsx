@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import styles from "./PcBuildPage.module.css";
 
 interface InlineBannersProps {
@@ -11,10 +12,10 @@ interface InlineBannersProps {
 export default function InlineBanners({
     criticalCount, loadPct, psu, firstCriticalMessage,
 }: InlineBannersProps) {
+    const { t } = useTranslation();
     const [conflictDismissed, setConflictDismissed] = useState(false);
     const [psuDismissed, setPsuDismissed] = useState(false);
 
-    // Reset dismissal when the underlying condition changes
     useEffect(() => {
         if (criticalCount === 0) setConflictDismissed(false);
     }, [criticalCount]);
@@ -35,7 +36,9 @@ export default function InlineBanners({
                     <span className={styles.bannerGlyph}>×</span>
                     <div className={styles.bannerBody}>
                         <div className={styles.bannerTitle}>
-                            INCOMPATIBLE · {criticalCount} CHECK{criticalCount === 1 ? "" : "S"} FAILED
+                            {criticalCount === 1
+                                ? t("pcBuildPage.inlineBanners.incompatibleTitle", { count: criticalCount })
+                                : t("pcBuildPage.inlineBanners.incompatibleTitle_plural", { count: criticalCount })}
                         </div>
                         {firstCriticalMessage && (
                             <div className={styles.bannerText}>{firstCriticalMessage}</div>
@@ -45,7 +48,7 @@ export default function InlineBanners({
                         type="button"
                         className={styles.bannerClose}
                         onClick={() => setConflictDismissed(true)}
-                        aria-label="Dismiss"
+                        aria-label={t("pcBuildPage.inlineBanners.dismiss")}
                     >×</button>
                 </div>
             )}
@@ -53,16 +56,16 @@ export default function InlineBanners({
                 <div className={`${styles.banner} ${styles.bannerWarn}`}>
                     <span className={styles.bannerGlyph}>!</span>
                     <div className={styles.bannerBody}>
-                        <div className={styles.bannerTitle}>PSU MARGIN LOW</div>
+                        <div className={styles.bannerTitle}>{t("pcBuildPage.inlineBanners.psuMarginTitle")}</div>
                         <div className={styles.bannerText}>
-                            Очікуване навантаження перевищує 80% потужності БЖ. Розгляньте оновлення.
+                            {t("pcBuildPage.inlineBanners.psuMarginText")}
                         </div>
                     </div>
                     <button
                         type="button"
                         className={styles.bannerClose}
                         onClick={() => setPsuDismissed(true)}
-                        aria-label="Dismiss"
+                        aria-label={t("pcBuildPage.inlineBanners.dismiss")}
                     >×</button>
                 </div>
             )}

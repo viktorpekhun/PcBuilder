@@ -1,17 +1,11 @@
 import { Fragment } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import styles from "./PcBuildPage.module.css";
 import type { ComponentDataState, MultiKey, SingleKey } from "./types";
 import { MULTI_TYPES, SINGLE_TYPES } from "./types";
 import { SLOT_TAG } from "./constants";
 import RowAlertButton from "./RowAlertButton";
-
-const MORE_LABEL: Record<MultiKey, string> = {
-    rams: "Додати ще модуль RAM",
-    ssds: "Додати ще SSD",
-    hdds: "Додати ще HDD",
-    fans: "Додати ще вентилятор",
-};
 
 function fmt(n: number): string {
     if (!n) return "0";
@@ -25,11 +19,15 @@ interface CardsViewProps {
 }
 
 export default function CardsView({ componentData, onRemoveSingle, onRemoveMulti }: CardsViewProps) {
+    const { t } = useTranslation();
+
     return (
         <div className={styles.cardsGrid}>
-            {SINGLE_TYPES.map(({ key, urlType, apiType, label, buttonLabel }) => {
+            {SINGLE_TYPES.map(({ key, urlType, apiType }) => {
                 const data = componentData[key];
                 const tag = SLOT_TAG[key];
+                const label = t(`pcBuildPage.componentTypes.${key}.label`);
+                const buttonLabel = t(`pcBuildPage.componentTypes.${key}.buttonLabel`);
 
                 if (!data) {
                     return (
@@ -40,7 +38,7 @@ export default function CardsView({ componentData, onRemoveSingle, onRemoveMulti
                             </div>
                             <div className={`${styles.ccBody} ${styles.ccBodyEmpty}`}>
                                 <span className={styles.addCue}>＋</span>
-                                <span>Додати {buttonLabel.toLowerCase()}</span>
+                                <span>{t("pcBuildPage.cardsView.addComponent", { label: buttonLabel.toLowerCase() })}</span>
                             </div>
                         </Link>
                     );
@@ -70,7 +68,7 @@ export default function CardsView({ componentData, onRemoveSingle, onRemoveMulti
                                             className={styles.rowToolBtn}
                                             onClick={(e) => e.stopPropagation()}
                                         >
-                                            <span className={styles.toolGly}>⇋</span> ALT
+                                            <span className={styles.toolGly}>⇋</span> {t("pcBuildPage.partsTable.altBtn")}
                                         </Link>
                                         <RowAlertButton componentId={data.id} componentType={apiType} />
                                     </div>
@@ -89,9 +87,12 @@ export default function CardsView({ componentData, onRemoveSingle, onRemoveMulti
                 );
             })}
 
-            {MULTI_TYPES.map(({ key, urlType, apiType, label, buttonLabel }) => {
+            {MULTI_TYPES.map(({ key, urlType, apiType }) => {
                 const items = componentData[key];
                 const tag = SLOT_TAG[key];
+                const label = t(`pcBuildPage.componentTypes.${key}.label`);
+                const buttonLabel = t(`pcBuildPage.componentTypes.${key}.buttonLabel`);
+                const addMoreLabel = t(`pcBuildPage.cardsView.addMore.${key}`);
 
                 if (items.length === 0) {
                     return (
@@ -102,7 +103,7 @@ export default function CardsView({ componentData, onRemoveSingle, onRemoveMulti
                             </div>
                             <div className={`${styles.ccBody} ${styles.ccBodyEmpty}`}>
                                 <span className={styles.addCue}>＋</span>
-                                <span>Додати {buttonLabel.toLowerCase()}</span>
+                                <span>{t("pcBuildPage.cardsView.addComponent", { label: buttonLabel.toLowerCase() })}</span>
                             </div>
                         </Link>
                     );
@@ -134,7 +135,7 @@ export default function CardsView({ componentData, onRemoveSingle, onRemoveMulti
                                                     className={styles.rowToolBtn}
                                                     onClick={(e) => e.stopPropagation()}
                                                 >
-                                                    <span className={styles.toolGly}>⇋</span> ALT
+                                                    <span className={styles.toolGly}>⇋</span> {t("pcBuildPage.partsTable.altBtn")}
                                                 </Link>
                                                 <RowAlertButton componentId={item.componentId} componentType={apiType} />
                                             </div>
@@ -158,7 +159,7 @@ export default function CardsView({ componentData, onRemoveSingle, onRemoveMulti
                             </div>
                             <div className={`${styles.ccBody} ${styles.ccBodyEmpty}`}>
                                 <span className={styles.addCue}>＋</span>
-                                <span>{MORE_LABEL[key]}</span>
+                                <span>{addMoreLabel}</span>
                             </div>
                         </Link>
                     </Fragment>

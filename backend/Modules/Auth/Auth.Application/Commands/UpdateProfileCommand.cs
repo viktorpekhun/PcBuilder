@@ -4,5 +4,5 @@ using PcBuilder.SharedKernel;
 
 namespace Auth.Application.Commands
 {
-    public record UpdateProfileCommand(Guid UserId, string Username, string? Bio) : IRequest<Result<ProfileDto>>;
+    public record UpdateProfileCommand(Guid UserId, string Username, string? Bio, string? PreferredLanguage) : IRequest<Result<ProfileDto>>;
 }

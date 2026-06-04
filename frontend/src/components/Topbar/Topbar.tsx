@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import useAuth from "../../hooks/useAuth";
 import useLogout from "../../hooks/useLogout";
 import NotificationCenter from "../NotificationCenter/NotificationCenter";
 import GlobalSearch from "../GlobalSearch/GlobalSearch";
 import { buildService } from "../../api/build.service";
 import { componentService } from "../../api/component.service";
+import { profileService } from "../../api/profile.service";
 import type { ComponentType } from "../../types/component.types";
 import styles from "./Topbar.module.css";
 
@@ -95,14 +97,20 @@ export default function Topbar() {
     const navigate = useNavigate();
     const location = useLocation();
     const logout = useLogout();
+    const { t, i18n } = useTranslation();
     const [menuOpen, setMenuOpen] = useState(false);
+    const [langOpen, setLangOpen] = useState(false);
     const [resolved, setResolved] = useState<Record<string, string>>({});
     const menuRef = useRef<HTMLDivElement>(null);
+    const langRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const handler = (e: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
                 setMenuOpen(false);
+            }
+            if (langRef.current && !langRef.current.contains(e.target as Node)) {
+                setLangOpen(false);
             }
         };
         document.addEventListener("mousedown", handler);
@@ -173,10 +181,27 @@ export default function Topbar() {
         navigate("/");
     };
 
+    const LANGUAGES = [
+        { code: "en", label: "English", flagImg: "https://flagcdn.com/16x12/gb.png" },
+        { code: "uk", label: "Українська", flagImg: "https://flagcdn.com/16x12/ua.png" },
+    ];
+
+    const selectLanguage = (code: string) => {
+        setLangOpen(false);
+        if (code === i18n.language) return;
+        i18n.changeLanguage(code);
+        if (auth?.username) {
+            profileService.updateProfile({ username: auth.username, preferredLanguage: code })
+                .catch(() => {});
+        }
+    };
+
+    const currentLang = LANGUAGES.find(l => l.code === i18n.language) ?? LANGUAGES[0];
+
     return (
         <div className={styles.topbar}>
             <button className={styles.wordmark} onClick={() => navigate("/")}>
-                pc<span className={styles.b}>[</span><span className={styles.s}>builder</span><span className={styles.b}>]</span>
+                <span className={styles.b}>[</span><span>pcbuilder</span><span className={styles.s}>/</span><span className={styles.b}>]</span>
             </button>
 
             <span className={styles.path}>
@@ -194,6 +219,32 @@ export default function Topbar() {
 
             <div className={styles.grow} />
             <GlobalSearch />
+
+            <div className={styles.langMenu} ref={langRef}>
+                <button
+                    className={`${styles.btn} ${styles.langBtn}`}
+                    onClick={() => setLangOpen(p => !p)}
+                    aria-expanded={langOpen}
+                >
+                    {currentLang && <img src={currentLang.flagImg} alt={currentLang.code} className={styles.flagImg} />}
+                    <span>{currentLang?.code.toUpperCase()}</span>
+                    <span className={styles.caret}>{langOpen ? "▾" : "▸"}</span>
+                </button>
+                {langOpen && (
+                    <div className={styles.langDropdown}>
+                        {LANGUAGES.map(l => (
+                            <button
+                                key={l.code}
+                                className={`${styles.langOption} ${l.code === i18n.language ? styles.langOptionActive : ""}`}
+                                onClick={() => selectLanguage(l.code)}
+                            >
+                                <img src={l.flagImg} alt={l.code} className={styles.flagImg} />
+                                <span>{l.label}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
 
             {auth?.username ? (
                 <>
@@ -217,14 +268,14 @@ export default function Topbar() {
                                         setMenuOpen(false);
                                     }}
                                 >
-                                    @ Profile
+                                    {t("topbar.profile")}
                                 </button>
                                 <div className={styles.dropdownDivider} />
                                 <button
                                     className={`${styles.dropdownItem} ${styles.dropdownDanger}`}
                                     onClick={signOut}
                                 >
-                                    ↗ Sign out
+                                    {t("topbar.signOut")}
                                 </button>
                             </div>
                         )}
@@ -232,8 +283,8 @@ export default function Topbar() {
                 </>
             ) : (
                 <div className={styles.authButtons}>
-                    <button className={styles.btn} onClick={() => navigate("/login")}>Sign in</button>
-                    <button className={`${styles.btn} ${styles.btnPri}`} onClick={() => navigate("/register")}>Register</button>
+                    <button className={styles.btn} onClick={() => navigate("/login")}>{t("topbar.signIn")}</button>
+                    <button className={`${styles.btn} ${styles.btnPri}`} onClick={() => navigate("/register")}>{t("topbar.register")}</button>
                 </div>
             )}
         </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { profileService } from '../../api/profile.service';
 import type { IProfileResponse } from '../../types/profile.types';
@@ -6,6 +7,7 @@ import useLogout from '../../hooks/useLogout';
 import styles from './ProfilePage.module.css';
 
 export function AccountTab({ profile }: { profile: IProfileResponse }) {
+    const { t } = useTranslation();
     const [confirmText, setConfirmText] = useState('');
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState('');
@@ -22,7 +24,7 @@ export function AccountTab({ profile }: { profile: IProfileResponse }) {
             await logout();
             navigate('/');
         } catch {
-            setErr('Error deleting account. Try again.');
+            setErr(t('profile.accountTab.deleteError'));
             setLoading(false);
         }
     };
@@ -32,44 +34,40 @@ export function AccountTab({ profile }: { profile: IProfileResponse }) {
             <div className={styles['col']}>
                 <div className={styles['card']}>
                     <div className={styles['card-h']}>
-                        <span className={styles['card-ttl']}>Your data</span>
-                        <span className={styles['card-aux']}>SCOPE</span>
+                        <span className={styles['card-ttl']}>{t('profile.accountTab.yourDataTitle')}</span>
+                        <span className={styles['card-aux']}>{t('profile.accountTab.yourDataAux')}</span>
                     </div>
                     <div className={styles['info-body']}>
-                        <p>
-                            Everything you've created on PcBuilder lives under your account: published and draft builds,
-                            comments and reviews you've left, price-alert subscriptions, and your uploaded profile photo.
-                        </p>
+                        <p>{t('profile.accountTab.yourDataBody')}</p>
                         <p className={styles['info-mono']} style={{ marginTop: 10 }}>
-                            SAVED BUILDS · <b>{profile.buildCount}</b>
+                            {t('profile.accountTab.savedBuilds')} · <b>{profile.buildCount}</b>
                         </p>
                     </div>
                 </div>
 
                 <div className={`${styles['card']} ${styles['danger-card']}`}>
                     <div className={styles['card-h']}>
-                        <span className={styles['card-ttl']}>Delete account</span>
-                        <span className={styles['danger-ex']}>IRREVERSIBLE</span>
+                        <span className={styles['card-ttl']}>{t('profile.accountTab.deleteAccountTitle')}</span>
+                        <span className={styles['danger-ex']}>{t('profile.accountTab.irreversible')}</span>
                     </div>
                     <div className={styles['danger-body']}>
                         <p>
-                            Deleting your account purges your profile, all <b>{profile.buildCount}</b> saved builds,
-                            every comment and review you've left, and your active sessions. This cannot be undone.
+                            {t('profile.accountTab.deleteAccountBody')} <b>{profile.buildCount}</b>
                         </p>
                         <ul className={styles['danger-list']}>
-                            <li>The username <code>@{profile.username}</code> is released back to the pool</li>
-                            <li>The refresh-token cookie on this device is cleared</li>
-                            <li>Reviews you've left on other builds are deleted</li>
-                            <li>Price-alert subscriptions are unsubscribed</li>
+                            <li>{t('profile.accountTab.deleteItem1', { username: profile.username })}</li>
+                            <li>{t('profile.accountTab.deleteItem2')}</li>
+                            <li>{t('profile.accountTab.deleteItem3')}</li>
+                            <li>{t('profile.accountTab.deleteItem4')}</li>
                         </ul>
 
                         {err && <div className={styles['error-banner']}>{err}</div>}
 
                         <div className={styles['field']} style={{ margin: 0 }}>
                             <div className={styles['field-lbl']}>
-                                <span>TYPE YOUR USERNAME TO CONFIRM</span>
+                                <span>{t('profile.accountTab.confirmLabel')}</span>
                                 <span className={styles['field-cnt']}>
-                                    EXPECTED · <b style={{ color: 'var(--err)', fontFamily: 'var(--font-mono)' }}>{profile.username}</b>
+                                    {t('profile.accountTab.confirmExpected')} · <b style={{ color: 'var(--err)', fontFamily: 'var(--font-mono)' }}>{profile.username}</b>
                                 </span>
                             </div>
                             <div className={styles['danger-confirm']}>
@@ -81,11 +79,11 @@ export function AccountTab({ profile }: { profile: IProfileResponse }) {
                                     onChange={e => setConfirmText(e.target.value)}
                                 />
                                 <button className={styles['danger-btn']} disabled={!canDelete || loading} onClick={handleDelete}>
-                                    {loading ? '...' : '× DELETE ACCOUNT'}
+                                    {loading ? '...' : t('profile.accountTab.deleteBtn')}
                                 </button>
                             </div>
                             <span className={styles['danger-hint']} style={{ color: canDelete ? 'var(--err)' : 'var(--fg-3)', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.08em' }}>
-                                {canDelete ? 'READY · CLICK TO CONFIRM DELETION' : 'MATCH REQUIRED — CASE-SENSITIVE'}
+                                {canDelete ? t('profile.accountTab.readyToDelete') : t('profile.accountTab.matchRequired')}
                             </span>
                         </div>
                     </div>

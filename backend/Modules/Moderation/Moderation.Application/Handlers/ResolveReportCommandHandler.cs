@@ -65,7 +65,7 @@ namespace Moderation.Application.Handlers
                         request.AdminId,
                         report.ReportedUserId,
                         warnBanType,
-                        request.Reason ?? report.Reason), cancellationToken);
+                        request.ReasonCode ?? WarnReasonCodes.CommunityGuidelines), cancellationToken);
                     if (warnResult.IsFailure)
                         return Result.Failure<bool>(warnResult.Error!);
                     break;

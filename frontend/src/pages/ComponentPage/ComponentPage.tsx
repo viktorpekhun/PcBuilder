@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, Fragment } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faShoppingBag } from '@fortawesome/free-solid-svg-icons';
 import styles from './ComponentPage.module.css';
@@ -7,23 +9,23 @@ import { componentService } from '../../api/component.service';
 import { buildService } from '../../api/build.service';
 import type { ComponentType, IComponentBase, IProductOffer, IPriceHistoryPoint } from '../../types/component.types';
 import type { IBuildCompatibilityReport, IComponentsCompatibility } from '../../types/build.types';
-import { componentSpecFullConfigs } from './componentSpecsFullConfigs';
+import { getComponentSpecFullConfigs } from './componentSpecsFullConfigs';
 import type { FullSpecConfig } from './componentSpecsFullConfigs';
 import PriceAlertButton from '../../components/PriceAlertButton/PriceAlertButton';
 
 // ── constants ────────────────────────────────────────────────
 
-const TYPE_META: Record<string, { gly: string; label: string }> = {
-    Cpu:         { gly: 'CPU', label: 'Processor' },
-    Gpu:         { gly: 'GPU', label: 'Graphics card' },
-    Motherboard: { gly: 'M/B', label: 'Motherboard' },
-    Ram:         { gly: 'RAM', label: 'Memory' },
-    Ssd:         { gly: 'SSD', label: 'SSD storage' },
-    Hdd:         { gly: 'HDD', label: 'Hard drive' },
-    PowerSupply: { gly: 'PSU', label: 'Power supply' },
-    CpuCooler:  { gly: 'CLR', label: 'CPU cooler' },
-    PcCase:      { gly: 'CSE', label: 'Case' },
-    Fan:         { gly: 'FAN', label: 'Case fan' },
+const TYPE_META: Record<string, { gly: string; labelKey: string }> = {
+    Cpu:         { gly: 'CPU', labelKey: 'componentTypes.cpu' },
+    Gpu:         { gly: 'GPU', labelKey: 'componentTypes.gpu' },
+    Motherboard: { gly: 'M/B', labelKey: 'componentTypes.motherboard' },
+    Ram:         { gly: 'RAM', labelKey: 'componentTypes.ram' },
+    Ssd:         { gly: 'SSD', labelKey: 'componentTypes.ssd' },
+    Hdd:         { gly: 'HDD', labelKey: 'componentTypes.hdd' },
+    PowerSupply: { gly: 'PSU', labelKey: 'componentTypes.powerSupply' },
+    CpuCooler:  { gly: 'CLR', labelKey: 'componentTypes.cpuCooler' },
+    PcCase:      { gly: 'CSE', labelKey: 'componentTypes.pcCase' },
+    Fan:         { gly: 'FAN', labelKey: 'componentTypes.fan' },
 };
 
 const MULTI_COMPONENT_TYPES = ['ram', 'ssd', 'hdd', 'fan'];
@@ -249,9 +251,9 @@ function fmtPrice(p: number) {
     return `₴ ${Math.round(p)}`;
 }
 
-function PriceChart({ data, avgPrice, range }: { data: IPriceHistoryPoint[]; avgPrice: number; range: string }) {
+function PriceChart({ data, avgPrice, range, t }: { data: IPriceHistoryPoint[]; avgPrice: number; range: string; t: TFunction }) {
     if (data.length === 0) {
-        return <div className={styles.chartEmpty}>— no history data —</div>;
+        return <div className={styles.chartEmpty}>{t('components.componentPage.noHistoryData')}</div>;
     }
 
     const W = 760, H = 200, PX = 56, PY = 16, PB = 28;
@@ -300,7 +302,7 @@ function PriceChart({ data, avgPrice, range }: { data: IPriceHistoryPoint[]; avg
         <div className={styles.chartOuter}>
             {/* meta subtext */}
             <div className={styles.chartMeta}>
-                <span>RANGE · {range} · {count} POINTS</span>
+                <span>{t('components.componentPage.chartRange', { range, count })}</span>
             </div>
 
             {/* svg chart */}
@@ -355,17 +357,17 @@ function PriceChart({ data, avgPrice, range }: { data: IPriceHistoryPoint[]; avg
             {/* legend row */}
             <div className={styles.chartLegend}>
                 <span className={styles.legendItem}>
-                    <span className={styles.legendLineSolid} /> PRICE
+                    <span className={styles.legendLineSolid} /> {t('components.componentPage.chartLegendPrice')}
                 </span>
                 <span className={styles.legendItem}>
-                    <span className={styles.legendLineDash} /> AVG CURRENT
+                    <span className={styles.legendLineDash} /> {t('components.componentPage.chartLegendAvg')}
                 </span>
                 <span className={styles.legendSep}>·</span>
-                <span className={styles.legendStat}>Δ START · <b className={deltaPct < 0 ? styles.deltaPos : styles.deltaNeg}>{deltaStr}</b></span>
+                <span className={styles.legendStat}>{t('components.componentPage.chartDeltaStart')} · <b className={deltaPct < 0 ? styles.deltaPos : styles.deltaNeg}>{deltaStr}</b></span>
                 <span className={styles.legendSep}>·</span>
-                <span className={styles.legendStat}>LOW <b>{fmtPrice(minP)}</b></span>
+                <span className={styles.legendStat}>{t('components.componentPage.chartLow')} <b>{fmtPrice(minP)}</b></span>
                 <span className={styles.legendSep}>·</span>
-                <span className={styles.legendStat}>HIGH <b>{fmtPrice(maxP)}</b></span>
+                <span className={styles.legendStat}>{t('components.componentPage.chartHigh')} <b>{fmtPrice(maxP)}</b></span>
             </div>
         </div>
     );
@@ -377,6 +379,7 @@ const RANGE_DAYS = { '1M': 30, '3M': 90, '6M': 180, '1Y': 0 } as const;
 // ── main component ───────────────────────────────────────────
 
 function ComponentPage() {
+    const { t, i18n } = useTranslation();
     const { type, id } = useParams<{ type: string; id: string }>();
 
     const [component, setComponent]         = useState<IComponentBase | null>(null);
@@ -393,7 +396,7 @@ function ComponentPage() {
     const [toast, setToast]                 = useState<{ visible: boolean; text: string }>({ visible: false, text: '' });
 
     const typeKey = TYPE_KEY_MAP[type?.toLowerCase() ?? ''] ?? type ?? '';
-    const meta = TYPE_META[typeKey] ?? { gly: '???', label: type ?? '' };
+    const meta = TYPE_META[typeKey] ?? { gly: '???', labelKey: type ?? '' };
 
     // fetch main component data
     useEffect(() => {
@@ -408,9 +411,9 @@ function ComponentPage() {
                     setSelectedOffer(cheapest);
                 }
             })
-            .catch(() => setError(`Failed to load ${type} details`))
+            .catch(() => setError(t('components.componentPage.loadError', { type })))
             .finally(() => setLoading(false));
-    }, [type, id]);
+    }, [type, id, t]);
 
     // fetch price history
     useEffect(() => {
@@ -503,11 +506,11 @@ function ComponentPage() {
         let cls = '';
 
         if (compat.isStrictlyCompatible && compat.overallFitnessScore >= 0.8) {
-            badge = '✓ COMPATIBLE'; cls = styles.compatible ?? '';
+            badge = t('components.componentPage.compatCompatible'); cls = styles.compatible ?? '';
         } else if (compat.isStrictlyCompatible) {
-            badge = '▲ WARNING'; cls = styles.warning ?? '';
+            badge = t('components.componentPage.compatWarning'); cls = styles.warning ?? '';
         } else {
-            badge = '× CONFLICT'; cls = styles.conflict ?? '';
+            badge = t('components.componentPage.compatConflict'); cls = styles.conflict ?? '';
         }
 
         const issues = compat.ruleResults.flatMap(r => r.issues);
@@ -519,8 +522,8 @@ function ComponentPage() {
 
         return (
             <div className={styles.buildStrip}>
-                <span className={styles.buildStripLabel}>Your build</span>
-                <span className={styles.buildStripDetail}>{detail || 'No issues found'}</span>
+                <span className={styles.buildStripLabel}>{t('components.componentPage.compatYourBuild')}</span>
+                <span className={styles.buildStripDetail}>{detail || t('components.componentPage.compatNoIssues')}</span>
                 <span className={`${styles.buildStripBadge} ${cls}`}>{badge}</span>
             </div>
         );
@@ -562,7 +565,7 @@ function ComponentPage() {
     const renderSpecVal = (cell: SpecCell) => {
         if (cell.isBool) {
             return cell.boolVal
-                ? <span className={styles.specValBoolYes}>✓ Yes</span>
+                ? <span className={styles.specValBoolYes}>{t('components.componentPage.specBoolYes')}</span>
                 : <span className={styles.specValBoolNo}>—</span>;
         }
         return (
@@ -576,8 +579,9 @@ function ComponentPage() {
     const renderSpecs = () => {
         if (!component) return null;
         const configKey = TYPE_KEY_MAP[type?.toLowerCase() ?? ''] ?? type ?? '';
-        const specs: FullSpecConfig[] = componentSpecFullConfigs[configKey] ??
-            componentSpecFullConfigs['default'] ?? [];
+        const allSpecConfigs = getComponentSpecFullConfigs(t, i18n.language);
+        const specs: FullSpecConfig[] = allSpecConfigs[configKey] ??
+            allSpecConfigs['default'] ?? [];
 
         // pass 1: count non-null fields to decide layout
         let fieldCount = 0;
@@ -717,9 +721,9 @@ function ComponentPage() {
 
     // ── status / loading ──────────────────────────────────────
 
-    if (loading) return <div className={styles.loading}>Loading…</div>;
+    if (loading) return <div className={styles.loading}>{t('components.componentPage.loading')}</div>;
     if (error)   return <div className={styles.errorState}>{error}</div>;
-    if (!component) return <div className={styles.errorState}>Component not found</div>;
+    if (!component) return <div className={styles.errorState}>{t('components.componentPage.notFound')}</div>;
 
     // ── render ────────────────────────────────────────────────
 
@@ -731,19 +735,19 @@ function ComponentPage() {
                 <div className={styles.headerLeft}>
                     <h1>{component.name}</h1>
                     <div className={styles.subRow}>
-                        {component.offersCount != null && <span>{component.offersCount} offers</span>}
-                        {avgPrice ? <span>avg ₴{Number(avgPrice).toLocaleString()}</span> : null}
+                        {component.offersCount != null && <span>{t('components.componentPage.offersCount', { count: component.offersCount })}</span>}
+                        {avgPrice ? <span>{t('components.componentPage.avgPrice', { price: Number(avgPrice).toLocaleString() })}</span> : null}
                     </div>
                 </div>
                 <div className={styles.headerActions}>
                     {factoryLink && (
                         <a href={factoryLink} target="_blank" rel="noopener noreferrer" className={styles.btnGhost}>
-                            ↗ Manufacturer
+                            {t('components.componentPage.manufacturer')}
                         </a>
                     )}
                     {selectedOffer && (
                         <button className={styles.btnPrimary} onClick={() => handleAddToBuild(selectedOffer)}>
-                            + Add to build
+                            {t('components.componentPage.addToBuild')}
                         </button>
                     )}
                 </div>
@@ -765,32 +769,32 @@ function ComponentPage() {
                     <div>
                         <div className={styles.priceLabel}>
                             <FontAwesomeIcon icon={faShoppingBag} style={{ marginRight: 6, fontSize: 10 }} />
-                            {selectedOffer ? `${selectedOffer.store.name}` : 'Best price'}
+                            {selectedOffer ? `${selectedOffer.store.name}` : t('components.componentPage.bestPrice')}
                         </div>
                         <div className={styles.priceHero}>
                             ₴{selectedOffer
                                 ? Number(selectedOffer.price).toLocaleString()
                                 : (avgPrice ? Number(avgPrice).toLocaleString() : '—')}
-                            <span className={styles.priceHeroSub}>UAH</span>
+                            <span className={styles.priceHeroSub}>{t('components.componentPage.currency')}</span>
                         </div>
                     </div>
 
                     {productOffers.length > 0 && (
                         <div className={styles.priceStats}>
                             <div className={styles.priceStat}>
-                                <span className={styles.priceStatLabel}>Min</span>
+                                <span className={styles.priceStatLabel}>{t('components.componentPage.priceMin')}</span>
                                 <span className={styles.priceStatVal}>₴{Number(minOffer).toLocaleString()}</span>
                             </div>
                             <div className={styles.priceStat}>
-                                <span className={styles.priceStatLabel}>Avg</span>
+                                <span className={styles.priceStatLabel}>{t('components.componentPage.priceAvg')}</span>
                                 <span className={styles.priceStatVal}>₴{Number(avgPrice).toLocaleString()}</span>
                             </div>
                             <div className={styles.priceStat}>
-                                <span className={styles.priceStatLabel}>Max</span>
+                                <span className={styles.priceStatLabel}>{t('components.componentPage.priceMax')}</span>
                                 <span className={styles.priceStatVal}>₴{Number(maxOffer).toLocaleString()}</span>
                             </div>
                             <div className={styles.priceStat}>
-                                <span className={styles.priceStatLabel}>Offers</span>
+                                <span className={styles.priceStatLabel}>{t('components.componentPage.priceOffers')}</span>
                                 <span className={styles.priceStatVal}>{component.offersCount ?? productOffers.length}</span>
                             </div>
                         </div>
@@ -799,6 +803,7 @@ function ComponentPage() {
                     {/* spec chips */}
                     {(() => {
                         const c = component as Record<string, unknown>;
+                        const ck = (k: string) => t(`components.componentPage.chips.${k}`);
                         const chip = (key: string, lbl: string, val: unknown, unit = '') =>
                             val != null && val !== '' && val !== false
                                 ? <span key={key} className={styles.chip}>
@@ -807,73 +812,78 @@ function ComponentPage() {
                                     {unit && <span className={styles.chipUnit}>{unit}</span>}
                                   </span>
                                 : null;
+                        const coolerType = (raw: unknown) => {
+                            if (raw === 'Air') return ck('coolerTypeAir');
+                            if (raw === 'Water') return ck('coolerTypeWater');
+                            return raw;
+                        };
                         const lk = typeKey.toLowerCase();
                         let chips: (React.ReactNode)[] = [];
                         if (lk === 'cpu') chips = [
-                            chip('socket',   'Socket',  c['socket']),
-                            chip('cores',    'Cores',   c['cores'] != null && c['threads'] != null ? `${c['cores']}C/${c['threads']}T` : c['cores']),
-                            chip('freq',     'Boost',   c['maxFrequency'], 'GHz'),
-                            chip('dimm',     'Mem',     c['dimmType']),
-                            chip('tdp',      'TDP',     c['tdp'], 'W'),
+                            chip('socket',   ck('socket'),  c['socket']),
+                            chip('cores',    ck('cores'),   c['cores'] != null && c['threads'] != null ? `${c['cores']}C/${c['threads']}T` : c['cores']),
+                            chip('freq',     ck('boost'),   c['maxFrequency'], 'GHz'),
+                            chip('dimm',     ck('mem'),     c['dimmType']),
+                            chip('tdp',      ck('tdp'),     c['tdp'], 'W'),
                         ];
                         else if (lk === 'gpu') chips = [
-                            chip('mem',      'VRAM',    c['memory'], 'GB'),
-                            chip('memtype',  'Type',    c['memoryType']),
-                            chip('freq',     'Boost',   c['maxFrequency'], 'MHz'),
-                            chip('bus',      'Bus',     c['memoryBus'], 'bit'),
-                            chip('tdp',      'TDP',     c['wattage'], 'W'),
+                            chip('mem',      ck('vram'),    c['memory'], 'GB'),
+                            chip('memtype',  ck('type'),    c['memoryType']),
+                            chip('freq',     ck('boost'),   c['maxFrequency'], 'MHz'),
+                            chip('bus',      ck('bus'),     c['memoryBus'], 'bit'),
+                            chip('tdp',      ck('tdp'),     c['wattage'], 'W'),
                         ];
                         else if (lk === 'ram') chips = [
-                            chip('type',     'Type',    c['type']),
-                            chip('freq',     'Speed',   c['frequency'], 'MHz'),
-                            chip('cap',      'Cap',     c['capacity'] != null && c['moduleQuantity'] != null ? `${c['moduleQuantity']}×${c['capacity']} GB` : c['capacity'] != null ? `${c['capacity']} GB` : null),
-                            chip('xmp',      '',        c['xmp'] ? 'XMP' : null),
-                            chip('expo',     '',        c['expo'] ? 'EXPO' : null),
-                            chip('ecc',      '',        c['ecc'] ? 'ECC' : null),
+                            chip('type',     ck('type'),    c['type']),
+                            chip('freq',     ck('speed'),   c['frequency'], 'MHz'),
+                            chip('cap',      ck('cap'),     c['capacity'] != null && c['moduleQuantity'] != null ? `${c['moduleQuantity']}×${c['capacity']} GB` : c['capacity'] != null ? `${c['capacity']} GB` : null),
+                            chip('xmp',      '',            c['xmp'] ? 'XMP' : null),
+                            chip('expo',     '',            c['expo'] ? 'EXPO' : null),
+                            chip('ecc',      '',            c['ecc'] ? 'ECC' : null),
                         ];
                         else if (lk === 'motherboard') chips = [
-                            chip('socket',   'Socket',  c['socket']),
-                            chip('chipset',  'Chipset', c['chipset']),
-                            chip('ff',       'Form',    c['formFactor']),
-                            chip('dimm',     'RAM',     c['dimmType']),
-                            chip('dimmfreq', 'Max',     c['dimmFrequency'], 'MHz'),
+                            chip('socket',   ck('socket'),  c['socket']),
+                            chip('chipset',  ck('chipset'), c['chipset']),
+                            chip('ff',       ck('form'),    c['formFactor']),
+                            chip('dimm',     ck('mem'),     c['dimmType']),
+                            chip('dimmfreq', ck('max'),     c['dimmFrequency'], 'MHz'),
                         ];
                         else if (lk === 'ssd') chips = [
-                            chip('cap',      'Cap',     c['capacity'], 'GB'),
-                            chip('iface',    'If',      c['interface']),
-                            chip('ff',       'Form',    c['formFactor']),
-                            chip('read',     'Read',    c['maxReadSpeed'], 'MB/s'),
-                            chip('write',    'Write',   c['maxWriteSpeed'], 'MB/s'),
+                            chip('cap',      ck('cap'),     c['capacity'], 'GB'),
+                            chip('iface',    ck('iface'),   c['interface']),
+                            chip('ff',       ck('form'),    c['formFactor']),
+                            chip('read',     ck('read'),    c['maxReadSpeed'], 'MB/s'),
+                            chip('write',    ck('write'),   c['maxWriteSpeed'], 'MB/s'),
                         ];
                         else if (lk === 'hdd') chips = [
-                            chip('cap',      'Cap',     c['capacity'], 'GB'),
-                            chip('iface',    'If',      c['interface']),
-                            chip('rpm',      'RPM',     c['spindleSpeed']),
-                            chip('cache',    'Cache',   c['cache'], 'MB'),
+                            chip('cap',      ck('cap'),     c['capacity'], 'GB'),
+                            chip('iface',    ck('iface'),   c['interface']),
+                            chip('rpm',      ck('rpm'),     c['spindleSpeed']),
+                            chip('cache',    ck('cache'),   c['cache'], 'MB'),
                         ];
                         else if (lk === 'powersupply') chips = [
-                            chip('watt',     'Power',   c['wattage'], 'W'),
-                            chip('ff',       'Form',    c['formFactor']),
-                            chip('eff',      'Eff',     c['efficiencyStandart']),
-                            chip('apcf',     '',        c['hasApcf'] ? 'APFC' : null),
+                            chip('watt',     ck('power'),   c['wattage'], 'W'),
+                            chip('ff',       ck('form'),    c['formFactor']),
+                            chip('eff',      ck('eff'),     c['efficiencyStandart']),
+                            chip('apcf',     '',            c['hasApcf'] ? 'APFC' : null),
                         ];
                         else if (lk === 'cpucooler') chips = [
-                            chip('type',     'Type',    c['type']),
-                            chip('tdp',      'TDP',     c['maxPowerDissipation'], 'W'),
-                            chip('fans',     'Fans',    c['fanCount'] != null ? `${c['fanCount']}×${c['fanSize']}mm` : null),
-                            chip('noise',    'Noise',   c['noiseLevelDb'], 'dB'),
+                            chip('type',     ck('type'),    coolerType(c['type'])),
+                            chip('tdp',      ck('tdp'),     c['maxPowerDissipation'], 'W'),
+                            chip('fans',     ck('fans'),    c['fanCount'] != null ? `${c['fanCount']}×${c['fanSize']}mm` : null),
+                            chip('noise',    ck('noise'),   c['noiseLevelDb'], 'dB'),
                         ];
                         else if (lk === 'pccase') chips = [
-                            chip('std',      'Class',   c['sizeStandard']),
-                            chip('maxgpu',   'GPU',     c['maxGpuLength'], 'mm'),
-                            chip('maxcpu',   'Cooler',  c['maxCpuCoolerHeight'], 'mm'),
-                            chip('filters',  '',        c['hasDustFilters'] ? 'Dust filters' : null),
+                            chip('std',      ck('class'),   c['sizeStandard']),
+                            chip('maxgpu',   ck('gpu'),     c['maxGpuLength'], 'mm'),
+                            chip('maxcpu',   ck('cooler'),  c['maxCpuCoolerHeight'], 'mm'),
+                            chip('filters',  '',            c['hasDustFilters'] ? ck('dustFilters') : null),
                         ];
                         else if (lk === 'fan') chips = [
-                            chip('size',     'Size',    c['sizeLength'] != null ? `${c['sizeLength']}mm` : null),
-                            chip('speed',    'Max',     c['maxSpeed'], 'RPM'),
-                            chip('noise',    'Noise',   c['noiseLevelDb'], 'dB'),
-                            chip('airflow',  'Flow',    c['airflowCfm'], 'CFM'),
+                            chip('size',     ck('size'),    c['sizeLength'] != null ? `${c['sizeLength']}mm` : null),
+                            chip('speed',    ck('max'),     c['maxSpeed'], 'RPM'),
+                            chip('noise',    ck('noise'),   c['noiseLevelDb'], 'dB'),
+                            chip('airflow',  ck('flow'),    c['airflowCfm'], 'CFM'),
                         ];
                         const visible = chips.filter(Boolean);
                         if (!visible.length) return null;
@@ -891,13 +901,13 @@ function ComponentPage() {
                 <div className={styles.section}>
                     <div className={styles.sectionHead}>
                         <div>
-                            <span className={styles.sectionTitle}>Offers</span>
+                            <span className={styles.sectionTitle}>{t('components.componentPage.offersSection')}</span>
                             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', letterSpacing: '0.08em', marginLeft: 10 }}>
-                                {filteredOffers.length} of {productOffers.length} · {new Set(productOffers.map(o => o.store.name)).size} stores
+                                {t('components.componentPage.storesCount', { filtered: filteredOffers.length, total: productOffers.length, stores: new Set(productOffers.map(o => o.store.name)).size })}
                             </span>
                         </div>
                         <div className={styles.sectionControls}>
-                            <span className={styles.ctrlLabel}>Sort</span>
+                            <span className={styles.ctrlLabel}>{t('components.componentPage.sortLabel')}</span>
                             <div className={styles.sortGroup}>
                                 {(['price', 'rating'] as const).map(s => (
                                     <span
@@ -908,7 +918,7 @@ function ComponentPage() {
                                             else { setOfferSort(s); setOfferSortDir('asc'); }
                                         }}
                                     >
-                                        {s === 'price' ? 'Price' : 'Rating'}
+                                        {s === 'price' ? t('components.componentPage.sortPrice') : t('components.componentPage.sortRating')}
                                         {offerSort === s && (
                                             <span className={styles.sortArrow}>{offerSortDir === 'asc' ? '▲' : '▼'}</span>
                                         )}
@@ -922,11 +932,11 @@ function ComponentPage() {
                         {/* pinned header row */}
                         <div className={styles.offersHead}>
                             <span />
-                            <span>Store</span>
-                            <span>Rating</span>
-                            <span className={styles.r}>Price</span>
-                            <span className={styles.r}>Δ avg</span>
-                            <span className={styles.r}>Actions</span>
+                            <span>{t('components.componentPage.offersHeadStore')}</span>
+                            <span>{t('components.componentPage.offersHeadRating')}</span>
+                            <span className={styles.r}>{t('components.componentPage.offersHeadPrice')}</span>
+                            <span className={styles.r}>{t('components.componentPage.offersHeadDeltaAvg')}</span>
+                            <span className={styles.r}>{t('components.componentPage.offersHeadActions')}</span>
                         </div>
 
                         {/* scrollable body */}
@@ -971,7 +981,7 @@ function ComponentPage() {
                                             <div className={styles.storeMeta}>
                                                 <div className={styles.storeName}>{offer.store.name}</div>
                                                 <div className={styles.storeSub}>
-                                                    {total > 0 ? `${total.toLocaleString()} REVIEWS` : ''}
+                                                    {total > 0 ? `${total.toLocaleString()} ${t('components.componentPage.reviewsLabel')}` : ''}
                                                 </div>
                                             </div>
                                         </div>
@@ -999,12 +1009,12 @@ function ComponentPage() {
                                                 rel="noopener noreferrer"
                                                 className={styles.btnBuy}
                                             >
-                                                <span style={{ fontFamily: 'var(--font-mono)' }}>↗</span> Buy
+                                                {t('components.componentPage.buyBtn')}
                                             </a>
                                             <button
                                                 className={styles.btnAdd}
                                                 onClick={() => { setSelectedOffer(offer); handleAddToBuild(offer); }}
-                                            >+ Add</button>
+                                            >{t('components.componentPage.addBtn')}</button>
                                         </div>
                                     </div>
                                 );
@@ -1013,8 +1023,8 @@ function ComponentPage() {
 
                         {/* footer */}
                         <div className={styles.offersFoot}>
-                            <span>SHOWING {filteredOffers.length} OFFERS</span>
-                            <span>SELECT ROW · ADDS TO BUILD</span>
+                            <span>{t('components.componentPage.showingOffers', { count: filteredOffers.length })}</span>
+                            <span>{t('components.componentPage.selectRowHint')}</span>
                         </div>
                     </div>
                 </div>
@@ -1024,7 +1034,7 @@ function ComponentPage() {
             <div className={styles.historyRow}>
                 <div className={styles.historyCard}>
                     <div className={styles.cardHead}>
-                        <span className={styles.cardTitle}>Price history</span>
+                        <span className={styles.cardTitle}>{t('components.componentPage.priceHistory')}</span>
                         <div className={styles.sortGroup}>
                             {(['1M', '3M', '6M', '1Y'] as const).map(r => (
                                 <span
@@ -1035,7 +1045,7 @@ function ComponentPage() {
                             ))}
                         </div>
                     </div>
-                    <PriceChart data={history} avgPrice={Number(avgPrice)} range={historyRange} />
+                    <PriceChart data={history} avgPrice={Number(avgPrice)} range={historyRange} t={t} />
                 </div>
                 <div className={styles.alertCard}>
                     {id && type ? (
@@ -1047,9 +1057,9 @@ function ComponentPage() {
             {/* specs */}
             <div className={styles.section}>
                 <div className={styles.sectionHead}>
-                    <span className={styles.sectionTitle}>Specifications</span>
+                    <span className={styles.sectionTitle}>{t('components.componentPage.specifications')}</span>
                     {specsResult.fieldCount > 0 && (
-                        <span className={styles.sectionMeta}>{specsResult.fieldCount} fields</span>
+                        <span className={styles.sectionMeta}>{t('components.componentPage.specFields', { count: specsResult.fieldCount })}</span>
                     )}
                 </div>
                 <div className={styles.specsGrid}>
@@ -1061,10 +1071,10 @@ function ComponentPage() {
             {similar.length > 0 && (
                 <div className={styles.section}>
                     <div className={styles.similarHead}>
-                        <span className={styles.similarTitle}>Similar parts</span>
-                        <span className={styles.similarMeta}>{similar.length} suggestions · {meta.label.toLowerCase()}</span>
+                        <span className={styles.similarTitle}>{t('components.componentPage.similarParts')}</span>
+                        <span className={styles.similarMeta}>{t('components.componentPage.similarMeta', { count: similar.length, label: t(meta.labelKey).toLowerCase() })}</span>
                         <Link to={`/components/${type}`} className={styles.similarBrowse}>
-                            Browse all {meta.label.toLowerCase()} →
+                            {t('components.componentPage.browseAll', { label: t(meta.labelKey).toLowerCase() })}
                         </Link>
                     </div>
                     <div className={styles.similarGrid}>
@@ -1089,9 +1099,9 @@ function ComponentPage() {
                             if (simPrice && curPrice && curPrice > 0) {
                                 const pct = ((simPrice - curPrice) / curPrice) * 100;
                                 const absPct = Math.abs(pct).toFixed(0);
-                                if (pct < -1) deltaEl = <span className={styles.similarDeltaDown}>▼ {absPct}% vs current</span>;
-                                else if (pct > 1) deltaEl = <span className={styles.similarDeltaUp}>▲ {absPct}% vs current</span>;
-                                else deltaEl = <span className={styles.similarDeltaFlat}>≈ vs current</span>;
+                                if (pct < -1) deltaEl = <span className={styles.similarDeltaDown}>{t('components.componentPage.vsCurrentDown', { pct: absPct })}</span>;
+                                else if (pct > 1) deltaEl = <span className={styles.similarDeltaUp}>{t('components.componentPage.vsCurrentUp', { pct: absPct })}</span>;
+                                else deltaEl = <span className={styles.similarDeltaFlat}>{t('components.componentPage.vsCurrentFlat')}</span>;
                             }
 
                             return (
@@ -1130,8 +1140,8 @@ function ComponentPage() {
             {/* toast */}
             <div className={`${styles.toast} ${toast.visible ? styles.toastVisible : ''}`}>
                 <div className={styles.toastDot} />
-                <span className={styles.toastText}>Added — {toast.text}</span>
-                <Link to="/" className={styles.toastLink}>View build →</Link>
+                <span className={styles.toastText}>{t('components.componentPage.toastAdded', { text: toast.text })}</span>
+                <Link to="/" className={styles.toastLink}>{t('components.componentPage.viewBuild')}</Link>
             </div>
         </div>
     );

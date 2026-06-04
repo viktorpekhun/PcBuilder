@@ -34,6 +34,8 @@ namespace PcBuilds.Application.Dtos
         public List<MultiComponentPreviewDto> Ssds { get; set; } = new();
         public List<MultiComponentPreviewDto> Hdds { get; set; } = new();
         public List<MultiComponentPreviewDto> Fans { get; set; } = new();
+
+        public List<string> Tags { get; set; } = new();
     }
 
     public class ComponentPreviewDto

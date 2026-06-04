@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { buildService } from '../../api/build.service';
 import type { IAutoBuildComponents, IAutoBuildResult, UsageScenario } from '../../types/build.types';
 import styles from './AutoBuilderPanel.module.css';
@@ -25,12 +26,12 @@ const ChevronUp = () => (
 
 // --- Scenario definitions ---
 
-type ScenarioConfig = { value: UsageScenario; label: string; icon: ReactNode };
+type ScenarioConfig = { value: UsageScenario; labelKey: string; icon: ReactNode };
 
 const SCENARIOS: ScenarioConfig[] = [
     {
         value: 'Gaming',
-        label: 'Ігровий',
+        labelKey: 'autoBuilder.scenarios.Gaming',
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
                 <path d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0zm-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1zm2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0zm-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1zm-6.5-3h1v1h1v1h-1v1h-1v-1h-1v-1h1v-1z"/>
@@ -40,7 +41,7 @@ const SCENARIOS: ScenarioConfig[] = [
     },
     {
         value: 'Office',
-        label: 'Офісний',
+        labelKey: 'autoBuilder.scenarios.Office',
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
                 <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h13A1.5 1.5 0 0 1 16 1.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13zM1.5 1a.5.5 0 0 0-.5.5V5h1V1H1.5zM1 14.5a.5.5 0 0 0 .5.5H5v-4H1v3.5zm4 .5h6v-4H5v4zm7 0h.5a.5.5 0 0 0 .5-.5V11h-1v4zm1-5V6h-1v4h1zm0-5V1.5a.5.5 0 0 0-.5-.5H11v4h1zM10 1H6v4h4V1zM5 1H1v4h4V1zm0 5H1v4h4V6zm1 0v4h4V6H6zm5 0v4h4V6h-4z"/>
@@ -49,7 +50,7 @@ const SCENARIOS: ScenarioConfig[] = [
     },
     {
         value: 'ContentCreation',
-        label: 'Контент',
+        labelKey: 'autoBuilder.scenarios.ContentCreation',
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
                 <path d="M0 5a2 2 0 0 1 2-2h7.5a2 2 0 0 1 1.983 1.738l3.11-1.382A1 1 0 0 1 16 4.269v7.462a1 1 0 0 1-1.406.913l-3.111-1.382A2 2 0 0 1 9.5 13H2a2 2 0 0 1-2-2V5z"/>
@@ -58,7 +59,7 @@ const SCENARIOS: ScenarioConfig[] = [
     },
     {
         value: 'Workstation',
-        label: 'Робоча станція',
+        labelKey: 'autoBuilder.scenarios.Workstation',
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
                 <path d="M0 4s0-2 2-2h12s2 0 2 2v6s0 2-2 2h-4c0 .667.083 1.167.25 1.5H11a.5.5 0 0 1 0 1H5a.5.5 0 0 1 0-1h.75c.167-.333.25-.833.25-1.5H2s-2 0-2-2V4zm1.398-.855a.758.758 0 0 0-.254.302A1.46 1.46 0 0 0 1 4.01V10c0 .325.078.502.145.602.07.105.17.188.302.254a1.464 1.464 0 0 0 .538.143L2.01 11H14c.325 0 .502-.078.602-.145a.758.758 0 0 0 .254-.302 1.464 1.464 0 0 0 .143-.538L15 9.99V4c0-.325-.078-.502-.145-.602a.757.757 0 0 0-.302-.254A1.46 1.46 0 0 0 13.99 3H2c-.325 0-.502.078-.602.145z"/>
@@ -67,7 +68,7 @@ const SCENARIOS: ScenarioConfig[] = [
     },
     {
         value: 'Budget',
-        label: 'Бюджетний',
+        labelKey: 'autoBuilder.scenarios.Budget',
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
                 <path d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1H1zm7 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
@@ -79,17 +80,19 @@ const SCENARIOS: ScenarioConfig[] = [
 
 const FORM_FACTORS = ['ATX', 'Micro-ATX', 'Mini-ITX', 'E-ATX'];
 
-const COMPONENT_LABELS: { key: keyof IAutoBuildComponents; label: string }[] = [
-    { key: 'cpu', label: 'Процесор' },
-    { key: 'gpu', label: 'Відеокарта' },
-    { key: 'motherboard', label: 'Материнська Плата' },
-    { key: 'ram', label: "Оперативна Пам'ять" },
-    { key: 'ssd', label: 'SSD Диск' },
-    { key: 'hdd', label: 'HDD Диск' },
-    { key: 'powerSupply', label: 'Блок живлення' },
-    { key: 'cpuCooler', label: 'Кулер Процесора' },
-    { key: 'pcCase', label: 'Корпус ПК' },
-    { key: 'fan', label: 'Вентилятори' },
+type ComponentLabelKey = 'cpu' | 'gpu' | 'motherboard' | 'ram' | 'ssd' | 'hdd' | 'powerSupply' | 'cpuCooler' | 'pcCase' | 'fan';
+
+const COMPONENT_LABEL_KEYS: { key: keyof IAutoBuildComponents; labelKey: ComponentLabelKey }[] = [
+    { key: 'cpu', labelKey: 'cpu' },
+    { key: 'gpu', labelKey: 'gpu' },
+    { key: 'motherboard', labelKey: 'motherboard' },
+    { key: 'ram', labelKey: 'ram' },
+    { key: 'ssd', labelKey: 'ssd' },
+    { key: 'hdd', labelKey: 'hdd' },
+    { key: 'powerSupply', labelKey: 'powerSupply' },
+    { key: 'cpuCooler', labelKey: 'cpuCooler' },
+    { key: 'pcCase', labelKey: 'pcCase' },
+    { key: 'fan', labelKey: 'fan' },
 ];
 
 const quantityKey: Partial<Record<keyof IAutoBuildComponents, keyof IAutoBuildComponents>> = {
@@ -123,16 +126,19 @@ const DEFAULT_FORM: FormState = {
 };
 
 export default function AutoBuilderPanel({ isOpen, hasExistingComponents, onClose, onApply }: AutoBuilderPanelProps) {
+    const { t, i18n } = useTranslation();
     const [form, setForm] = useState<FormState>(DEFAULT_FORM);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [result, setResult] = useState<IAutoBuildResult | null>(null);
     const [extraOpen, setExtraOpen] = useState(false);
 
+    const locale = i18n.language === 'uk' ? 'uk-UA' : 'en-GB';
+
     const handleGenerate = async () => {
         const budget = parseFloat(form.budget);
         if (!form.budget || isNaN(budget) || budget <= 0) {
-            setError('Введіть коректний бюджет.');
+            setError(t('autoBuilder.invalidBudget'));
             return;
         }
         setError(null);
@@ -148,7 +154,7 @@ export default function AutoBuilderPanel({ isOpen, hasExistingComponents, onClos
             setResult(data);
         } catch (err: unknown) {
             const msg = (err as { response?: { data?: { message?: string } } })
-                ?.response?.data?.message ?? 'Не вдалося підібрати компоненти. Спробуйте змінити параметри.';
+                ?.response?.data?.message ?? t('autoBuilder.failedToPick');
             setError(msg);
         } finally {
             setIsLoading(false);
@@ -164,15 +170,15 @@ export default function AutoBuilderPanel({ isOpen, hasExistingComponents, onClos
         if (result) onApply(result.components);
     };
 
-    const scenarioLabel = SCENARIOS.find(s => s.value === form.scenario)?.label ?? '';
+    const scenarioLabel = t(SCENARIOS.find(s => s.value === form.scenario)?.labelKey ?? '');
 
     return (
         <>
             {isOpen && <div className={styles.overlay} onClick={onClose} />}
             <div className={`${styles.panel} ${isOpen ? styles.open : ''}`}>
                 <div className={styles.header}>
-                    <span className={styles.title}>Автопідбір ПК</span>
-                    <button className={styles.closeBtn} onClick={onClose} aria-label="Закрити">
+                    <span className={styles.title}>{t('autoBuilder.title')}</span>
+                    <button className={styles.closeBtn} onClick={onClose} aria-label={t('autoBuilder.close')}>
                         <CloseIcon />
                     </button>
                 </div>
@@ -184,14 +190,14 @@ export default function AutoBuilderPanel({ isOpen, hasExistingComponents, onClos
                             <div className={styles.formSummaryChip}>
                                 <span>{scenarioLabel}</span>
                                 <span className={styles.chipDot}>·</span>
-                                <span>{parseFloat(form.budget).toLocaleString('uk-UA')} грн</span>
-                                {form.isStrictBudget && <><span className={styles.chipDot}>·</span><span>Строгий</span></>}
-                                {form.isFutureProof && <><span className={styles.chipDot}>·</span><span>На майбутнє</span></>}
+                                <span>{parseFloat(form.budget).toLocaleString(locale)} грн</span>
+                                {form.isStrictBudget && <><span className={styles.chipDot}>·</span><span>{t('autoBuilder.strict')}</span></>}
+                                {form.isFutureProof && <><span className={styles.chipDot}>·</span><span>{t('autoBuilder.futureProofChip')}</span></>}
                                 {form.formFactor && <><span className={styles.chipDot}>·</span><span>{form.formFactor}</span></>}
                             </div>
 
                             <div className={styles.resultList}>
-                                {COMPONENT_LABELS.map(({ key, label }) => {
+                                {COMPONENT_LABEL_KEYS.map(({ key, labelKey }) => {
                                     const info = result.components[key];
                                     if (!info || typeof info !== 'object') return null;
                                     const qKey = quantityKey[key];
@@ -200,11 +206,11 @@ export default function AutoBuilderPanel({ isOpen, hasExistingComponents, onClos
                                     return (
                                         <div key={key} className={styles.resultRow}>
                                             <span className={styles.resultType}>
-                                                {label}{qty > 1 ? ` ×${qty}` : ''}
+                                                {t(`autoBuilder.componentLabels.${labelKey}`)}{qty > 1 ? ` ×${qty}` : ''}
                                             </span>
                                             <span className={styles.resultName}>{info.name}</span>
                                             <span className={styles.resultPrice}>
-                                                {price > 0 ? `${price.toLocaleString('uk-UA')} грн` : '—'}
+                                                {price > 0 ? `${price.toLocaleString(locale)} грн` : '—'}
                                             </span>
                                         </div>
                                     );
@@ -212,42 +218,42 @@ export default function AutoBuilderPanel({ isOpen, hasExistingComponents, onClos
                             </div>
 
                             <div className={styles.resultTotal}>
-                                <span>Разом</span>
+                                <span>{t('autoBuilder.resultTotal')}</span>
                                 <span className={styles.totalPrice}>
-                                    {result.totalPrice.toLocaleString('uk-UA')} грн
+                                    {result.totalPrice.toLocaleString(locale)} грн
                                 </span>
                             </div>
 
                             {hasExistingComponents && (
                                 <div className={styles.overwriteWarning}>
-                                    Поточні компоненти будуть замінені
+                                    {t('autoBuilder.overwriteWarning')}
                                 </div>
                             )}
 
                             <div className={styles.resultActions}>
                                 <button className={`${styles.btn} ${styles.btnPri}`} onClick={handleApply}>
-                                    ✓ Застосувати
+                                    {t('autoBuilder.applyBtn')}
                                 </button>
                                 <button className={styles.btn} onClick={handleReset}>
-                                    Спробувати знову
+                                    {t('autoBuilder.tryAgain')}
                                 </button>
                             </div>
                         </>
                     ) : (
                         // --- Input state ---
                         <>
-                            <label className={styles.fieldLabel}>Бюджет (грн)</label>
+                            <label className={styles.fieldLabel}>{t('autoBuilder.budgetLabel')}</label>
                             <input
                                 className={styles.budgetInput}
                                 type="number"
                                 min={0}
-                                placeholder="Наприклад: 30000"
+                                placeholder={t('autoBuilder.budgetPlaceholder')}
                                 value={form.budget}
                                 disabled={isLoading}
                                 onChange={e => setForm(f => ({ ...f, budget: e.target.value }))}
                             />
 
-                            <label className={styles.fieldLabel}>Призначення</label>
+                            <label className={styles.fieldLabel}>{t('autoBuilder.usageLabel')}</label>
                             <div className={styles.scenarioGrid}>
                                 {SCENARIOS.map(s => (
                                     <button
@@ -257,7 +263,7 @@ export default function AutoBuilderPanel({ isOpen, hasExistingComponents, onClos
                                         onClick={() => setForm(f => ({ ...f, scenario: s.value }))}
                                     >
                                         <span className={styles.scenarioIcon}>{s.icon}</span>
-                                        <span className={styles.scenarioLabel}>{s.label}</span>
+                                        <span className={styles.scenarioLabel}>{t(s.labelKey)}</span>
                                     </button>
                                 ))}
                             </div>
@@ -270,9 +276,9 @@ export default function AutoBuilderPanel({ isOpen, hasExistingComponents, onClos
                                         disabled={isLoading}
                                         onChange={e => setForm(f => ({ ...f, isStrictBudget: e.target.checked }))}
                                     />
-                                    Строгий бюджет
+                                    {t('autoBuilder.strictBudget')}
                                 </label>
-                                <span className={styles.toggleHint}>Не перевищувати бюджет</span>
+                                <span className={styles.toggleHint}>{t('autoBuilder.strictBudgetHint')}</span>
                             </div>
 
                             <div className={styles.toggleRow}>
@@ -283,9 +289,9 @@ export default function AutoBuilderPanel({ isOpen, hasExistingComponents, onClos
                                         disabled={isLoading}
                                         onChange={e => setForm(f => ({ ...f, isFutureProof: e.target.checked }))}
                                     />
-                                    З можливітю апгрейду
+                                    {t('autoBuilder.futureProof')}
                                 </label>
-                                <span className={styles.toggleHint}>Оптимізувати для апгрейду</span>
+                                <span className={styles.toggleHint}>{t('autoBuilder.futureProofHint')}</span>
                             </div>
 
                             <button
@@ -293,20 +299,20 @@ export default function AutoBuilderPanel({ isOpen, hasExistingComponents, onClos
                                 onClick={() => setExtraOpen(o => !o)}
                                 disabled={isLoading}
                             >
-                                <span>Додаткові параметри</span>
+                                <span>{t('autoBuilder.extraParams')}</span>
                                 {extraOpen ? <ChevronUp /> : <ChevronDown />}
                             </button>
 
                             {extraOpen && (
                                 <div className={styles.extraSection}>
-                                    <label className={styles.fieldLabel}>Форм-фактор</label>
+                                    <label className={styles.fieldLabel}>{t('autoBuilder.formFactor')}</label>
                                     <div className={styles.chipRow}>
                                         <button
                                             className={`${styles.chip} ${form.formFactor === null ? styles.chipSelected : ''}`}
                                             disabled={isLoading}
                                             onClick={() => setForm(f => ({ ...f, formFactor: null }))}
                                         >
-                                            Будь-який
+                                            {t('autoBuilder.anyFormFactor')}
                                         </button>
                                         {FORM_FACTORS.map(ff => (
                                             <button
@@ -329,7 +335,7 @@ export default function AutoBuilderPanel({ isOpen, hasExistingComponents, onClos
                                 onClick={handleGenerate}
                                 disabled={isLoading}
                             >
-                                {isLoading ? 'Підбираємо компоненти...' : '⚙ Згенерувати збірку'}
+                                {isLoading ? t('autoBuilder.generating') : t('autoBuilder.generate')}
                             </button>
                         </>
                     )}

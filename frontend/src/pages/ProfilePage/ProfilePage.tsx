@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { profileService } from '../../api/profile.service';
 import useAuth from '../../hooks/useAuth';
 import type { IProfileResponse } from '../../types/profile.types';
@@ -11,6 +12,7 @@ import styles from './ProfilePage.module.css';
 type Tab = 'profile' | 'security' | 'account';
 
 const ProfilePage = () => {
+    const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState<Tab>('profile');
     const [profile, setProfile] = useState<IProfileResponse | null>(null);
     const [loading, setLoading] = useState(true);
@@ -41,11 +43,14 @@ const ProfilePage = () => {
 
     if (!profile) return null;
 
-    const title = activeTab === 'profile' ? 'Profile' : activeTab === 'security' ? 'Security' : 'Account';
+    const title =
+        activeTab === 'profile'  ? t('profile.titleProfile')
+      : activeTab === 'security' ? t('profile.titleSecurity')
+      :                            t('profile.titleAccount');
     const eyebrow =
-        activeTab === 'profile'  ? `USER · @${profile.username.toUpperCase()} · SETTINGS`
-      : activeTab === 'security' ? `USER · @${profile.username.toUpperCase()} · AUTHENTICATION`
-      :                            `USER · @${profile.username.toUpperCase()} · DESTRUCTIVE`;
+        activeTab === 'profile'  ? t('profile.eyebrowSettings', { username: profile.username.toUpperCase() })
+      : activeTab === 'security' ? t('profile.eyebrowAuthentication', { username: profile.username.toUpperCase() })
+      :                            t('profile.eyebrowDestructive', { username: profile.username.toUpperCase() });
 
     const methodCount = (profile.hasPassword ? 1 : 0) + (profile.googleLinked ? 1 : 0);
 
@@ -58,37 +63,33 @@ const ProfilePage = () => {
                     <div className={styles['head-meta']}>
                         <span>
                             <span className={styles['head-meta-dot']} style={{ background: 'var(--acc)' }} />
-                            SIGNED IN AS <b>@{profile.username}</b>
+                            {t('profile.signedInAs')} <b>@{profile.username}</b>
                         </span>
                         <span className={styles['head-meta-sep']}>·</span>
-                        <span>MEMBER SINCE <b>{shortDate(profile.createdAt)}</b> ({accountAge(profile.createdAt)})</span>
+                        <span>{t('profile.memberSince')} <b>{shortDate(profile.createdAt)}</b> ({accountAge(profile.createdAt)})</span>
                         <span className={styles['head-meta-sep']}>·</span>
-                        <span><b>{profile.buildCount}</b> BUILDS</span>
+                        <span><b>{profile.buildCount}</b> {t('profile.builds')}</span>
                     </div>
                 </div>
             </div>
 
             <div className={styles['tabs']}>
                 {([
-                    { key: 'profile',  ic: '@', label: 'Profile',  num: `${profile.buildCount}` },
-                    { key: 'security', ic: '⌬', label: 'Security', num: `${methodCount}/2` },
-                    { key: 'account',  ic: '⌥', label: 'Account',  num: undefined },
-                ] as const).map(t => (
+                    { key: 'profile',  ic: '@', label: t('profile.tabs.profile'),  num: `${profile.buildCount}` },
+                    { key: 'security', ic: '⌬', label: t('profile.tabs.security'), num: `${methodCount}/2` },
+                    { key: 'account',  ic: '⌥', label: t('profile.tabs.account'),  num: undefined },
+                ] as const).map(tab => (
                     <button
-                        key={t.key}
-                        className={`${styles['tab']} ${activeTab === t.key ? styles['tab-active'] : ''}`}
-                        onClick={() => setActiveTab(t.key)}
+                        key={tab.key}
+                        className={`${styles['tab']} ${activeTab === tab.key ? styles['tab-active'] : ''}`}
+                        onClick={() => setActiveTab(tab.key)}
                     >
-                        <span className={styles['tab-ic']}>{t.ic}</span>
-                        <span className={styles['tab-lbl']}>{t.label}</span>
-                        {t.num != null && <span className={styles['tab-num']}>{t.num}</span>}
+                        <span className={styles['tab-ic']}>{tab.ic}</span>
+                        <span className={styles['tab-lbl']}>{tab.label}</span>
+                        {tab.num != null && <span className={styles['tab-num']}>{tab.num}</span>}
                     </button>
                 ))}
                 <div className={styles['tab-spacer']} />
-                <div className={styles['tab-foot']}>
-                    <span className={styles['tab-foot-dot']} />
-                    <span>SESSION OK</span>
-                </div>
             </div>
 
             <div className={styles['panel']}>

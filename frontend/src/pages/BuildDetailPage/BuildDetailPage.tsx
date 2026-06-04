@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import styles from './BuildDetailPage.module.css';
 import useAuth from '../../hooks/useAuth';
 import { buildService } from '../../api/build.service';
@@ -21,7 +22,7 @@ import type { IComment } from '../../types/comment.types';
 
 interface PartRow {
     slot: string;
-    label: string;
+    labelKey: string;
     name: string;
     qty: number;
     componentId: string;
@@ -35,24 +36,24 @@ interface PartRow {
 
 const SINGLE_COMPONENTS: {
     key: keyof Pick<IPcBuildRequest, 'cpu' | 'gpu' | 'motherboard' | 'powerSupply' | 'cpuCooler' | 'pcCase'>;
-    slot: string; label: string; urlType: string;
+    slot: string; labelKey: string; urlType: string;
 }[] = [
-    { key: 'cpu', slot: 'CPU', label: 'Процесор', urlType: 'cpu' },
-    { key: 'gpu', slot: 'GPU', label: 'Відеокарта', urlType: 'gpu' },
-    { key: 'motherboard', slot: 'M/B', label: 'Материнська плата', urlType: 'motherboard' },
-    { key: 'cpuCooler', slot: 'CLR', label: 'Процесорний кулер', urlType: 'cpuCooler' },
-    { key: 'powerSupply', slot: 'PSU', label: 'Блок живлення', urlType: 'powerSupply' },
-    { key: 'pcCase', slot: 'CSE', label: 'Корпус', urlType: 'pcCase' },
+    { key: 'cpu', slot: 'CPU', labelKey: 'cpu', urlType: 'cpu' },
+    { key: 'gpu', slot: 'GPU', labelKey: 'gpu', urlType: 'gpu' },
+    { key: 'motherboard', slot: 'M/B', labelKey: 'motherboard', urlType: 'motherboard' },
+    { key: 'cpuCooler', slot: 'CLR', labelKey: 'cpuCooler', urlType: 'cpuCooler' },
+    { key: 'powerSupply', slot: 'PSU', labelKey: 'powerSupply', urlType: 'powerSupply' },
+    { key: 'pcCase', slot: 'CSE', labelKey: 'pcCase', urlType: 'pcCase' },
 ];
 
 const MULTI_COMPONENTS: {
     key: keyof Pick<IPcBuildRequest, 'rams' | 'ssds' | 'hdds' | 'fans'>;
-    slot: string; label: string; urlType: string;
+    slot: string; labelKey: string; urlType: string;
 }[] = [
-    { key: 'rams', slot: 'RAM', label: "Оперативна пам'ять", urlType: 'ram' },
-    { key: 'ssds', slot: 'SSD', label: 'SSD Диск', urlType: 'ssd' },
-    { key: 'hdds', slot: 'HDD', label: 'HDD Диск', urlType: 'hdd' },
-    { key: 'fans', slot: 'FAN', label: 'Вентилятор', urlType: 'fan' },
+    { key: 'rams', slot: 'RAM', labelKey: 'rams', urlType: 'ram' },
+    { key: 'ssds', slot: 'SSD', labelKey: 'ssds', urlType: 'ssd' },
+    { key: 'hdds', slot: 'HDD', labelKey: 'hdds', urlType: 'hdd' },
+    { key: 'fans', slot: 'FAN', labelKey: 'fans', urlType: 'fan' },
 ];
 
 const COMMENTS_PAGE_SIZE = 10;
@@ -106,6 +107,7 @@ function BuildDetailPage() {
     const { id } = useParams<{ id: string }>();
     const { auth } = useAuth();
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     const [build, setBuild] = useState<IPcBuildRequest | null>(null);
     const [loading, setLoading] = useState(true);
@@ -143,13 +145,13 @@ function BuildDetailPage() {
                 setBuild(data);
                 setError(null);
             } catch {
-                setError('Не вдалося завантажити збірку.');
+                setError(t('buildDetail.loadFailed'));
             } finally {
                 setLoading(false);
             }
         };
         fetchBuild();
-    }, [id, auth?.accessToken]);
+    }, [id, auth?.accessToken, t]);
 
     // Run the compatibility checker against the loaded build's components for the stats strip.
     useEffect(() => {
@@ -190,11 +192,11 @@ function BuildDetailPage() {
             if (header) setCommentsMeta(JSON.parse(header));
             setCommentsError(null);
         } catch {
-            setCommentsError('Не вдалося завантажити відгуки.');
+            setCommentsError(t('buildDetail.reviewsSection.loadFailed'));
         } finally {
             setCommentsLoading(false);
         }
-    }, [id]);
+    }, [id, t]);
 
     useEffect(() => {
         fetchComments(1);
@@ -207,7 +209,7 @@ function BuildDetailPage() {
             await buildService.cloneBuild(id);
             navigate('/user/builds');
         } catch {
-            setError('Не вдалося клонувати збірку.');
+            setError(t('buildDetail.cloneFailed'));
         } finally {
             setCloning(false);
         }
@@ -226,7 +228,7 @@ function BuildDetailPage() {
         } catch (err) {
             const resp = (err as { response?: { status?: number; data?: { message?: string; code?: string } } })?.response;
             if (resp?.status === 400 && resp?.data?.code === 'Toxic') return; // surfaced via notifications
-            setFormError(resp?.data?.message || 'Не вдалося надіслати відгук. Спробуйте ще раз.');
+            setFormError(resp?.data?.message || t('buildDetail.submitFailed'));
         } finally {
             setSubmitting(false);
         }
@@ -237,7 +239,7 @@ function BuildDetailPage() {
             await commentService.deleteComment(commentId);
             await fetchComments(commentsMeta.pageNumber);
         } catch {
-            setCommentsError('Не вдалося видалити відгук.');
+            setCommentsError(t('buildDetail.reviewsSection.deleteFailed'));
         }
     };
 
@@ -256,12 +258,12 @@ function BuildDetailPage() {
     const formatWhen = (dateStr: string) => {
         const diffMs = Date.now() - new Date(dateStr).getTime();
         const mins = Math.floor(diffMs / 60000);
-        if (mins < 1) return 'щойно';
-        if (mins < 60) return `${mins} хв тому`;
+        if (mins < 1) return t('notifications.row.justNow');
+        if (mins < 60) return t('notifications.row.minutesAgo', { count: mins });
         const hours = Math.floor(mins / 60);
-        if (hours < 24) return `${hours} год тому`;
+        if (hours < 24) return t('notifications.row.hoursAgo', { count: hours });
         const days = Math.floor(hours / 24);
-        if (days < 30) return `${days} д тому`;
+        if (days < 30) return t('notifications.row.daysAgo', { count: days });
         return new Date(dateStr).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' });
     };
 
@@ -272,9 +274,9 @@ function BuildDetailPage() {
         const days = Math.floor(mins / 1440);
         const hours = Math.floor((mins % 1440) / 60);
         const minutes = mins % 60;
-        if (days > 0) return `${days} д ${hours} год`;
-        if (hours > 0) return `${hours} год ${minutes} хв`;
-        return `${minutes} хв`;
+        if (days > 0) return `${days}d ${hours}h`;
+        if (hours > 0) return `${hours}h ${minutes}m`;
+        return `${minutes}m`;
     };
 
     // Flatten the build into slot-tagged part rows in canonical assembly order.
@@ -285,11 +287,11 @@ function BuildDetailPage() {
             try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return undefined; }
         };
         const rows: PartRow[] = [];
-        for (const { key, slot, label, urlType } of SINGLE_COMPONENTS) {
+        for (const { key, slot, labelKey, urlType } of SINGLE_COMPONENTS) {
             const c = build[key] as IComponentPreview | undefined;
             if (!c) continue;
             rows.push({
-                slot, label, urlType, name: c.name, qty: 1, componentId: c.id,
+                slot, labelKey, urlType, name: c.name, qty: 1, componentId: c.id,
                 ...(c.storeName ? { storeName: c.storeName } : {}),
                 ...(domainOf(c.productOfferUrl) ? { domain: domainOf(c.productOfferUrl)! } : {}),
                 ...(c.imageUrl ? { imageUrl: c.imageUrl } : {}),
@@ -297,10 +299,10 @@ function BuildDetailPage() {
                 ...(c.productOfferUrl ? { offerUrl: c.productOfferUrl } : {}),
             });
         }
-        for (const { key, slot, label, urlType } of MULTI_COMPONENTS) {
+        for (const { key, slot, labelKey, urlType } of MULTI_COMPONENTS) {
             for (const c of build[key] as IMultiComponentPreview[]) {
                 rows.push({
-                    slot, label, urlType, name: c.name, qty: c.quantity, componentId: c.id,
+                    slot, labelKey, urlType, name: c.name, qty: c.quantity, componentId: c.id,
                     ...(c.storeName ? { storeName: c.storeName } : {}),
                     ...(domainOf(c.productOfferUrl) ? { domain: domainOf(c.productOfferUrl)! } : {}),
                     ...(c.imageUrl ? { imageUrl: c.imageUrl } : {}),
@@ -318,8 +320,8 @@ function BuildDetailPage() {
     const psuLoad = useMemo(() => {
         if (!build?.psuWattage || build.psuWattage <= 0) return null;
         const pct = Math.round((build.estimatedPower / build.psuWattage) * 100);
-        const label = pct > 100 ? 'ПЕРЕВАНТАЖЕННЯ' : pct < 40 ? 'НИЗЬКЕ' : 'OK';
-        return { pct, label, over: pct > 100 };
+        const labelKey = pct > 100 ? 'psuOver' : pct < 40 ? 'psuLow' : 'psuOk';
+        return { pct, labelKey, over: pct > 100 };
     }, [build]);
 
     // Compatibility summary derived from the rule report (only failing rules are returned).
@@ -331,8 +333,8 @@ function BuildDetailPage() {
         return { pass: compat.isStrictlyCompatible, critical, warnings, issues: issues.length };
     }, [compat]);
 
-    if (loading) return <div className={styles['state']}>Завантаження…</div>;
-    if (error || !build) return <div className={`${styles['state']} ${styles['state-error']}`}>{error || 'Збірку не знайдено.'}</div>;
+    if (loading) return <div className={styles['state']}>{t('buildDetail.loading')}</div>;
+    if (error || !build) return <div className={`${styles['state']} ${styles['state-error']}`}>{error || t('buildDetail.loadFailed')}</div>;
 
     return (
         <div className={styles['shell']}>
@@ -355,7 +357,7 @@ function BuildDetailPage() {
                         {build.publishedAt && (
                             <>
                                 <span className={styles['sep']}>·</span>
-                                <span>ОПУБЛІКОВАНО {formatDate(build.publishedAt)}</span>
+                                <span>{t('buildDetail.publishedOn')} {formatDate(build.publishedAt)}</span>
                             </>
                         )}
                         {(build.averageRating ?? 0) > 0 && (
@@ -377,7 +379,7 @@ function BuildDetailPage() {
                                 className={`${styles['btn']} ${styles['btn-ghost']}`}
                                 onClick={() => setReportBuildOpen(true)}
                             >
-                                ⚑ Скарга
+                                {t('buildDetail.reportBtn')}
                             </button>
                         )}
                         {isOwner ? (
@@ -385,7 +387,7 @@ function BuildDetailPage() {
                                 className={`${styles['btn']} ${styles['btn-sec']}`}
                                 onClick={() => navigate('/user/builds')}
                             >
-                                ✎ Редагувати
+                                {t('buildDetail.editBtn')}
                             </button>
                         ) : isLoggedIn ? (
                             <button
@@ -393,7 +395,7 @@ function BuildDetailPage() {
                                 onClick={handleClone}
                                 disabled={cloning}
                             >
-                                {cloning ? 'Клонування…' : '⎘ Клонувати збірку'}
+                                {cloning ? t('buildDetail.cloning') : t('buildDetail.cloneBuild')}
                             </button>
                         ) : null}
                     </div>
@@ -404,7 +406,7 @@ function BuildDetailPage() {
             <div className={styles['overview']}>
                 {/* cover */}
                 <div className={styles['cover']}>
-                    <BuildCover title={build.name} />
+                    <BuildCover title={build.name} coverUrl={build.photoUrl} />
                 </div>
 
                 <div className={styles['overview-body']}>
@@ -415,44 +417,53 @@ function BuildDetailPage() {
                         </div>
                     )}
 
+                    {/* spec tags */}
+                    {build.tags.length > 0 && (
+                        <div className={styles['tags']}>
+                            {build.tags.map(tag => (
+                                <span key={tag} className={styles['tag']}>{tag}</span>
+                            ))}
+                        </div>
+                    )}
+
                     {/* stats strip — compact label : value rows */}
                     <div className={styles['stats']}>
                         <div className={styles['stat']}>
-                            <span className={styles['lbl']}>ВСЬОГО · ₴</span>
+                            <span className={styles['lbl']}>{t('buildDetail.stats.total')}</span>
                             <span className={styles['val']}>{fmt(build.price)}</span>
                         </div>
                         <div className={styles['stat']}>
-                            <span className={styles['lbl']}>ПОТУЖНІСТЬ</span>
+                            <span className={styles['lbl']}>{t('buildDetail.stats.power')}</span>
                             <span className={styles['val']}>
                                 {build.estimatedPower}
                                 {build.psuWattage ? (
                                     <span className={styles['val-of']}> / {build.psuWattage} W</span>
                                 ) : <span className={styles['val-of']}> W</span>}
-                                {psuLoad && <span className={styles['val-note']}> · {psuLoad.pct}% {psuLoad.label}</span>}
+                                {psuLoad && <span className={styles['val-note']}> · {psuLoad.pct}% {t(`buildDetail.stats.${psuLoad.labelKey}`)}</span>}
                             </span>
                         </div>
                         <div className={styles['stat']}>
-                            <span className={styles['lbl']}>СУМІСНІСТЬ</span>
+                            <span className={styles['lbl']}>{t('buildDetail.stats.compatibility')}</span>
                             <span className={styles['val']}>
                                 {compatInfo ? (
                                     <span className={compatInfo.pass ? styles['ok'] : styles['err']}>
-                                        {compatInfo.pass ? '✓ PASS' : '✗ FAIL'}
+                                        {compatInfo.pass ? t('buildDetail.stats.compatPass') : t('buildDetail.stats.compatFail')}
                                     </span>
                                 ) : '…'}
                                 {compatInfo && (
                                     <span className={styles['val-note']}>
                                         {compatInfo.pass
-                                            ? (compatInfo.warnings > 0 ? ` · ${compatInfo.warnings} ПОПЕРЕДЖ.` : '')
-                                            : ` · ${compatInfo.critical} КРИТИЧНИХ`}
+                                            ? (compatInfo.warnings > 0 ? ` · ${t('buildDetail.stats.warnings', { count: compatInfo.warnings })}` : '')
+                                            : ` · ${t('buildDetail.stats.critical', { count: compatInfo.critical })}`}
                                     </span>
                                 )}
                             </span>
                         </div>
                         <div className={styles['stat']}>
-                            <span className={styles['lbl']}>КОМПОНЕНТІВ</span>
+                            <span className={styles['lbl']}>{t('buildDetail.stats.components')}</span>
                             <span className={styles['val']}>
                                 {parts.length}
-                                <span className={styles['val-note']}> · {slotsUsed} СЛОТІВ</span>
+                                <span className={styles['val-note']}> · {t('buildDetail.stats.slots', { count: slotsUsed })}</span>
                             </span>
                         </div>
                     </div>
@@ -462,15 +473,15 @@ function BuildDetailPage() {
             {/* ── parts table ─────────────────────────────── */}
             <div className={styles['parts']}>
                 <div className={styles['ph']}>
-                    <span className={styles['eyebrow']}>КОМПОНЕНТИ · {parts.length}</span>
+                    <span className={styles['eyebrow']}>{t('buildDetail.components')} · {parts.length}</span>
                 </div>
                 <div className={styles['table-head']}>
-                    <span>СЛОТ</span>
+                    <span>{t('buildDetail.table.slot')}</span>
                     <span />
-                    <span>КОМПОНЕНТ</span>
-                    <span>МАГАЗИН</span>
-                    <span className={styles['r']}>СУМА · ₴</span>
-                    <span className={styles['r']}>ПОСИЛАННЯ</span>
+                    <span>{t('buildDetail.table.component')}</span>
+                    <span>{t('buildDetail.table.store')}</span>
+                    <span className={styles['r']}>{t('buildDetail.table.subtotal')}</span>
+                    <span className={styles['r']}>{t('buildDetail.table.link')}</span>
                 </div>
                 {parts.map((p, i) => (
                     <div key={`${p.slot}-${p.componentId}-${i}`} className={styles['row']}>
@@ -484,11 +495,12 @@ function BuildDetailPage() {
                             </Link>
                             {p.qty > 1 && <span className={styles['qty']}>× {p.qty}</span>}
                             <div className={styles['part-sub']}>
-                                {p.label.toUpperCase()}{p.qty > 1 ? ` · ${p.qty} ОД.` : ''}
+                                {t(`buildDetail.slotLabels.${p.labelKey}`).toUpperCase()}
+                                {p.qty > 1 ? ` · ${t('buildDetail.table.units', { count: p.qty })}` : ''}
                             </div>
                         </div>
                         <div className={styles['store']}>
-                            <div>{p.storeName || 'Середня ціна'}</div>
+                            <div>{p.storeName || t('buildDetail.table.avgPrice')}</div>
                             {p.domain && <div className={styles['dom']}>{p.domain}</div>}
                         </div>
                         <div className={styles['part-price']}>
@@ -496,7 +508,7 @@ function BuildDetailPage() {
                         </div>
                         <div className={styles['buy-col']}>
                             {p.offerUrl ? (
-                                <a className={styles['buy']} href={p.offerUrl} target="_blank" rel="noopener noreferrer">↗ КУПИТИ</a>
+                                <a className={styles['buy']} href={p.offerUrl} target="_blank" rel="noopener noreferrer">{t('buildDetail.table.buy')}</a>
                             ) : (
                                 <span className={styles['no-offer']}>—</span>
                             )}
@@ -504,7 +516,7 @@ function BuildDetailPage() {
                     </div>
                 ))}
                 <div className={styles['total']}>
-                    <span className={styles['total-lbl']}>ОСТАТОЧНА СУМА</span>
+                    <span className={styles['total-lbl']}>{t('buildDetail.table.finalPrice')}</span>
                     <span className={styles['total-v']}><span className={styles['ccy']}>₴</span>{fmt(build.price)}</span>
                 </div>
             </div>
@@ -512,20 +524,20 @@ function BuildDetailPage() {
             {/* ── comments ────────────────────────────────── */}
             <div className={styles['comments']}>
                 <div className={styles['ch']}>
-                    <span className={styles['eyebrow']}>ВІДГУКИ · {commentsMeta.totalCount}</span>
+                    <span className={styles['eyebrow']}>{t('buildDetail.reviewsSection.heading', { count: commentsMeta.totalCount })}</span>
                 </div>
 
                 {commentsError && (
                     <div className={styles['list-error']} role="alert">
                         <span>{commentsError}</span>
-                        <button className={styles['list-error-x']} onClick={() => setCommentsError(null)} aria-label="Закрити">×</button>
+                        <button className={styles['list-error-x']} onClick={() => setCommentsError(null)} aria-label="Close">{t('buildDetail.reviewsSection.closeError')}</button>
                     </div>
                 )}
 
                 {commentsLoading && comments.length === 0 ? (
-                    <div className={styles['comments-state']}>Завантаження відгуків…</div>
+                    <div className={styles['comments-state']}>{t('buildDetail.reviewsSection.loading')}</div>
                 ) : comments.length === 0 ? (
-                    <div className={styles['comments-state']}>Поки немає відгуків.</div>
+                    <div className={styles['comments-state']}>{t('buildDetail.reviewsSection.empty')}</div>
                 ) : (
                     <>
                         {comments.map(c => (
@@ -546,9 +558,9 @@ function BuildDetailPage() {
                                         </span>
                                         <span className={styles['grow']} />
                                         {auth?.userId === c.userId ? (
-                                            <span className={styles['c-act']} onClick={() => handleDeleteComment(c.id)}>⌫ Видалити</span>
+                                            <span className={styles['c-act']} onClick={() => handleDeleteComment(c.id)}>{t('buildDetail.reviewsSection.deleteComment')}</span>
                                         ) : isLoggedIn ? (
-                                            <span className={styles['c-act']} onClick={() => setReportComment(c.id)}>⚑ Скарга</span>
+                                            <span className={styles['c-act']} onClick={() => setReportComment(c.id)}>{t('buildDetail.reviewsSection.reportComment')}</span>
                                         ) : null}
                                     </div>
                                     <p className={styles['c-text']}>{c.text}</p>
@@ -571,30 +583,30 @@ function BuildDetailPage() {
                 {/* compose / sign-in prompt */}
                 {!isLoggedIn ? (
                     <div className={styles['signin-prompt']}>
-                        <div className={styles['eyebrow']}>УВІЙДІТЬ, ЩОБ ЗАЛИШИТИ ВІДГУК</div>
+                        <div className={styles['eyebrow']}>{t('buildDetail.signInPrompt.eyebrow')}</div>
                         <div className={styles['signin-links']}>
-                            <Link to="/login" className={styles['lnk']}>↗ Увійти</Link>
+                            <Link to="/login" className={styles['lnk']}>{t('buildDetail.signInPrompt.signIn')}</Link>
                             <span className={styles['sep']}>·</span>
-                            <Link to="/register" className={styles['lnk']}>＋ Створити акаунт</Link>
+                            <Link to="/register" className={styles['lnk']}>{t('buildDetail.signInPrompt.register')}</Link>
                         </div>
                     </div>
                 ) : commentBanUntil ? (
                     <div className={styles['ban']} role="status">
-                        🔒 Коментування заблоковано до <strong>{new Date(commentBanUntil).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</strong>
+                        {t('buildDetail.ban.message')} <strong>{new Date(commentBanUntil).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</strong>
                         {formatRemaining(commentBanUntil) && <> · {formatRemaining(commentBanUntil)}</>}
                     </div>
                 ) : (
                     <div className={styles['compose']}>
                         <div className={`${styles['field']} ${formError ? styles['field-error'] : ''}`}>
                             <textarea
-                                placeholder="Поділіться своїм відгуком про цю збірку."
+                                placeholder={t('buildDetail.reviewsSection.placeholder')}
                                 value={text}
-                                maxLength={2000}
+                                maxLength={500}
                                 onChange={e => { setText(e.target.value); if (formError) setFormError(null); }}
                                 onKeyDown={handleCompose}
                             />
                             <div className={styles['ratebar']}>
-                                <span className={styles['rate-lbl']}>ОЦІНКА</span>
+                                <span className={styles['rate-lbl']}>{t('buildDetail.reviewsSection.ratingLabel')}</span>
                                 {[1, 2, 3, 4, 5].map(n => (
                                     <span
                                         key={n}
@@ -605,13 +617,13 @@ function BuildDetailPage() {
                                     >★</span>
                                 ))}
                                 <span className={styles['grow']} />
-                                <span className={styles['hint']}>{text.length}/2000</span>
+                                <span className={styles['hint']}>{text.length}/500</span>
                                 <button
                                     className={`${styles['btn']} ${styles['btn-pri']}`}
                                     disabled={!text.trim() || rating === 0 || submitting}
                                     onClick={handleSubmitComment}
                                 >
-                                    {submitting ? 'НАДСИЛАННЯ…' : 'НАДІСЛАТИ'}
+                                    {submitting ? t('buildDetail.reviewsSection.sending') : t('buildDetail.reviewsSection.send')}
                                 </button>
                             </div>
                         </div>

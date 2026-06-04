@@ -37,7 +37,7 @@ namespace Moderation.Application.Handlers
                 return Result.Failure<bool>(new Error("Forbidden", "You cannot delete your own account through admin actions.", 403));
 
             // 1. Send account deletion email before any DB changes
-            await _emailService.SendAccountDeletionEmailAsync(user.Email, cancellationToken);
+            await _emailService.SendAccountDeletionEmailAsync(user.Email, user.PreferredLanguage, cancellationToken);
 
             // 2. Delete reviews authored by this user on OTHER users' builds
             //    and recalculate average ratings for affected builds

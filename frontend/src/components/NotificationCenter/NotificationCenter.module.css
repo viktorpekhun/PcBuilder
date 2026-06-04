@@ -309,6 +309,7 @@
 .typeTagDeleted { color: var(--err); border-color: #4a1d1f; background: var(--err-soft); }
 .typeTagPrice   { color: var(--info); border-color: #1d3550; background: var(--info-soft); }
 .typeTagWarn    { color: var(--warn); border-color: #3A2A12; background: var(--warn-soft); }
+.typeTagBan     { color: var(--err);  border-color: #4a1d1f; background: var(--err-soft); }
 
 .stars { font-family: var(--font-mono); font-size: 10px; color: var(--acc); letter-spacing: 0.04em; }
 .starsDim { color: var(--bd-2); }
