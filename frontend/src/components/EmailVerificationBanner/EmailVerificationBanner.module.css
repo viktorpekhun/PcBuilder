@@ -6,10 +6,11 @@
     align-items: flex-start;
     gap: 12px;
     width: 300px;
-    background-color: #ffffff;
-    border-radius: 12px;
+    background: var(--bg-1);
+    border: 1px solid var(--bd-2);
+    border-radius: var(--r-2);
     padding: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     z-index: 1000;
     box-sizing: border-box;
@@ -19,12 +20,12 @@
     flex-shrink: 0;
     width: 36px;
     height: 36px;
-    background-color: #fff3e0;
-    border-radius: 8px;
+    background: var(--warn-soft);
+    border-radius: var(--r-2);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #A68059;
+    color: var(--warn);
 }
 
 .body {
@@ -36,39 +37,43 @@
 }
 
 .title {
-    font-size: 14px;
-    font-weight: 600;
-    color: #262B31;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semi);
+    color: var(--fg-0);
     margin: 0;
+    font-family: var(--font-sans);
 }
 
 .text {
-    font-size: 13px;
-    color: #666;
+    font-size: var(--fs-xs);
+    color: var(--fg-1);
     margin: 0;
-    line-height: 1.4;
+    line-height: var(--lh-normal);
+    font-family: var(--font-sans);
 }
 
 .action-btn {
     margin-top: 10px;
     align-self: flex-start;
-    background-color: #A68059;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 500;
+    background: var(--acc);
+    color: var(--acc-ink);
+    border: 1px solid var(--acc);
+    border-radius: var(--r-2);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    font-family: var(--font-sans);
     padding: 6px 14px;
     cursor: pointer;
-    transition: filter 0.15s;
+    transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out);
 }
 
 .action-btn:hover:not(:disabled) {
-    filter: brightness(0.9);
+    background: var(--acc-dim);
+    border-color: var(--acc-dim);
 }
 
 .action-btn:disabled {
-    opacity: 0.6;
+    opacity: 0.45;
     cursor: not-allowed;
 }
 
@@ -77,19 +82,19 @@
     background: none;
     border: none;
     cursor: pointer;
-    color: #aaa;
+    color: var(--fg-2);
     padding: 2px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
-    transition: color 0.15s, background-color 0.15s;
+    border-radius: var(--r-2);
+    transition: color var(--dur-1) var(--ease-out), background var(--dur-1) var(--ease-out);
     margin-top: 1px;
 }
 
 .close-btn:hover {
-    color: #555;
-    background-color: #f0f0f0;
+    color: var(--fg-0);
+    background: var(--bg-3);
 }
 
 @keyframes slideUp {

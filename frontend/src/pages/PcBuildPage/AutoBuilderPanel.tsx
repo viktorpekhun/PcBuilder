@@ -190,7 +190,7 @@ export default function AutoBuilderPanel({ isOpen, hasExistingComponents, onClos
                             <div className={styles.formSummaryChip}>
                                 <span>{scenarioLabel}</span>
                                 <span className={styles.chipDot}>·</span>
-                                <span>{parseFloat(form.budget).toLocaleString(locale)} грн</span>
+                                <span>{parseFloat(form.budget).toLocaleString(locale)} {t('autoBuilder.currency')}</span>
                                 {form.isStrictBudget && <><span className={styles.chipDot}>·</span><span>{t('autoBuilder.strict')}</span></>}
                                 {form.isFutureProof && <><span className={styles.chipDot}>·</span><span>{t('autoBuilder.futureProofChip')}</span></>}
                                 {form.formFactor && <><span className={styles.chipDot}>·</span><span>{form.formFactor}</span></>}
@@ -210,7 +210,7 @@ export default function AutoBuilderPanel({ isOpen, hasExistingComponents, onClos
                                             </span>
                                             <span className={styles.resultName}>{info.name}</span>
                                             <span className={styles.resultPrice}>
-                                                {price > 0 ? `${price.toLocaleString(locale)} грн` : '—'}
+                                                {price > 0 ? `${price.toLocaleString(locale)} ${t('autoBuilder.currency')}` : '—'}
                                             </span>
                                         </div>
                                     );
@@ -220,7 +220,7 @@ export default function AutoBuilderPanel({ isOpen, hasExistingComponents, onClos
                             <div className={styles.resultTotal}>
                                 <span>{t('autoBuilder.resultTotal')}</span>
                                 <span className={styles.totalPrice}>
-                                    {result.totalPrice.toLocaleString(locale)} грн
+                                    {result.totalPrice.toLocaleString(locale)} {t('autoBuilder.currency')}
                                 </span>
                             </div>
 

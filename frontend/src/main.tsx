@@ -9,6 +9,12 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
+// Apply saved theme before first paint to prevent flash
+try {
+    const saved = localStorage.getItem("pcbuilder-theme");
+    if (saved === "light") document.documentElement.setAttribute("data-theme", "light");
+} catch {}
+
 createRoot(document.getElementById('root')!).render(
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
         <BrowserRouter>

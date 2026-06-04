@@ -72,7 +72,7 @@
     align-items: center;
     padding: 10px 14px;
     background: var(--info-soft);
-    border: 1px solid #15283C;
+    border: 1px solid var(--info-soft);
     margin-bottom: 16px;
     gap: 12px;
 }

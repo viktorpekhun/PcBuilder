@@ -69,6 +69,11 @@ const ProfilePage = () => {
                         <span>{t('profile.memberSince')} <b>{shortDate(profile.createdAt)}</b> ({accountAge(profile.createdAt)})</span>
                         <span className={styles['head-meta-sep']}>·</span>
                         <span><b>{profile.buildCount}</b> {t('profile.builds')}</span>
+                        <span className={styles['head-meta-sep']}>·</span>
+                        <span className={styles['head-meta-live']}>
+                            <span className={styles['head-meta-live-dot']} />
+                            {t('profile.sessionOk')}
+                        </span>
                     </div>
                 </div>
             </div>

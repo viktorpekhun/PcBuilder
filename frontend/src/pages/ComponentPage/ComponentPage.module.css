@@ -339,7 +339,7 @@
 .offerRow:last-child { border-bottom: none; }
 .offerRow:hover { background: var(--bg-2); }
 .offerRowSel { background: var(--acc-soft); }
-.offerRowSel:hover { background: #1F280B; }
+.offerRowSel:hover { background: var(--acc-soft); }
 .offerRowSel .pickDot { background: var(--acc); border-color: var(--acc); }
 
 .offersFoot {
@@ -518,12 +518,12 @@
 .legendLineSolid {
     display: inline-block;
     width: 20px; height: 2px;
-    background: #AECF55;
+    background: var(--acc);
 }
 .legendLineDash {
     display: inline-block;
     width: 20px; height: 0;
-    border-top: 2px dashed #44444E;
+    border-top: 2px dashed var(--bd-2);
 }
 .legendSep { color: var(--fg-3); }
 .legendStat { color: var(--fg-2); }

@@ -1,4 +1,19 @@
+import { useEffect, useState } from 'react';
 import styles from './BuildCover.module.css';
+
+function isLight() {
+    return document.documentElement.getAttribute('data-theme') === 'light';
+}
+
+function useIsLight() {
+    const [light, setLight] = useState(isLight);
+    useEffect(() => {
+        const obs = new MutationObserver(() => setLight(isLight()));
+        obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+        return () => obs.disconnect();
+    }, []);
+    return light;
+}
 
 interface BuildCoverProps {
     /** Build title used as the deterministic seed for the generated graphic. */
@@ -22,6 +37,7 @@ function hash(seed: string): number {
  * so every build gets a distinct but on-brand graphic.
  */
 export function BuildCover({ title, coverUrl, tag, stamp = true, className = '' }: BuildCoverProps) {
+    const light = useIsLight();
     const seed = title || 'untitled';
 
     const h = hash(seed);
@@ -41,7 +57,14 @@ export function BuildCover({ title, coverUrl, tag, stamp = true, className = '' 
     ).toUpperCase() || 'PC';
     const slugStamp = seed.slice(0, 18).toUpperCase();
 
-    const bgImage = [
+    const bgImage = light ? [
+        'linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px)',
+        'linear-gradient(to bottom, rgba(0,0,0,0.04) 1px, transparent 1px)',
+        `linear-gradient(${ang + 90}deg, transparent 48%, rgba(0,0,0,0.05) 50%, transparent 52%)`,
+        `radial-gradient(circle at ${ax}% ${ay}%, hsl(${hue} 40% 72% / 0.7) 0, transparent 42%)`,
+        `radial-gradient(ellipse at ${bx}% ${by}%, hsl(${hue2} 34% 78% / 0.6) 0, transparent 50%)`,
+        `linear-gradient(135deg, hsl(${(hue + 120) % 360} 20% 88%), hsl(${hue} 16% 92%))`,
+    ].join(', ') : [
         'linear-gradient(to right, rgba(255,255,255,0.025) 1px, transparent 1px)',
         'linear-gradient(to bottom, rgba(255,255,255,0.025) 1px, transparent 1px)',
         `linear-gradient(${ang + 90}deg, transparent 48%, rgba(255,255,255,0.04) 50%, transparent 52%)`,

@@ -69,7 +69,7 @@
   border: 1px solid var(--bd-2);
   border-radius: var(--r-0);
   z-index: 60;
-  box-shadow: 0 2px 0 -1px #000;
+  box-shadow: 0 2px 0 -1px var(--bg-0);
   transform-origin: top right;
   animation: ncPopIn var(--dur-2) var(--ease-out);
 }
@@ -306,10 +306,10 @@
   border-radius: var(--r-2);
 }
 .typeTagReview  { color: var(--fg-0); border-color: var(--bd-2); }
-.typeTagDeleted { color: var(--err); border-color: #4a1d1f; background: var(--err-soft); }
-.typeTagPrice   { color: var(--info); border-color: #1d3550; background: var(--info-soft); }
-.typeTagWarn    { color: var(--warn); border-color: #3A2A12; background: var(--warn-soft); }
-.typeTagBan     { color: var(--err);  border-color: #4a1d1f; background: var(--err-soft); }
+.typeTagDeleted { color: var(--err); border-color: var(--err-soft); background: var(--err-soft); }
+.typeTagPrice   { color: var(--info); border-color: var(--info-soft); background: var(--info-soft); }
+.typeTagWarn    { color: var(--warn); border-color: var(--warn-soft); background: var(--warn-soft); }
+.typeTagBan     { color: var(--err);  border-color: var(--err-soft); background: var(--err-soft); }
 
 .stars { font-family: var(--font-mono); font-size: 10px; color: var(--acc); letter-spacing: 0.04em; }
 .starsDim { color: var(--bd-2); }

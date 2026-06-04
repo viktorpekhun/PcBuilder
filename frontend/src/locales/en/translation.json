@@ -199,6 +199,7 @@
     "generating": "Picking components…",
     "invalidBudget": "Enter a valid budget.",
     "failedToPick": "Failed to pick components. Try changing parameters.",
+    "currency": "UAH",
     "resultTotal": "Total",
     "applyBtn": "✓ Apply",
     "tryAgain": "Try again",

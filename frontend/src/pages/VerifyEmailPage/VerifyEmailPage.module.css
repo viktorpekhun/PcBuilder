@@ -4,6 +4,7 @@
     width: 100%;
     padding: 20px;
     box-sizing: border-box;
+    background: var(--bg-0);
 }
 
 .verify-container {
@@ -14,40 +15,42 @@
     width: 100%;
     max-width: 480px;
     padding: 56px 40px;
-    background-color: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    background: var(--bg-1);
+    border: 1px solid var(--bd-2);
+    border-radius: var(--r-2);
     margin-top: 64px;
     box-sizing: border-box;
     gap: 16px;
 }
 
 .verify-container h1 {
-    font-size: 24px;
-    color: #262B31;
+    font-size: var(--fs-2xl);
+    color: var(--fg-0);
     margin: 0;
-    font-weight: 600;
+    font-weight: var(--fw-semi);
+    font-family: var(--font-sans);
 }
 
 .subtitle {
-    font-size: 15px;
-    color: #666;
+    font-size: var(--fs-sm);
+    color: var(--fg-1);
     margin: 0;
-    line-height: 1.5;
+    line-height: var(--lh-normal);
+    font-family: var(--font-sans);
 }
 
 .icon-success {
-    color: #28a745;
+    color: var(--ok);
     margin-bottom: 4px;
 }
 
 .icon-info {
-    color: #A68059;
+    color: var(--acc);
     margin-bottom: 4px;
 }
 
 .icon-error {
-    color: #dc3545;
+    color: var(--err);
     margin-bottom: 4px;
 }
 
@@ -59,16 +62,17 @@
 }
 
 .loading p {
-    color: #666;
-    font-size: 15px;
+    color: var(--fg-1);
+    font-size: var(--fs-sm);
     margin: 0;
+    font-family: var(--font-sans);
 }
 
 .spinner {
     width: 40px;
     height: 40px;
-    border: 3px solid #e0e0e0;
-    border-top-color: #A68059;
+    border: 3px solid var(--bd-1);
+    border-top-color: var(--acc);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }

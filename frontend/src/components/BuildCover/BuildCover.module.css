@@ -28,6 +28,10 @@
     line-height: 1;
 }
 
+[data-theme="light"] .bc-ini {
+    color: rgba(0, 0, 0, 0.06);
+}
+
 .bc-tag {
     position: absolute;
     top: 10px;
@@ -40,6 +44,10 @@
     border: 1px solid var(--bd-1);
     color: var(--fg-1);
     text-transform: uppercase;
+}
+
+[data-theme="light"] .bc-tag {
+    background: rgba(244, 244, 246, 0.82);
 }
 
 .bc-stamp {
