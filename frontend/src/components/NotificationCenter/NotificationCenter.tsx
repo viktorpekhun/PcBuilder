@@ -354,9 +354,6 @@ export default function NotificationCenter() {
                                   style={{ background: unreadCount > 0 ? "var(--acc)" : "var(--bd-2)" }} />
                             {t("notifications.filter.unread")} <span className={styles.chipNum}>{unreadCount}</span>
                         </button>
-                        <span className={styles.live}>
-                            <span className={styles.liveDot} />{t("notifications.tabs.feedConnected")}
-                        </span>
                     </div>
 
                     {/* list or empty */}
@@ -368,10 +365,7 @@ export default function NotificationCenter() {
                     {/* footer */}
                     <div className={styles.footBar}>
                         <span className={styles.summary}>
-                            <span className={styles.summaryNum}>{unreadCount}</span>{" "}
-                            unread ·{" "}
-                            <span className={styles.summaryNum}>{notifications.length}</span>{" "}
-                            total
+                            {t("notifications.summary", { unread: unreadCount, total: notifications.length })}
                         </span>
                         <button
                             className={styles.viewAll}

@@ -43,7 +43,7 @@ export function CompletenessCard({ profile }: { profile: IProfileResponse }) {
 }
 
 export function OverviewCard({ profile }: { profile: IProfileResponse }) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const methods: string[] = [];
     if (profile.hasPassword) methods.push(t('profile.sideCards.emailMethodLabel'));
     if (profile.googleLinked) methods.push(t('profile.sideCards.googleMethodLabel'));
@@ -57,11 +57,11 @@ export function OverviewCard({ profile }: { profile: IProfileResponse }) {
                 <div className={styles['kv']}>
                     <div className={styles['kv-row']}>
                         <span className={styles['kv-k']}>{t('profile.sideCards.registered')}</span>
-                        <span className={styles['kv-v']}>{shortDate(profile.createdAt)}</span>
+                        <span className={styles['kv-v']}>{shortDate(profile.createdAt, i18n.language)}</span>
                     </div>
                     <div className={styles['kv-row']}>
                         <span className={styles['kv-k']}>{t('profile.sideCards.accountAge')}</span>
-                        <span className={styles['kv-v']}>{accountAge(profile.createdAt)}</span>
+                        <span className={styles['kv-v']}>{accountAge(profile.createdAt, t)}</span>
                     </div>
                     <div className={styles['kv-row']}>
                         <span className={styles['kv-k']}>{t('profile.sideCards.buildsSaved')}</span>
@@ -88,7 +88,7 @@ export function OverviewCard({ profile }: { profile: IProfileResponse }) {
 }
 
 export function BansCard({ banStatus }: { banStatus: IUserBanStatus }) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [expanded, setExpanded] = useState(false);
     const VISIBLE = 3;
 
@@ -130,7 +130,7 @@ export function BansCard({ banStatus }: { banStatus: IUserBanStatus }) {
                                         <span className={styles['rstr-ban-cd']}>{banRemain(b.until)} {t('profile.sideCards.timeLeft')}</span>
                                     </div>
                                     <div className={styles['rstr-ban-sub']}>
-                                        {b.desc} · {t('profile.sideCards.until')} <b>{shortDate(b.until)}</b>
+                                        {b.desc} · {t('profile.sideCards.until')} <b>{shortDate(b.until, i18n.language)}</b>
                                     </div>
                                 </div>
                             </div>
@@ -154,7 +154,7 @@ export function BansCard({ banStatus }: { banStatus: IUserBanStatus }) {
                                     <div className={styles['rstr-warns-body']}>
                                         <div className={styles['rstr-warns-top']}>
                                             <span className={styles['rstr-warns-type']}>{w.banType === 'Comment' ? t('profile.sideCards.warnTypeComment') : t('profile.sideCards.warnTypePublish')}</span>
-                                            <span className={styles['rstr-warns-date']}>{shortDate(w.issuedAt)}</span>
+                                            <span className={styles['rstr-warns-date']}>{shortDate(w.issuedAt, i18n.language)}</span>
                                         </div>
                                         <span className={styles['rstr-warns-reason']}>
                                             {w.reasonCode

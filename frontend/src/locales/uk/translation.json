@@ -268,7 +268,7 @@
     "loadFailed": "Не вдалося завантажити збірки. Спробуйте пізніше.",
     "yourBuilds": "ВАШІ ЗБІРКИ",
     "items": "{{count}} ЕЛЕМЕНТІВ",
-    "filterPlaceholder": "Фільтр списку…",
+    "filterPlaceholder": "Пошук по списку…",
     "createNewBuild": "＋ Створити нову збірку",
     "noMatchBuilds": "НЕМАЄ ЗБІГІВ",
     "clearFilter": "СПРОБУЙТЕ ОЧИСТИТИ ФІЛЬТР",
@@ -330,6 +330,7 @@
     "deleteModal": {
       "title": "× ВИДАЛИТИ ЗБІРКУ",
       "confirmText": "Видалити <strong>{{name}}</strong>?",
+      "confirmPrefix": "Видалити",
       "subText": "Це видалить збірку зі збережених. Дію не можна скасувати.",
       "cancel": "Скасувати",
       "confirm": "× Видалити збірку",
@@ -348,6 +349,14 @@
     "memberSince": "УЧАСНИК З",
     "builds": "ЗБІРОК",
     "sessionOk": "СЕСІЯ OK",
+    "accountAge": {
+      "today": "СЬОГОДНІ",
+      "oneDay": "1 ДЕНЬ",
+      "days": "{{count}} ДН",
+      "months": "{{count}} МІС",
+      "years": "{{years}}Р",
+      "yearsMonths": "{{years}}Р {{months}}МІС"
+    },
     "tabs": {
       "profile": "Профіль",
       "security": "Безпека",
@@ -502,6 +511,7 @@
     "active": "{{count}} АКТИВНИХ",
     "unreadInbox": "○ {{count}} НЕПРОЧИТАНИХ",
     "markAllRead": "✓ Позначити всі прочитаними",
+    "summary": "{{unread}} непрочитаних · {{total}} всього",
     "tabs": {
       "notifications": "Сповіщення",
       "priceAlerts": "Цінові сповіщення",

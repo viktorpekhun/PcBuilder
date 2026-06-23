@@ -29,11 +29,10 @@ const POLL_INTERVAL_MS = 5000;
 
 const isActive = (state: ScrapeJobState) => ACTIVE_STATES.includes(state);
 
-const fmtDateTime = (iso: string | null) => {
+const fmtDateTime = (iso: string | null, locale = "en") => {
     if (!iso) return "—";
     const d = new Date(iso);
-    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" }) + " " +
-        d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+    return new Intl.DateTimeFormat(locale, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
 };
 
 const fmtDuration = (start: string | null, end: string | null): string => {
@@ -83,7 +82,7 @@ const AnimatedDots = () => {
 const PAGE_SIZE = 15;
 
 const AdminScrapingPage = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [jobs, setJobs] = useState<IScrapeJobStatus[]>([]);
     const [loading, setLoading] = useState(true);
     const [polling, setPolling] = useState(false);
@@ -222,12 +221,12 @@ const AdminScrapingPage = () => {
                                 {latest?.state === "Queued" && <span>{t("admin.scrapingPage.waitingInQueue")}</span>}
                                 {latest?.state === "Completed" && (
                                     <>
-                                        <span>{t("admin.scrapingPage.lastRun", { date: fmtDateTime(latest.completedAt) })}</span>
+                                        <span>{t("admin.scrapingPage.lastRun", { date: fmtDateTime(latest.completedAt, i18n.language) })}</span>
                                         {latest.itemsScraped > 0 && <span className={styles.scardBodyBig}>{t("admin.scrapingPage.itemsScraped", { count: fmtNum(latest.itemsScraped) })}</span>}
                                     </>
                                 )}
-                                {latest?.state === "Failed" && <span style={{ color: "#FF5C5C" }}>{t("admin.scrapingPage.failed", { date: fmtDateTime(latest.completedAt) })}</span>}
-                                {latest?.state === "Cancelled" && <span>{t("admin.scrapingPage.cancelled", { date: fmtDateTime(latest.completedAt) })}</span>}
+                                {latest?.state === "Failed" && <span style={{ color: "#FF5C5C" }}>{t("admin.scrapingPage.failed", { date: fmtDateTime(latest.completedAt, i18n.language) })}</span>}
+                                {latest?.state === "Cancelled" && <span>{t("admin.scrapingPage.cancelled", { date: fmtDateTime(latest.completedAt, i18n.language) })}</span>}
                                 {!latest && <span style={{ color: "#4A4A52" }}>{t("admin.scrapingPage.noRunsYet")}</span>}
                             </div>
 
@@ -313,8 +312,8 @@ const AdminScrapingPage = () => {
                                         <td className={styles.tdName}>{job.componentType}</td>
                                         <td><span className={styles.tag}>{kindLabel(job.kind)}</span></td>
                                         <td><Pill kind={statePillKind(job.state)}>{t(`admin.scrapingPage.states.${job.state}`)}</Pill></td>
-                                        <td className={styles.tdDim}>{fmtDateTime(job.queuedAt)}</td>
-                                        <td className={styles.tdDim}>{fmtDateTime(job.completedAt)}</td>
+                                        <td className={styles.tdDim}>{fmtDateTime(job.queuedAt, i18n.language)}</td>
+                                        <td className={styles.tdDim}>{fmtDateTime(job.completedAt, i18n.language)}</td>
                                         <td className={styles.tdRight}>{fmtDuration(job.startedAt, job.completedAt)}</td>
                                         <td className={styles.tdRight}>{job.itemsScraped > 0 ? fmtNum(job.itemsScraped) : "—"}</td>
                                         <td className={styles.errorCell}>

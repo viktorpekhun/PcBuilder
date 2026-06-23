@@ -37,16 +37,6 @@ const EyeIcon = ({ off }: { off: boolean }) => (
 
 
 
-const PageFoot = () => (
-    <div className={styles['stage-foot']}>
-        <span>
-            <span className={styles['stage-foot-dot']}></span>
-            <span className={styles['stage-foot-ok']}>all systems ok</span>
-        </span>
-        <span>v 0.42 · 2026.05.31</span>
-    </div>
-);
-
 /* ── FORGOT PASSWORD view ────────────────────────────────── */
 const ForgotView = () => {
     const emailRef = useRef<HTMLInputElement>(null);
@@ -135,7 +125,6 @@ const ForgotView = () => {
                     <Link to="/login" className={styles['back-link']}>← Повернутися до входу</Link>
                 </div>
             </div>
-            <PageFoot />
         </>
     );
 };
@@ -195,7 +184,6 @@ const ResetView = ({ token }: { token: string }) => {
                         <Link to="/login" className={styles['back-link']}>← Повернутися до входу</Link>
                     </div>
                 </div>
-                <PageFoot />
             </>
         );
     }
@@ -224,7 +212,6 @@ const ResetView = ({ token }: { token: string }) => {
                         <Link to="/login" className={styles['back-link']}>← Повернутися до входу</Link>
                     </div>
                 </div>
-                <PageFoot />
             </>
         );
     }
@@ -252,7 +239,6 @@ const ResetView = ({ token }: { token: string }) => {
                         </button>
                     </div>
                 </div>
-                <PageFoot />
             </>
         );
     }
@@ -341,7 +327,6 @@ const ResetView = ({ token }: { token: string }) => {
                     <Link to="/login" className={styles['back-link']}>← Повернутися до входу</Link>
                 </div>
             </div>
-            <PageFoot />
         </>
     );
 };

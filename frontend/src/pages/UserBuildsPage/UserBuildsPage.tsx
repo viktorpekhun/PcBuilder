@@ -545,7 +545,7 @@ function DeleteModal({
                     <span className={styles['dm-x']} onClick={onCancel}>×</span>
                 </div>
                 <div className={styles['dm-body']}>
-                    <p><strong>{build.name}</strong>?</p>
+                    <p>{t('savedBuilds.deleteModal.confirmPrefix')} <strong>{build.name}</strong>?</p>
                     <p className={styles['dm-sub']}>
                         {t('savedBuilds.deleteModal.subText')}
                     </p>

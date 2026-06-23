@@ -326,6 +326,7 @@
     "deleteModal": {
       "title": "× DELETE BUILD",
       "confirmText": "Delete <strong>{{name}}</strong>?",
+      "confirmPrefix": "Delete",
       "subText": "This removes the build from your saved list. This cannot be undone.",
       "cancel": "Cancel",
       "confirm": "× Delete build",
@@ -344,6 +345,14 @@
     "memberSince": "MEMBER SINCE",
     "builds": "BUILDS",
     "sessionOk": "SESSION OK",
+    "accountAge": {
+      "today": "TODAY",
+      "oneDay": "1 DAY",
+      "days": "{{count}} DAYS",
+      "months": "{{count}} MO",
+      "years": "{{years}}Y",
+      "yearsMonths": "{{years}}Y {{months}}MO"
+    },
     "tabs": {
       "profile": "Profile",
       "security": "Security",
@@ -498,6 +507,7 @@
     "active": "{{count}} ACTIVE",
     "unreadInbox": "○ {{count}} UNREAD INBOX",
     "markAllRead": "✓ Mark all read",
+    "summary": "{{unread}} unread · {{total}} total",
     "tabs": {
       "notifications": "Notifications",
       "priceAlerts": "Price alerts",
