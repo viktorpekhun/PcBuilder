@@ -61,7 +61,7 @@ public class Worker : BackgroundService
         await jobChannel.QueueDeclareAsync("scrape-jobs", durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
         await jobChannel.QueueDeclareAsync("scrape-results", durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
         await jobChannel.QueueDeclareAsync("scrape-started", durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
-        await jobChannel.QueueDeclareAsync("scrape-progress", durable: false, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
+        await jobChannel.QueueDeclareAsync("scrape-progress", durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
 
         // Dedicated publisher channel for started/result messages. Not subject to the
         // consumer ack timeout, so long-running jobs can still report completion.

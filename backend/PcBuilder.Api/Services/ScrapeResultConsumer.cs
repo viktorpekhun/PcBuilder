@@ -38,7 +38,7 @@ namespace PcBuilder.Api.Services
             await using var channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
             await channel.QueueDeclareAsync("scrape-results", durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
             await channel.QueueDeclareAsync("scrape-started", durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
-            await channel.QueueDeclareAsync("scrape-progress", durable: false, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
+            await channel.QueueDeclareAsync("scrape-progress", durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
 
             var consumer = new AsyncEventingBasicConsumer(channel);
             consumer.ReceivedAsync += async (_, ea) =>
