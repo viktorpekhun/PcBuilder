@@ -12,7 +12,7 @@ import styles from './ProfilePage.module.css';
 type Tab = 'profile' | 'security' | 'account';
 
 const ProfilePage = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [activeTab, setActiveTab] = useState<Tab>('profile');
     const [profile, setProfile] = useState<IProfileResponse | null>(null);
     const [loading, setLoading] = useState(true);
@@ -66,14 +66,9 @@ const ProfilePage = () => {
                             {t('profile.signedInAs')} <b>@{profile.username}</b>
                         </span>
                         <span className={styles['head-meta-sep']}>·</span>
-                        <span>{t('profile.memberSince')} <b>{shortDate(profile.createdAt)}</b> ({accountAge(profile.createdAt)})</span>
+                        <span>{t('profile.memberSince')} <b>{shortDate(profile.createdAt, i18n.language)}</b> ({accountAge(profile.createdAt, t)})</span>
                         <span className={styles['head-meta-sep']}>·</span>
                         <span><b>{profile.buildCount}</b> {t('profile.builds')}</span>
-                        <span className={styles['head-meta-sep']}>·</span>
-                        <span className={styles['head-meta-live']}>
-                            <span className={styles['head-meta-live-dot']} />
-                            {t('profile.sessionOk')}
-                        </span>
                     </div>
                 </div>
             </div>

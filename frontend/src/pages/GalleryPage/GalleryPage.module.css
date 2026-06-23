@@ -272,6 +272,10 @@
     z-index: 2;
 }
 
+:global([data-theme="light"]) .price-badge {
+    background: rgba(244, 244, 246, 0.92);
+}
+
 .body {
     padding: 12px 14px;
     display: flex;

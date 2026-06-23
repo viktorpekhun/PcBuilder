@@ -9,24 +9,24 @@
 :root {
   /* ── COLORS ─────────────────────────────────────────────── */
 
-  /* surfaces (dark, neutral, slightly cool) */
-  --bg-0:  #08080A;   /* page background — near-black */
-  --bg-1:  #0F0F12;   /* panel / card */
-  --bg-2:  #16161A;   /* raised surface */
-  --bg-3:  #1E1E23;   /* interactive hover */
-  --bg-4:  #2A2A30;   /* pressed / selected wash */
+  /* surfaces (dark, neutral gray) */
+  --bg-0:  #141414;   /* page background */
+  --bg-1:  #1C1C1C;   /* panel / card */
+  --bg-2:  #242424;   /* raised surface */
+  --bg-3:  #2E2E2E;   /* interactive hover */
+  --bg-4:  #3A3A3A;   /* pressed / selected wash */
 
   /* borders (solid, hairline, no shadow) */
-  --bd-0:  #1F1F24;   /* dividers (subtle) */
-  --bd-1:  #2E2E36;   /* default border */
-  --bd-2:  #44444E;   /* emphasized border */
-  --bd-3:  #6B6B76;   /* focus / strong border */
+  --bd-0:  #2C2C2C;   /* dividers (subtle) */
+  --bd-1:  #3C3C3C;   /* default border */
+  --bd-2:  #545454;   /* emphasized border */
+  --bd-3:  #787878;   /* focus / strong border */
 
   /* foreground (text) */
   --fg-0:  #ECECEE;   /* primary text */
   --fg-1:  #A6A6AE;   /* secondary text */
-  --fg-2:  #70707A;   /* tertiary / labels */
-  --fg-3:  #4A4A52;   /* disabled / hints */
+  --fg-2:  #8f8f9a;   /* tertiary / labels */
+  --fg-3:  #878792;   /* disabled / hints */
 
   /* signal — single muted lime accent (calmer than neon, still terminal) */
   --acc:       #AECF55;   /* primary accent */
@@ -132,9 +132,9 @@
 
   /* foreground */
   --fg-0:  #111114;   /* primary text */
-  --fg-1:  #4A4A56;   /* secondary text */
-  --fg-2:  #767682;   /* tertiary / labels */
-  --fg-3:  #A6A6B0;   /* disabled / hints */
+  --fg-1:  #3e3e45;   /* secondary text */
+  --fg-2:  #717179;   /* tertiary / labels */
+  --fg-3:  #74747c;   /* disabled / hints */
 
   /* accent — same hue, darkened for light bg contrast */
   --acc:       #5A7A1A;   /* primary accent */

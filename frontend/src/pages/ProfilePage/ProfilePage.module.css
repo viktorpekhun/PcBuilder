@@ -58,21 +58,6 @@
   margin-right: 6px;
   vertical-align: middle;
 }
-.head-meta-live {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  letter-spacing: 0.08em;
-  color: var(--fg-3);
-}
-.head-meta-live-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--ok);
-  flex-shrink: 0;
-}
-
 /* ---------- primary tabs ---------- */
 .tabs {
   display: flex;

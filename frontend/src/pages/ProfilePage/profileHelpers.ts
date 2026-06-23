@@ -6,25 +6,29 @@ export function initials(name: string): string {
     return ((parts[0]![0] ?? '') + (parts[1]![0] ?? '')).toUpperCase();
 }
 
-export function shortDate(iso: string): string {
+export function shortDate(iso: string, locale = 'en'): string {
     if (!iso) return '—';
     const d = new Date(iso);
     if (isNaN(d.getTime())) return iso;
-    const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'] as const;
-    return `${String(d.getDate()).padStart(2, '0')} ${months[d.getMonth() as 0|1|2|3|4|5|6|7|8|9|10|11]} ${d.getFullYear()}`;
+    return new Intl.DateTimeFormat(locale, { day: '2-digit', month: 'short', year: 'numeric' })
+        .format(d)
+        .toUpperCase();
 }
 
-export function accountAge(iso: string): string {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function accountAge(iso: string, t: (k: string, o?: any) => string): string {
     if (!iso) return '—';
     const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
-    if (days < 1) return 'TODAY';
-    if (days === 1) return '1 DAY';
-    if (days < 30) return `${days} DAYS`;
+    if (days < 1) return t('profile.accountAge.today');
+    if (days === 1) return t('profile.accountAge.oneDay');
+    if (days < 30) return t('profile.accountAge.days', { count: days });
     const months = Math.floor(days / 30);
-    if (months < 12) return `${months} MO`;
+    if (months < 12) return t('profile.accountAge.months', { count: months });
     const years = Math.floor(months / 12);
     const rem = months % 12;
-    return rem > 0 ? `${years}Y ${rem}MO` : `${years}Y`;
+    return rem > 0
+        ? t('profile.accountAge.yearsMonths', { years, months: rem })
+        : t('profile.accountAge.years', { years });
 }
 
 export function banRemain(iso: string): string {
