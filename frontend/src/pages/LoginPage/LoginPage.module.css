@@ -377,70 +377,9 @@
 /* ── google button ──────────────────────────────────────────── */
 .google-login {
     width: 100%;
-}
-
-/* Overlay pattern: custom face on top, real GoogleLogin iframe underneath */
-.google-btn-wrap {
-    position: relative;
-    width: 100%;
-    height: 42px;
-    overflow: hidden;
-    border-radius: 2px;
-}
-
-.google-btn-face {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
-    font-family: var(--font-sans);
-    font-size: var(--fs-sm);
-    font-weight: var(--fw-medium);
-    color: var(--fg-0);
-    background: var(--bg-2);
-    border: 1px solid var(--bd-1);
-    border-radius: 2px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out);
-}
-
-.google-btn-wrap:hover .google-btn-face {
-    background: var(--bg-3);
-    border-color: var(--bd-2);
-}
-
-.google-mark {
-    width: 18px;
-    height: 18px;
-    flex: 0 0 auto;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--bd-2);
-    border-radius: 2px;
-    font-family: var(--font-mono);
-    font-size: var(--fs-2xs);
-    font-weight: var(--fw-semi);
-    color: var(--fg-1);
-}
-
-.google-btn-real {
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    opacity: 0;
     display: flex;
-    align-items: stretch;
-}
-
-.google-btn-real > div,
-.google-btn-real iframe {
-    width: 100% !important;
-    height: 100% !important;
-    border-radius: 0 !important;
+    justify-content: center;
+    overflow: hidden;
 }
 
 .btn-google {

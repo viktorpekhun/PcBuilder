@@ -207,20 +207,14 @@ const LoginPage = () => {
                     <div className={styles['divider']}><span>{t('auth.login.orDivider')}</span></div>
 
                     <div className={styles['google-login']}>
-                        <div className={styles['google-btn-wrap']}>
-                            <div className={styles['google-btn-face']} aria-hidden="true">
-                                <span className={styles['google-mark']}>G</span>
-                                {t('auth.login.googleSignIn')}
-                            </div>
-                            <div className={styles['google-btn-real']}>
-                                <GoogleLogin
-                                    onSuccess={handleGoogleLogin}
-                                    onError={() => setErr('google')}
-                                    text="signin_with"
-                                    width={400}
-                                />
-                            </div>
-                        </div>
+                        <GoogleLogin
+                            onSuccess={handleGoogleLogin}
+                            onError={() => setErr('google')}
+                            text="signin_with"
+                            theme="filled_black"
+                            shape="square"
+                            width={320}
+                        />
                     </div>
                 </div>
             </div>

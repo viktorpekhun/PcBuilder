@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client'
-import './i18n'
+import i18n from './i18n'
 import './index.css'
 import App from './App'
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -17,7 +17,7 @@ try {
 } catch {}
 
 createRoot(document.getElementById('root')!).render(
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID} locale={i18n.language}>
         <BrowserRouter>
             <AuthProvider>
                 <NotificationProvider>
