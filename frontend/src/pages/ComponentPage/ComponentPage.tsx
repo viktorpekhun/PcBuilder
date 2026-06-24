@@ -317,8 +317,8 @@ function PriceChart({ data, avgPrice, range, t }: { data: IPriceHistoryPoint[]; 
                 {/* grid lines + y labels */}
                 {yTicks.map(t => (
                     <g key={t.i}>
-                        <line x1={PX} y1={t.y} x2={W - 8} y2={t.y} stroke="#1F1F24" strokeWidth="1" />
-                        <text x={PX - 6} y={t.y + 4} textAnchor="end" fill="#4A4A52" fontSize="10" fontFamily="'IBM Plex Mono',monospace">
+                        <line x1={PX} y1={t.y} x2={W - 8} y2={t.y} style={{ stroke: 'var(--bd-1)' }} strokeWidth="1" />
+                        <text x={PX - 6} y={t.y + 4} textAnchor="end" style={{ fill: 'var(--fg-3)' }} fontSize="10" fontFamily="'IBM Plex Mono',monospace">
                             {fmtPrice(t.p)}
                         </text>
                     </g>
@@ -328,8 +328,8 @@ function PriceChart({ data, avgPrice, range, t }: { data: IPriceHistoryPoint[]; 
                 <polygon points={area} fill="url(#pcAreaGrad)" />
 
                 {/* avg dashed line + label */}
-                <line x1={PX} y1={avgY} x2={W - 8} y2={avgY} stroke="#44444E" strokeWidth="1" strokeDasharray="5 3" />
-                <text x={W - 10} y={avgY - 4} textAnchor="end" fill="#6B6B76" fontSize="9" fontFamily="'IBM Plex Mono',monospace">
+                <line x1={PX} y1={avgY} x2={W - 8} y2={avgY} style={{ stroke: 'var(--fg-3)' }} strokeWidth="1" strokeDasharray="5 3" />
+                <text x={PX + 6} y={avgY - 4} textAnchor="start" style={{ fill: 'var(--fg-3)' }} fontSize="9" fontFamily="'IBM Plex Mono',monospace">
                     AVG · {fmtPrice(avgPrice)}
                 </text>
 
@@ -337,18 +337,18 @@ function PriceChart({ data, avgPrice, range, t }: { data: IPriceHistoryPoint[]; 
                 <polyline points={pts} fill="none" stroke="#AECF55" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
 
                 {/* vertical dashed line at last point */}
-                <line x1={lastX} y1={lastY} x2={lastX} y2={PY + innerH} stroke="#44444E" strokeWidth="1" strokeDasharray="4 3" />
+                <line x1={lastX} y1={lastY} x2={lastX} y2={PY + innerH} style={{ stroke: 'var(--fg-3)' }} strokeWidth="1" strokeDasharray="4 3" />
 
                 {/* current price dot + label */}
                 <circle cx={lastX} cy={lastY} r="5" fill="#AECF55" />
                 <circle cx={lastX} cy={lastY} r="2.5" fill="#08080A" />
-                <text x={lastX - 8} y={lastY - 9} textAnchor="end" fill="#AECF55" fontSize="11" fontWeight="600" fontFamily="'IBM Plex Mono',monospace">
+                <text x={lastX + 8} y={lastY - 9} textAnchor="start" fill="#AECF55" fontSize="11" fontWeight="600" fontFamily="'IBM Plex Mono',monospace">
                     {fmtPrice(data[count - 1]!.averagePrice)}
                 </text>
 
                 {/* x-axis labels */}
                 {xTicks.map((t, i) => (
-                    <text key={i} x={t.x} y={H - 4} textAnchor="middle" fill="#4A4A52" fontSize="10" fontFamily="'IBM Plex Mono',monospace">
+                    <text key={i} x={t.x} y={H - 4} textAnchor="middle" style={{ fill: 'var(--fg-3)' }} fontSize="10" fontFamily="'IBM Plex Mono',monospace">
                         {t.label}
                     </text>
                 ))}
