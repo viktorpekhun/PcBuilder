@@ -244,7 +244,7 @@ const FilterPanel = ({ config, onFilterChange, onPrefilterChange, showPrefilterT
 
                 return (
                     <div key={filter.id} className={styles.section}>
-                        <div className={styles.sectionLabel}>{filter.label}</div>
+                        <div className={styles.sectionLabel}>{t(filter.label)}</div>
                         <div className={styles.checks}>
                             {visibleOptions.map(option => {
                                 const isOn = (filterValues[filter.id] as string[])?.includes(option) || false;
@@ -258,7 +258,7 @@ const FilterPanel = ({ config, onFilterChange, onPrefilterChange, showPrefilterT
                                         />
                                         <span className={`${styles.checkBox} ${isOn ? styles.checkBoxOn : ''}`} />
                                         <span className={styles.checkLabel}>
-                                            {filter.formatOptionLabel ? filter.formatOptionLabel(option) : filter.displayLabels?.[option] || option}
+                                            {filter.formatOptionLabel ? filter.formatOptionLabel(option) : filter.displayLabelKeys?.[option] ? t(filter.displayLabelKeys[option]) : option}
                                         </span>
                                     </label>
                                 );
@@ -294,7 +294,7 @@ const FilterPanel = ({ config, onFilterChange, onPrefilterChange, showPrefilterT
                 if (isPrice) {
                     return (
                         <div key={filter.id} className={styles.section}>
-                            <div className={styles.sectionLabel}>{filter.label}</div>
+                            <div className={styles.sectionLabel}>{t(filter.label)}</div>
                             <div className={styles.priceRange}>
                                 <div className={styles.priceInput}>
                                     <input
@@ -326,7 +326,7 @@ const FilterPanel = ({ config, onFilterChange, onPrefilterChange, showPrefilterT
 
                 return (
                     <div key={filter.id} className={styles.section}>
-                        <div className={styles.sectionLabel}>{filter.label}</div>
+                        <div className={styles.sectionLabel}>{t(filter.label)}</div>
                         <DoubleRangeSlider
                             min={minValue}
                             max={maxValue}

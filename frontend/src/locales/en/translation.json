@@ -1025,6 +1025,7 @@
         "memSpeed": "Memory speed",
         "pcieIface": "PCIe interface",
         "powerConn": "Power connectors",
+        "gpuPowerConn": "GPU power",
         "recPsu": "Recommended PSU",
         "dimensions": "Dimensions",
         "speed": "Speed",
@@ -1167,6 +1168,119 @@
     "FALSE_INFORMATION": "False or misleading information",
     "COPYRIGHT_VIOLATION": "Copyright violation",
     "COMMUNITY_GUIDELINES": "Violated community guidelines"
+  },
+  "filters": {
+    "boolYes": "Yes",
+    "boolNo": "No",
+    "boolPresent": "Yes",
+    "boolAbsent": "No",
+    "cpu": {
+      "price": "Price, UAH",
+      "manufacturer": "Manufacturer",
+      "socketType": "Socket",
+      "coreCount": "Core count",
+      "threadCount": "Thread count",
+      "basicFrequency": "Base frequency, GHz",
+      "maxFrequency": "Max frequency, GHz",
+      "cache": "L3 cache",
+      "integratedGraphics": "Integrated graphics",
+      "complectation": "Packaging"
+    },
+    "gpu": {
+      "price": "Price, UAH",
+      "brand": "Brand",
+      "gpuManufacturer": "GPU manufacturer",
+      "gpuModel": "Model",
+      "memory": "Memory, GB",
+      "maxFrequency": "Max frequency, MHz",
+      "cudaCores": "CUDA cores",
+      "memoryBus": "Memory bus",
+      "pcieVersion": "Interface"
+    },
+    "motherboard": {
+      "price": "Price, UAH",
+      "brand": "Brand",
+      "socketType": "Socket",
+      "chipset": "Chipset",
+      "dimmSlots": "RAM slots",
+      "dimmType": "Supported RAM type",
+      "dimmCapacity": "Max RAM capacity",
+      "sata3Count": "SATA ports",
+      "formFactor": "Form factor"
+    },
+    "cpuCooler": {
+      "price": "Price, UAH",
+      "brand": "Brand",
+      "type": "Cooling type",
+      "typeAir": "Air",
+      "typeWater": "Water",
+      "fanSize": "Fan size",
+      "fanCount": "Fan count",
+      "height": "Cooler height, mm",
+      "maxPowerDissipation": "TDP rating, W",
+      "maxSpeed": "Max fan speed, RPM"
+    },
+    "powerSupply": {
+      "price": "Price, UAH",
+      "brand": "Brand",
+      "wattage": "Wattage, W",
+      "efficiencyStandart": "80 PLUS rating",
+      "efficiencyPercent": "Efficiency (%)",
+      "molexCount": "Molex connectors",
+      "sataCount": "SATA connectors",
+      "isModular": "Modularity",
+      "cpuConnectorPins": "CPU connector (pins)",
+      "gpuConnectorPins": "GPU connector (pins)"
+    },
+    "pcCase": {
+      "price": "Price, UAH",
+      "brand": "Brand",
+      "weight": "Weight, kg",
+      "maxGpuLength": "Max GPU length, mm",
+      "maxCpuCoolerHeight": "Max cooler height, mm",
+      "hasDustFilters": "Dust filters",
+      "slot25Quant": "2.5\" bays",
+      "slot35Quant": "3.5\" bays",
+      "hasHeadphones": "Headphone jack",
+      "hasMicrophone": "Microphone jack"
+    },
+    "ram": {
+      "price": "Price, UAH",
+      "brand": "Brand",
+      "type": "Type",
+      "capacity": "Capacity (per module), GB",
+      "frequency": "Frequency, MHz",
+      "moduleQuantity": "Modules per kit",
+      "bufferization": "Buffering",
+      "xmp": "XMP support",
+      "ecc": "ECC support",
+      "expo": "EXPO support"
+    },
+    "ssd": {
+      "price": "Price, UAH",
+      "brand": "Brand",
+      "formFactor": "Type",
+      "capacity": "Capacity, GB",
+      "maxReadSpeed": "Max read speed, MB/s",
+      "maxWriteSpeed": "Max write speed, MB/s",
+      "isTrimmSupported": "TRIM support"
+    },
+    "hdd": {
+      "price": "Price, UAH",
+      "brand": "Brand",
+      "capacity": "Capacity, GB",
+      "spindleSpeed": "Spindle speed, RPM",
+      "cache": "Cache, MB"
+    },
+    "fan": {
+      "price": "Price, UAH",
+      "brand": "Brand",
+      "moduleCount": "Pack count",
+      "sizeLength": "Size, mm",
+      "maxSpeed": "Max speed, RPM",
+      "airflowCfm": "Airflow (CFM)",
+      "noiseLevelDb": "Noise level, dB"
+    }
   },
   "common": {
     "loading": "Loading…",
