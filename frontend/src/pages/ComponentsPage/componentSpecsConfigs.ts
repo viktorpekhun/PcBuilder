@@ -2,14 +2,14 @@
 
 interface SingleKeySpec {
     key: string;
-    label: string;
+    labelKey: string;
     unit: string;
     isList?: false;
 }
 
 interface ListKeySpec {
     key: string;
-    label: string;
+    labelKey: string;
     unit: string;
     isList: true;
     formatItem: (item: Record<string, unknown>) => string;
@@ -18,7 +18,7 @@ interface ListKeySpec {
 
 interface MultiKeySpec {
     keys: string[];
-    label: string;
+    labelKey: string;
     unit: string;
     format: (values: Record<string, unknown>) => string;
 }
@@ -29,13 +29,13 @@ export type SpecConfig = SingleKeySpec | ListKeySpec | MultiKeySpec;
 
 export const componentSpecConfigs: Record<string, SpecConfig[]> = {
     cpu: [
-        { key: 'brand', label: 'Бренд', unit: '' },
-        { key: 'socket', label: 'Сокет', unit: '' },
-        { key: 'cores', label: 'Ядра', unit: '' },
-        { key: 'threads', label: 'Потоки', unit: '' },
+        { key: 'brand', labelKey: 'components.componentPage.specs.brand', unit: '' },
+        { key: 'socket', labelKey: 'components.componentPage.specs.socket', unit: '' },
+        { key: 'cores', labelKey: 'components.componentPage.specs.cores', unit: '' },
+        { key: 'threads', labelKey: 'components.componentPage.specs.threads', unit: '' },
         {
             keys: ['basicFrequency', 'maxFrequency'],
-            label: 'Частота',
+            labelKey: 'components.componentPage.specs.baseFreq',
             format: (values) => {
                 if (values.basicFrequency && values.maxFrequency) {
                     return `${values.basicFrequency}-${values.maxFrequency}`;
@@ -50,11 +50,11 @@ export const componentSpecConfigs: Record<string, SpecConfig[]> = {
         }
     ],
     gpu: [
-        { key: 'brand', label: 'Бренд', unit: '' },
-        { key: 'threads', label: 'Потоки', unit: '' },
+        { key: 'brand', labelKey: 'components.componentPage.specs.brand', unit: '' },
+        { key: 'threads', labelKey: 'components.componentPage.specs.threads', unit: '' },
         {
             keys: ['gpuManufacturer', 'gpuModel'],
-            label: '',
+            labelKey: '',
             format: (values) => {
                 if (values.gpuManufacturer && values.gpuModel) {
                     return `${values.gpuManufacturer} ${values.gpuModel}`;
@@ -67,13 +67,13 @@ export const componentSpecConfigs: Record<string, SpecConfig[]> = {
             },
             unit: ''
         },
-        { key: 'memory', label: "Пам'ять", unit: 'Гб' },
-        { key: 'memoryType', label: '', unit: '' },
-        { key: 'maxFrequency', label: 'Максимальна частота', unit: 'МГц' },
-        { key: 'memoryBus', label: 'Шина', unit: 'біт' },
+        { key: 'memory', labelKey: 'components.componentPage.specs.vram', unit: 'Гб' },
+        { key: 'memoryType', labelKey: '', unit: '' },
+        { key: 'maxFrequency', labelKey: 'components.componentPage.specs.memSpeed', unit: 'МГц' },
+        { key: 'memoryBus', labelKey: 'components.componentPage.specs.memBus', unit: 'біт' },
         {
             keys: ['pcleVersion', 'PcleLane'],
-            label: '',
+            labelKey: '',
             format: (values) => {
                 if (values.pcleVersion && values.pcleLane) {
                     return `PCI-Express ${values.pcleVersion}.0 x${values.pcleLane}`;
@@ -86,12 +86,12 @@ export const componentSpecConfigs: Record<string, SpecConfig[]> = {
         },
     ],
     motherboard: [
-        { key: 'brand', label: 'Бренд', unit: '' },
-        { key: 'socket', label: '', unit: '' },
-        { key: 'chipset', label: 'Чіпсет', unit: '' },
+        { key: 'brand', labelKey: 'components.componentPage.specs.brand', unit: '' },
+        { key: 'socket', labelKey: '', unit: '' },
+        { key: 'chipset', labelKey: 'components.componentPage.specs.chipset', unit: '' },
         {
             keys: ['dimmSlots', 'dimmType', 'dimmFrequency', 'dimmCapacity'],
-            label: '',
+            labelKey: '',
             format: (values) => {
                 if (values.dimmSlots && values.dimmType && values.dimmFrequency && values.dimmCapacity) {
                     return `${values.dimmSlots}x${values.dimmType} ${values.dimmFrequency} МГц, до ${values.dimmCapacity} Гб`;
@@ -112,7 +112,7 @@ export const componentSpecConfigs: Record<string, SpecConfig[]> = {
         },
         {
             key: 'pcleSlots',
-            label: '',
+            labelKey: '',
             isList: true,
             formatItem: (item) => `PCI-E ${item.version}.0 (x${item.lane})`,
             formatList: (items) => items.join(', '),
@@ -120,7 +120,7 @@ export const componentSpecConfigs: Record<string, SpecConfig[]> = {
         },
         {
             keys: ['formFactor', 'sizeDimentions'],
-            label: 'Форм-фактор',
+            labelKey: 'components.componentPage.specs.formFactor',
             format: (values) => {
                 if (values.formFactor && values.sizeDimentions) {
                     const newSizeDim = (values.sizeDimentions as string).replace(' мм', '').replace('мм', '');
@@ -137,21 +137,21 @@ export const componentSpecConfigs: Record<string, SpecConfig[]> = {
         }
     ],
     pcCase: [
-        { key: 'brand', label: 'Бренд', unit: '' },
-        { key: 'sizeStandard', label: '', unit: '' },
+        { key: 'brand', labelKey: 'components.componentPage.specs.brand', unit: '' },
+        { key: 'sizeStandard', labelKey: '', unit: '' },
         {
             key: 'pcCaseFormFactors',
-            label: '',
+            labelKey: '',
             isList: true,
             formatItem: (item) => `${item.name}`,
             formatList: (items) => items.join('/ '),
             unit: ''
         },
-        { key: 'psuLocation', label: 'Місце для блоку живлення', unit: '' },
-        { key: 'usb', label: 'USB на передній панелі', unit: '' },
+        { key: 'psuLocation', labelKey: 'components.componentPage.specs.psuLocation', unit: '' },
+        { key: 'usb', labelKey: 'components.componentPage.specs.frontUsb', unit: '' },
         {
             keys: ['sizeDimentions'],
-            label: '',
+            labelKey: '',
             format: (values) => {
                 if (values.sizeDimentions) {
                     const newSizeDim = (values.sizeDimentions as string).replace(' мм', '').replace('мм', '');
@@ -163,10 +163,10 @@ export const componentSpecConfigs: Record<string, SpecConfig[]> = {
         }
     ],
     cpuCooler: [
-        { key: 'brand', label: 'Бренд', unit: '' },
+        { key: 'brand', labelKey: 'components.componentPage.specs.brand', unit: '' },
         {
             keys: ['type'],
-            label: 'Тип',
+            labelKey: 'components.componentPage.specs.coolingType',
             format: (values) => {
                 if (values.type === 'Water') {
                     return 'Водяне';
@@ -176,13 +176,13 @@ export const componentSpecConfigs: Record<string, SpecConfig[]> = {
             },
             unit: ''
         },
-        { key: 'fanSize', label: 'Розмір вентиляторів', unit: 'мм' },
-        { key: 'radiatorMaterial', label: 'Матеріал радіатора', unit: '' },
-        { key: 'maxSpeed', label: 'Максимальна швидкість обертання', unit: '' },
-        { key: 'maxPowerDissipation', label: 'Розсіювана потужність', unit: 'Вт' },
+        { key: 'fanSize', labelKey: 'components.componentPage.specs.fanSize', unit: 'мм' },
+        { key: 'radiatorMaterial', labelKey: 'components.componentPage.specs.radiator', unit: '' },
+        { key: 'maxSpeed', labelKey: 'components.componentPage.specs.maxFanSpeed', unit: '' },
+        { key: 'maxPowerDissipation', labelKey: 'components.componentPage.specs.tdpRating', unit: 'Вт' },
         {
             keys: ['noiseLevelDb'],
-            label: 'Рівень шуму',
+            labelKey: 'components.componentPage.specs.noiseLevel',
             format: (values) => {
                 if (values.noiseLevelDb) {
                     return `${values.noiseLevelDb}`;
@@ -193,7 +193,7 @@ export const componentSpecConfigs: Record<string, SpecConfig[]> = {
         },
         {
             keys: ['length', 'width', 'height'],
-            label: '',
+            labelKey: '',
             format: (values) => {
                 if (values.length && values.width && values.height) {
                     return `${values.length}x${values.width}x${values.height}`;
@@ -206,13 +206,13 @@ export const componentSpecConfigs: Record<string, SpecConfig[]> = {
         },
     ],
     powerSupply: [
-        { key: 'brand', label: 'Бренд', unit: '' },
-        { key: 'formFactor', label: '', unit: '' },
-        { key: 'wattage', label: 'Потужність', unit: 'Вт' },
-        { key: 'efficiencyStandart', label: 'Стандарт', unit: '' },
+        { key: 'brand', labelKey: 'components.componentPage.specs.brand', unit: '' },
+        { key: 'formFactor', labelKey: '', unit: '' },
+        { key: 'wattage', labelKey: 'components.componentPage.specs.wattage', unit: 'Вт' },
+        { key: 'efficiencyStandart', labelKey: 'components.componentPage.specs.80plusRating', unit: '' },
         {
             keys: ['efficiencyPercent'],
-            label: 'ККД',
+            labelKey: 'components.componentPage.specs.efficiencyPct',
             format: (values) => {
                 if (values.efficiencyPercent) {
                     return `${values.efficiencyPercent}%`;
@@ -221,10 +221,10 @@ export const componentSpecConfigs: Record<string, SpecConfig[]> = {
             },
             unit: ''
         },
-        { key: 'noiseLevelMaxDb', label: 'Максимальний рівень шуму', unit: 'Дб' },
+        { key: 'noiseLevelMaxDb', labelKey: 'components.componentPage.specs.maxNoise', unit: 'Дб' },
         {
             key: 'powerSupplyCpuPowerConnectors',
-            label: 'Підключення CPU',
+            labelKey: 'components.componentPage.specs.cpuPower',
             isList: true,
             formatItem: (item) => {
                 const base = `${item.quantity}x${item.pins}`;
@@ -237,7 +237,7 @@ export const componentSpecConfigs: Record<string, SpecConfig[]> = {
         },
         {
             key: 'powerSupplyGpuPowerConnectors',
-            label: 'Підключення GPU',
+            labelKey: 'components.componentPage.specs.gpuPowerConn',
             isList: true,
             formatItem: (item) => {
                 const base = `${item.quantity}x${item.pins}`;
@@ -250,11 +250,11 @@ export const componentSpecConfigs: Record<string, SpecConfig[]> = {
         },
     ],
     ram: [
-        { key: 'brand', label: 'Бренд', unit: '' },
-        { key: 'type', label: '', unit: '' },
+        { key: 'brand', labelKey: 'components.componentPage.specs.brand', unit: '' },
+        { key: 'type', labelKey: '', unit: '' },
         {
             keys: ['moduleQuantity', 'capacity'],
-            label: "Пам'ять",
+            labelKey: 'components.componentPage.specs.capacity',
             format: (values) => {
                 if (values.moduleQuantity && values.capacity) {
                     return `${values.moduleQuantity}x${values.capacity}`;
@@ -265,19 +265,19 @@ export const componentSpecConfigs: Record<string, SpecConfig[]> = {
             },
             unit: 'Гб'
         },
-        { key: 'frequency', label: 'Частота', unit: 'МГц' },
-        { key: 'timings', label: 'Таймінги', unit: '' },
-        { key: 'voltage', label: 'Напруга', unit: 'В' },
+        { key: 'frequency', labelKey: 'components.componentPage.specs.speed', unit: 'МГц' },
+        { key: 'timings', labelKey: 'components.componentPage.specs.timings', unit: '' },
+        { key: 'voltage', labelKey: 'components.componentPage.specs.voltage', unit: 'В' },
     ],
     ssd: [
-        { key: 'brand', label: 'Бренд', unit: '' },
-        { key: 'capacity', label: 'Обʼєм', unit: 'Гб' },
-        { key: 'interface', label: 'Інтерфейс', unit: '' },
-        { key: 'formFactor', label: 'Форм-фактор', unit: '' },
-        { key: 'nandType', label: 'NAND', unit: '' },
+        { key: 'brand', labelKey: 'components.componentPage.specs.brand', unit: '' },
+        { key: 'capacity', labelKey: 'components.componentPage.specs.capacity', unit: 'Гб' },
+        { key: 'interface', labelKey: 'components.componentPage.specs.interface', unit: '' },
+        { key: 'formFactor', labelKey: 'components.componentPage.specs.formFactor', unit: '' },
+        { key: 'nandType', labelKey: 'components.componentPage.specs.nandType', unit: '' },
         {
             keys: ['maxReadSpeed', 'maxWriteSpeed'],
-            label: 'Швидкість читання/запису',
+            labelKey: 'components.componentPage.specs.seqReadWrite',
             format: (values) => {
                 if (values.maxReadSpeed && values.maxWriteSpeed) {
                     return `${values.maxReadSpeed} / ${values.maxWriteSpeed}`;
@@ -292,21 +292,21 @@ export const componentSpecConfigs: Record<string, SpecConfig[]> = {
         },
     ],
     hdd: [
-        { key: 'brand', label: 'Бренд', unit: '' },
-        { key: 'capacity', label: 'Обʼєм', unit: 'Гб' },
-        { key: 'interface', label: 'Інтерфейс', unit: '' },
-        { key: 'formFactor', label: 'Форм-фактор', unit: '' },
-        { key: 'spindleSpeed', label: 'Швидкість обертання', unit: 'об/хв' },
-        { key: 'cache', label: 'Кеш', unit: 'Мб' },
-        { key: 'writingTechnology', label: 'Технологія запису', unit: '' },
+        { key: 'brand', labelKey: 'components.componentPage.specs.brand', unit: '' },
+        { key: 'capacity', labelKey: 'components.componentPage.specs.capacity', unit: 'Гб' },
+        { key: 'interface', labelKey: 'components.componentPage.specs.interface', unit: '' },
+        { key: 'formFactor', labelKey: 'components.componentPage.specs.formFactor', unit: '' },
+        { key: 'spindleSpeed', labelKey: 'components.componentPage.specs.spindleSpeed', unit: 'об/хв' },
+        { key: 'cache', labelKey: 'components.componentPage.specs.cache', unit: 'Мб' },
+        { key: 'writingTechnology', labelKey: 'components.componentPage.specs.writeTech', unit: '' },
     ],
     fan: [
-        { key: 'brand', label: 'Бренд', unit: '' },
-        { key: 'moduleCount', label: 'К-сть вентиляторів', unit: '' },
-        { key: 'connector', label: 'Конектор', unit: '' },
+        { key: 'brand', labelKey: 'components.componentPage.specs.brand', unit: '' },
+        { key: 'moduleCount', labelKey: 'components.componentPage.specs.fanCount', unit: '' },
+        { key: 'connector', labelKey: 'components.componentPage.specs.connector', unit: '' },
         {
             keys: ['minSpeed', 'maxSpeed'],
-            label: 'Швидкість',
+            labelKey: 'components.componentPage.specs.fanSpeed',
             format: (values) => {
                 if (values.minSpeed && values.maxSpeed) {
                     return `${values.minSpeed}-${values.maxSpeed}`;
@@ -317,11 +317,11 @@ export const componentSpecConfigs: Record<string, SpecConfig[]> = {
             },
             unit: 'об/хв'
         },
-        { key: 'noiseLevelDb', label: 'Рівень шуму', unit: 'дБ' },
-        { key: 'sizeLength', label: 'Розмір', unit: 'мм' },
+        { key: 'noiseLevelDb', labelKey: 'components.componentPage.specs.noiseLevel', unit: 'дБ' },
+        { key: 'sizeLength', labelKey: 'components.componentPage.specs.size', unit: 'мм' },
     ],
     default: [
-        { key: 'spec1', label: 'Spec 1', unit: '' },
-        { key: 'spec2', label: 'Spec 2', unit: '' }
+        { key: 'spec1', labelKey: 'components.componentPage.specs.general', unit: '' },
+        { key: 'spec2', labelKey: 'components.componentPage.specs.other', unit: '' }
     ]
 };

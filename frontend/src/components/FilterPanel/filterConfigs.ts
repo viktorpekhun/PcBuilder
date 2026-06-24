@@ -6,7 +6,7 @@ export interface CheckboxFilter {
     dynamic: boolean;
     property: string;
     formatOptionLabel?: (value: string) => string;
-    displayLabels?: Record<string, string>;
+    displayLabelKeys?: Record<string, string>;
 }
 
 export interface RangeFilter {
@@ -33,7 +33,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
         filters: [
             {
                 id: "price",
-                label: "Ціна, грн",
+                label: "filters.cpu.price",
                 type: "range",
                 min: 0,
                 max: 50000,
@@ -43,7 +43,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "manufacturer",
-                label: "Виробник",
+                label: "filters.cpu.manufacturer",
                 type: "checkbox",
                 options: [],
                 property: "brand",
@@ -51,7 +51,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "socketType",
-                label: "Сокет",
+                label: "filters.cpu.socketType",
                 type: "checkbox",
                 options: [],
                 property: "socket",
@@ -59,7 +59,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "coreCount",
-                label: "Кількість ядер",
+                label: "filters.cpu.coreCount",
                 type: "range",
                 min: 2,
                 max: 16,
@@ -69,7 +69,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "threadCount",
-                label: "Кількість потоків",
+                label: "filters.cpu.threadCount",
                 type: "range",
                 min: 2,
                 max: 32,
@@ -79,7 +79,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "basicFrequency",
-                label: "Базова частота, ГГц",
+                label: "filters.cpu.basicFrequency",
                 type: "range",
                 min: 1.0,
                 max: 5.0,
@@ -89,7 +89,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "maxFrequency",
-                label: "Максимальна частота, ГГц",
+                label: "filters.cpu.maxFrequency",
                 type: "range",
                 min: 1.0,
                 max: 6.0,
@@ -99,7 +99,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "cache",
-                label: "Кеш L3",
+                label: "filters.cpu.cache",
                 type: "range",
                 min: 2,
                 max: 256,
@@ -109,25 +109,24 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "integratedGraphics",
-                label: "Інтегрована графіка",
+                label: "filters.cpu.integratedGraphics",
                 type: "checkbox",
-                options: ['false','true'],
-                displayLabels: {
-                    'false': 'Ні',
-                    'true': 'Так'
+                options: ['false', 'true'],
+                displayLabelKeys: {
+                    'false': 'filters.boolNo',
+                    'true': 'filters.boolYes'
                 },
                 property: "integratedGraphics",
                 dynamic: false
             },
             {
                 id: "complectation",
-                label: "Комплектація",
+                label: "filters.cpu.complectation",
                 type: "checkbox",
                 options: [],
                 property: "complectation",
                 dynamic: true
             }
-
         ]
     },
     gpu: {
@@ -135,7 +134,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
         filters: [
             {
                 id: "price",
-                label: "Ціна, грн",
+                label: "filters.gpu.price",
                 type: "range",
                 min: 0,
                 max: 100000,
@@ -145,7 +144,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "brand",
-                label: "Бренд",
+                label: "filters.gpu.brand",
                 type: "checkbox",
                 options: [],
                 property: "brand",
@@ -153,7 +152,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "gpuManufacturer",
-                label: "Виробник GPU",
+                label: "filters.gpu.gpuManufacturer",
                 type: "checkbox",
                 options: [],
                 property: "gpuManufacturer",
@@ -161,7 +160,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "gpuModel",
-                label: "Модель",
+                label: "filters.gpu.gpuModel",
                 type: "checkbox",
                 options: [],
                 property: "gpuModel",
@@ -169,7 +168,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "memory",
-                label: "Об'єм пам'яті, Гб",
+                label: "filters.gpu.memory",
                 type: "range",
                 min: 2,
                 max: 48,
@@ -179,7 +178,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "maxFrequency",
-                label: "Максимальна частота, МГц",
+                label: "filters.gpu.maxFrequency",
                 type: "range",
                 min: 100,
                 max: 6000,
@@ -189,7 +188,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "cudaCores",
-                label: "Кількість CUDA ядер",
+                label: "filters.gpu.cudaCores",
                 type: "range",
                 min: 100,
                 max: 8000,
@@ -199,7 +198,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "memoryBus",
-                label: "Шина пам'яті",
+                label: "filters.gpu.memoryBus",
                 type: "checkbox",
                 options: [],
                 property: "memoryBus",
@@ -207,14 +206,13 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "pcieVersion",
-                label: "Інтерфейс",
+                label: "filters.gpu.pcieVersion",
                 type: "checkbox",
                 options: [],
-                formatOptionLabel: (value: string) => `PCI-Express ${value.replace(',','.')}`,
+                formatOptionLabel: (value: string) => `PCI-Express ${value.replace(',', '.')}`,
                 property: "pcleVersion",
                 dynamic: true
             }
-
         ]
     },
     motherboard: {
@@ -222,7 +220,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
         filters: [
             {
                 id: "price",
-                label: "Ціна, грн",
+                label: "filters.motherboard.price",
                 type: "range",
                 min: 0,
                 max: 50000,
@@ -232,7 +230,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "brand",
-                label: "Бренд",
+                label: "filters.motherboard.brand",
                 type: "checkbox",
                 options: [],
                 property: "brand",
@@ -240,7 +238,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "socketType",
-                label: "Сокет",
+                label: "filters.motherboard.socketType",
                 type: "checkbox",
                 options: [],
                 property: "socket",
@@ -248,7 +246,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "chipset",
-                label: "Чіпсет",
+                label: "filters.motherboard.chipset",
                 type: "checkbox",
                 options: [],
                 property: "chipset",
@@ -256,7 +254,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "dimmSlots",
-                label: "Кількість слотів ОЗУ",
+                label: "filters.motherboard.dimmSlots",
                 type: "checkbox",
                 options: [],
                 property: "dimmSlots",
@@ -264,7 +262,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "dimmType",
-                label: "Тип підтримуваної ОЗУ",
+                label: "filters.motherboard.dimmType",
                 type: "checkbox",
                 options: [],
                 property: "dimmType",
@@ -272,7 +270,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "dimmCapacity",
-                label: "Максимальний об'єм ОЗУ",
+                label: "filters.motherboard.dimmCapacity",
                 type: "checkbox",
                 options: [],
                 property: "dimmCapacity",
@@ -280,7 +278,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "sata3Count",
-                label: "Кількість роз'ємів SATA",
+                label: "filters.motherboard.sata3Count",
                 type: "range",
                 min: 0,
                 max: 10,
@@ -290,7 +288,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "formFactor",
-                label: "Форм-фактор",
+                label: "filters.motherboard.formFactor",
                 type: "checkbox",
                 options: [],
                 property: "formFactor",
@@ -303,7 +301,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
         filters: [
             {
                 id: "price",
-                label: "Ціна, грн",
+                label: "filters.cpuCooler.price",
                 type: "range",
                 min: 0,
                 max: 50000,
@@ -313,7 +311,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "brand",
-                label: "Бренд",
+                label: "filters.cpuCooler.brand",
                 type: "checkbox",
                 options: [],
                 property: "brand",
@@ -321,28 +319,28 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "type",
-                label: "Тип охолодження",
+                label: "filters.cpuCooler.type",
                 type: "checkbox",
                 options: ['Air', 'Water'],
-                displayLabels: {
-                    'Air': 'Повітряне',
-                    'Water': 'Водяне'
+                displayLabelKeys: {
+                    'Air': 'filters.cpuCooler.typeAir',
+                    'Water': 'filters.cpuCooler.typeWater'
                 },
                 property: "type",
                 dynamic: false
             },
             {
                 id: "fanSize",
-                label: "Розмір вентиляторів",
+                label: "filters.cpuCooler.fanSize",
                 type: "checkbox",
                 options: [],
-                formatOptionLabel: (value: string) => `${value.replace(',0','')} мм`,
+                formatOptionLabel: (value: string) => `${value.replace(',0', '')} мм`,
                 property: "fanSize",
                 dynamic: true
             },
             {
                 id: "fanCount",
-                label: "Кількість вентиляторів",
+                label: "filters.cpuCooler.fanCount",
                 type: "checkbox",
                 options: [],
                 property: "fanCount",
@@ -350,7 +348,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "height",
-                label: "Висота кулера, мм",
+                label: "filters.cpuCooler.height",
                 type: "range",
                 min: 20,
                 max: 200,
@@ -360,7 +358,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "maxPowerDissipation",
-                label: "Розсіювана потужність, Вт",
+                label: "filters.cpuCooler.maxPowerDissipation",
                 type: "range",
                 min: 20,
                 max: 400,
@@ -370,7 +368,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "maxSpeed",
-                label: "Максимальна швидкість обертання, Об/Хв",
+                label: "filters.cpuCooler.maxSpeed",
                 type: "range",
                 min: 20,
                 max: 400,
@@ -385,7 +383,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
         filters: [
             {
                 id: "price",
-                label: "Ціна, грн",
+                label: "filters.powerSupply.price",
                 type: "range",
                 min: 0,
                 max: 50000,
@@ -395,7 +393,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "brand",
-                label: "Бренд",
+                label: "filters.powerSupply.brand",
                 type: "checkbox",
                 options: [],
                 property: "brand",
@@ -403,7 +401,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "wattage",
-                label: "Потужність, Вт",
+                label: "filters.powerSupply.wattage",
                 type: "range",
                 min: 100,
                 max: 3000,
@@ -413,7 +411,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "efficiencyStandart",
-                label: "Стандарт 80 PLUS",
+                label: "filters.powerSupply.efficiencyStandart",
                 type: "checkbox",
                 options: [],
                 property: "efficiencyStandart",
@@ -421,7 +419,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "efficiencyPercent",
-                label: "ККД (%)",
+                label: "filters.powerSupply.efficiencyPercent",
                 type: "range",
                 min: 70,
                 max: 100,
@@ -431,7 +429,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "molexCount",
-                label: "Кількість підключень MOLEX",
+                label: "filters.powerSupply.molexCount",
                 type: "range",
                 min: 1,
                 max: 10,
@@ -441,7 +439,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "sataCount",
-                label: "Кількість підключень SATA",
+                label: "filters.powerSupply.sataCount",
                 type: "range",
                 min: 1,
                 max: 10,
@@ -451,19 +449,19 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "isModular",
-                label: "Модульність",
+                label: "filters.powerSupply.isModular",
                 type: "checkbox",
                 options: ['true', 'false'],
-                displayLabels: {
-                    'true': 'Так',
-                    'false': 'Ні'
+                displayLabelKeys: {
+                    'true': 'filters.boolYes',
+                    'false': 'filters.boolNo'
                 },
                 property: "isModular",
                 dynamic: false
             },
             {
                 id: "cpuConnectorPins",
-                label: "Підключення CPU (пінів)",
+                label: "filters.powerSupply.cpuConnectorPins",
                 type: "checkbox",
                 options: [],
                 formatOptionLabel: (value: string) => `${value} pin`,
@@ -472,7 +470,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "gpuConnectorPins",
-                label: "Підключення GPU (пінів)",
+                label: "filters.powerSupply.gpuConnectorPins",
                 type: "checkbox",
                 options: [],
                 formatOptionLabel: (value: string) => `${value} pin`,
@@ -486,7 +484,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
         filters: [
             {
                 id: "price",
-                label: "Ціна, грн",
+                label: "filters.pcCase.price",
                 type: "range",
                 min: 0,
                 max: 50000,
@@ -496,7 +494,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "brand",
-                label: "Бренд",
+                label: "filters.pcCase.brand",
                 type: "checkbox",
                 options: [],
                 property: "brand",
@@ -504,7 +502,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "weight",
-                label: "Вага, кг",
+                label: "filters.pcCase.weight",
                 type: "range",
                 min: 1,
                 max: 40,
@@ -514,7 +512,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "maxGpuLength",
-                label: "Максимальна довжина відеокарти, мм",
+                label: "filters.pcCase.maxGpuLength",
                 type: "range",
                 min: 100,
                 max: 400,
@@ -524,7 +522,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "maxCpuCoolerHeight",
-                label: "Максимальна висота кулера, мм",
+                label: "filters.pcCase.maxCpuCoolerHeight",
                 type: "range",
                 min: 60,
                 max: 200,
@@ -534,19 +532,19 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "hasDustFilters",
-                label: "Пилові фільтри",
+                label: "filters.pcCase.hasDustFilters",
                 type: "checkbox",
                 options: ['true', 'false'],
-                displayLabels: {
-                    'true': 'Є',
-                    'false': 'Немає'
+                displayLabelKeys: {
+                    'true': 'filters.boolPresent',
+                    'false': 'filters.boolAbsent'
                 },
                 property: "hasDustFilters",
                 dynamic: false
             },
             {
                 id: "slot25Quant",
-                label: 'Кількість слотів 2.5"',
+                label: "filters.pcCase.slot25Quant",
                 type: "range",
                 min: 1,
                 max: 10,
@@ -556,7 +554,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "slot35Quant",
-                label: 'Кількість слотів 3.5"',
+                label: "filters.pcCase.slot35Quant",
                 type: "range",
                 min: 1,
                 max: 10,
@@ -566,24 +564,24 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "hasHeadphones",
-                label: "Роз'єм для гарнітури",
+                label: "filters.pcCase.hasHeadphones",
                 type: "checkbox",
                 options: ['true', 'false'],
-                displayLabels: {
-                    'true': 'Є',
-                    'false': 'Немає'
+                displayLabelKeys: {
+                    'true': 'filters.boolPresent',
+                    'false': 'filters.boolAbsent'
                 },
                 property: "hasHeadphones",
                 dynamic: false
             },
             {
                 id: "hasMicrophone",
-                label: "Роз'єм для мікрофона",
+                label: "filters.pcCase.hasMicrophone",
                 type: "checkbox",
                 options: ['true', 'false'],
-                displayLabels: {
-                    'true': 'Є',
-                    'false': 'Немає'
+                displayLabelKeys: {
+                    'true': 'filters.boolPresent',
+                    'false': 'filters.boolAbsent'
                 },
                 property: "hasMicrophone",
                 dynamic: false
@@ -595,7 +593,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
         filters: [
             {
                 id: "price",
-                label: "Ціна, грн",
+                label: "filters.ram.price",
                 type: "range",
                 min: 0,
                 max: 50000,
@@ -605,7 +603,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "brand",
-                label: "Бренд",
+                label: "filters.ram.brand",
                 type: "checkbox",
                 options: [],
                 property: "brand",
@@ -613,7 +611,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "type",
-                label: "Тип",
+                label: "filters.ram.type",
                 type: "checkbox",
                 options: [],
                 property: "type",
@@ -621,7 +619,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "capacity",
-                label: "Об'єм(штука), Гб",
+                label: "filters.ram.capacity",
                 type: "range",
                 min: 2000,
                 max: 10000,
@@ -631,7 +629,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "frequency",
-                label: "Частота, МГц",
+                label: "filters.ram.frequency",
                 type: "range",
                 min: 2000,
                 max: 10000,
@@ -641,7 +639,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "moduleQuantity",
-                label: "Кількість планок в комлекті",
+                label: "filters.ram.moduleQuantity",
                 type: "checkbox",
                 options: [],
                 property: "moduleQuantity",
@@ -649,7 +647,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "bufferization",
-                label: "Буферизація",
+                label: "filters.ram.bufferization",
                 type: "checkbox",
                 options: [],
                 property: "bufferization",
@@ -657,41 +655,40 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "xmp",
-                label: "Підтримка XMP",
+                label: "filters.ram.xmp",
                 type: "checkbox",
                 options: ['true', 'false'],
-                displayLabels: {
-                    'true': 'Є',
-                    'false': 'Немає'
+                displayLabelKeys: {
+                    'true': 'filters.boolPresent',
+                    'false': 'filters.boolAbsent'
                 },
                 property: "xmp",
                 dynamic: false
             },
             {
                 id: "ecc",
-                label: "Підтримка ECC",
+                label: "filters.ram.ecc",
                 type: "checkbox",
                 options: ['true', 'false'],
-                displayLabels: {
-                    'true': 'Є',
-                    'false': 'Немає'
+                displayLabelKeys: {
+                    'true': 'filters.boolPresent',
+                    'false': 'filters.boolAbsent'
                 },
                 property: "ecc",
                 dynamic: false
             },
             {
                 id: "expo",
-                label: "Підтримка EXPO",
+                label: "filters.ram.expo",
                 type: "checkbox",
                 options: ['true', 'false'],
-                displayLabels: {
-                    'true': 'Є',
-                    'false': 'Немає'
+                displayLabelKeys: {
+                    'true': 'filters.boolPresent',
+                    'false': 'filters.boolAbsent'
                 },
                 property: "expo",
                 dynamic: false
             }
-
         ]
     },
     ssd: {
@@ -699,7 +696,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
         filters: [
             {
                 id: "price",
-                label: "Ціна, грн",
+                label: "filters.ssd.price",
                 type: "range",
                 min: 0,
                 max: 50000,
@@ -709,7 +706,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "brand",
-                label: "Бренд",
+                label: "filters.ssd.brand",
                 type: "checkbox",
                 options: [],
                 property: "brand",
@@ -717,7 +714,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "formFactor",
-                label: "Тип",
+                label: "filters.ssd.formFactor",
                 type: "checkbox",
                 options: [],
                 property: "formFactor",
@@ -725,7 +722,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "capacity",
-                label: "Об'єм, Гб",
+                label: "filters.ssd.capacity",
                 type: "range",
                 min: 120,
                 max: 10000,
@@ -735,7 +732,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "maxReadSpeed",
-                label: "Максимальна швидкість читання, МБ/c",
+                label: "filters.ssd.maxReadSpeed",
                 type: "range",
                 min: 2000,
                 max: 10000,
@@ -745,7 +742,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "maxWriteSpeed",
-                label: "Максимальна швидкість запису, МБ/c",
+                label: "filters.ssd.maxWriteSpeed",
                 type: "range",
                 min: 2000,
                 max: 10000,
@@ -755,12 +752,12 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "isTrimmSupported",
-                label: "Підтримка Trimm",
+                label: "filters.ssd.isTrimmSupported",
                 type: "checkbox",
                 options: ['true', 'false'],
-                displayLabels: {
-                    'true': 'Є',
-                    'false': 'Немає'
+                displayLabelKeys: {
+                    'true': 'filters.boolPresent',
+                    'false': 'filters.boolAbsent'
                 },
                 property: "isTrimmSupported",
                 dynamic: false
@@ -772,7 +769,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
         filters: [
             {
                 id: "price",
-                label: "Ціна, грн",
+                label: "filters.hdd.price",
                 type: "range",
                 min: 0,
                 max: 50000,
@@ -782,7 +779,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "brand",
-                label: "Бренд",
+                label: "filters.hdd.brand",
                 type: "checkbox",
                 options: [],
                 property: "brand",
@@ -790,7 +787,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "capacity",
-                label: "Об'єм, Гб",
+                label: "filters.hdd.capacity",
                 type: "range",
                 min: 120,
                 max: 10000,
@@ -800,7 +797,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "spindleSpeed",
-                label: "Швидкість обертання шпинделя, об/хв",
+                label: "filters.hdd.spindleSpeed",
                 type: "checkbox",
                 options: [],
                 property: "spindleSpeed",
@@ -808,7 +805,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "cache",
-                label: "Буфер, МБ",
+                label: "filters.hdd.cache",
                 type: "checkbox",
                 options: [],
                 property: "cache",
@@ -821,7 +818,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
         filters: [
             {
                 id: "price",
-                label: "Ціна, грн",
+                label: "filters.fan.price",
                 type: "range",
                 min: 0,
                 max: 50000,
@@ -831,7 +828,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "brand",
-                label: "Бренд",
+                label: "filters.fan.brand",
                 type: "checkbox",
                 options: [],
                 property: "brand",
@@ -839,7 +836,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "moduleCount",
-                label: "Кількість в комплекті",
+                label: "filters.fan.moduleCount",
                 type: "checkbox",
                 options: [],
                 property: "moduleCount",
@@ -847,7 +844,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "sizeLength",
-                label: "Розмір, мм",
+                label: "filters.fan.sizeLength",
                 type: "range",
                 min: 50,
                 max: 200,
@@ -857,7 +854,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "maxSpeed",
-                label: "Максимальна швидкість обертання, об/хв",
+                label: "filters.fan.maxSpeed",
                 type: "range",
                 min: 1000,
                 max: 10000,
@@ -867,7 +864,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "airflowCfm",
-                label: "Повітряний потік (CFM)",
+                label: "filters.fan.airflowCfm",
                 type: "range",
                 min: 10,
                 max: 100,
@@ -877,7 +874,7 @@ export const filterConfigs: Record<string, FilterConfig> = {
             },
             {
                 id: "noiseLevelDb",
-                label: "Рівень шуму, Дб",
+                label: "filters.fan.noiseLevelDb",
                 type: "range",
                 min: 10,
                 max: 100,

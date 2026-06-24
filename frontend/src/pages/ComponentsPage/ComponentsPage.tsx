@@ -320,7 +320,7 @@ function ComponentsPage() {
                                                                     <span key={spec.key} className={styles.specItem}>
                                                                         {index > 0 && <span className={styles.specDot}>/</span>}
                                                                         <span>
-                                                                            {spec.label && <span className={styles.specLabel}>{spec.label}: </span>}
+                                                                            {spec.labelKey && <span className={styles.specLabel}>{t(spec.labelKey)}: </span>}
                                                                             {formattedItems}{spec.unit && ` ${spec.unit}`}
                                                                         </span>
                                                                     </span>
@@ -335,7 +335,7 @@ function ComponentsPage() {
                                                             <span key={spec.key} className={styles.specItem}>
                                                                 {index > 0 && <span className={styles.specDot}>/</span>}
                                                                 <span>
-                                                                    {spec.label && <span className={styles.specLabel}>{spec.label}: </span>}
+                                                                    {spec.labelKey && <span className={styles.specLabel}>{t(spec.labelKey)}: </span>}
                                                                     {String(value)}{spec.unit && ` ${spec.unit}`}
                                                                 </span>
                                                             </span>
@@ -355,7 +355,7 @@ function ComponentsPage() {
                                                             <span key={spec.keys.join('_')} className={styles.specItem}>
                                                                 {index > 0 && <span className={styles.specDot}>/</span>}
                                                                 <span>
-                                                                    {spec.label && <span className={styles.specLabel}>{spec.label}: </span>}
+                                                                    {spec.labelKey && <span className={styles.specLabel}>{t(spec.labelKey)}: </span>}
                                                                     {spec.format(values)}{spec.unit && ` ${spec.unit}`}
                                                                 </span>
                                                             </span>

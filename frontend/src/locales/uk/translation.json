@@ -1029,6 +1029,7 @@
         "memSpeed": "Швидкість пам'яті",
         "pcieIface": "Інтерфейс PCIe",
         "powerConn": "Роз'єми живлення",
+        "gpuPowerConn": "Живлення GPU",
         "recPsu": "Рекомендований БЖ",
         "dimensions": "Розміри",
         "speed": "Швидкість",
@@ -1171,6 +1172,119 @@
     "FALSE_INFORMATION": "Неправдива або оманлива інформація",
     "COPYRIGHT_VIOLATION": "Порушення авторських прав",
     "COMMUNITY_GUIDELINES": "Порушення правил спільноти"
+  },
+  "filters": {
+    "boolYes": "Так",
+    "boolNo": "Ні",
+    "boolPresent": "Є",
+    "boolAbsent": "Немає",
+    "cpu": {
+      "price": "Ціна, грн",
+      "manufacturer": "Виробник",
+      "socketType": "Сокет",
+      "coreCount": "Кількість ядер",
+      "threadCount": "Кількість потоків",
+      "basicFrequency": "Базова частота, ГГц",
+      "maxFrequency": "Максимальна частота, ГГц",
+      "cache": "Кеш L3",
+      "integratedGraphics": "Інтегрована графіка",
+      "complectation": "Комплектація"
+    },
+    "gpu": {
+      "price": "Ціна, грн",
+      "brand": "Бренд",
+      "gpuManufacturer": "Виробник GPU",
+      "gpuModel": "Модель",
+      "memory": "Об'єм пам'яті, Гб",
+      "maxFrequency": "Максимальна частота, МГц",
+      "cudaCores": "Кількість CUDA ядер",
+      "memoryBus": "Шина пам'яті",
+      "pcieVersion": "Інтерфейс"
+    },
+    "motherboard": {
+      "price": "Ціна, грн",
+      "brand": "Бренд",
+      "socketType": "Сокет",
+      "chipset": "Чіпсет",
+      "dimmSlots": "Кількість слотів ОЗУ",
+      "dimmType": "Тип підтримуваної ОЗУ",
+      "dimmCapacity": "Максимальний об'єм ОЗУ",
+      "sata3Count": "Кількість роз'ємів SATA",
+      "formFactor": "Форм-фактор"
+    },
+    "cpuCooler": {
+      "price": "Ціна, грн",
+      "brand": "Бренд",
+      "type": "Тип охолодження",
+      "typeAir": "Повітряне",
+      "typeWater": "Водяне",
+      "fanSize": "Розмір вентиляторів",
+      "fanCount": "Кількість вентиляторів",
+      "height": "Висота кулера, мм",
+      "maxPowerDissipation": "Розсіювана потужність, Вт",
+      "maxSpeed": "Максимальна швидкість обертання, Об/Хв"
+    },
+    "powerSupply": {
+      "price": "Ціна, грн",
+      "brand": "Бренд",
+      "wattage": "Потужність, Вт",
+      "efficiencyStandart": "Стандарт 80 PLUS",
+      "efficiencyPercent": "ККД (%)",
+      "molexCount": "Кількість підключень MOLEX",
+      "sataCount": "Кількість підключень SATA",
+      "isModular": "Модульність",
+      "cpuConnectorPins": "Підключення CPU (пінів)",
+      "gpuConnectorPins": "Підключення GPU (пінів)"
+    },
+    "pcCase": {
+      "price": "Ціна, грн",
+      "brand": "Бренд",
+      "weight": "Вага, кг",
+      "maxGpuLength": "Максимальна довжина відеокарти, мм",
+      "maxCpuCoolerHeight": "Максимальна висота кулера, мм",
+      "hasDustFilters": "Пилові фільтри",
+      "slot25Quant": "Кількість слотів 2.5\"",
+      "slot35Quant": "Кількість слотів 3.5\"",
+      "hasHeadphones": "Роз'єм для гарнітури",
+      "hasMicrophone": "Роз'єм для мікрофона"
+    },
+    "ram": {
+      "price": "Ціна, грн",
+      "brand": "Бренд",
+      "type": "Тип",
+      "capacity": "Об'єм (штука), Гб",
+      "frequency": "Частота, МГц",
+      "moduleQuantity": "Кількість планок в комлекті",
+      "bufferization": "Буферизація",
+      "xmp": "Підтримка XMP",
+      "ecc": "Підтримка ECC",
+      "expo": "Підтримка EXPO"
+    },
+    "ssd": {
+      "price": "Ціна, грн",
+      "brand": "Бренд",
+      "formFactor": "Тип",
+      "capacity": "Об'єм, Гб",
+      "maxReadSpeed": "Максимальна швидкість читання, МБ/c",
+      "maxWriteSpeed": "Максимальна швидкість запису, МБ/c",
+      "isTrimmSupported": "Підтримка Trimm"
+    },
+    "hdd": {
+      "price": "Ціна, грн",
+      "brand": "Бренд",
+      "capacity": "Об'єм, Гб",
+      "spindleSpeed": "Швидкість обертання шпинделя, об/хв",
+      "cache": "Буфер, МБ"
+    },
+    "fan": {
+      "price": "Ціна, грн",
+      "brand": "Бренд",
+      "moduleCount": "Кількість в комплекті",
+      "sizeLength": "Розмір, мм",
+      "maxSpeed": "Максимальна швидкість обертання, об/хв",
+      "airflowCfm": "Повітряний потік (CFM)",
+      "noiseLevelDb": "Рівень шуму, Дб"
+    }
   },
   "common": {
     "loading": "Завантаження…",
