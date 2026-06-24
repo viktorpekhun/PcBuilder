@@ -46,7 +46,8 @@
   "include": [
     "src/**/*",
     "src/**/*.jsx",
-    "src/**/*.tsx"
+    "src/**/*.tsx",
+    "src/**/*.json"
   ],
   "exclude": [
     "node_modules",
