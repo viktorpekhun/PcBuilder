@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { authService } from '../../api/auth.service';
 import useAuth from "../../hooks/useAuth";
+import { useTheme } from "../../hooks/useTheme";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import styles from './RegisterPage.module.css';
@@ -44,6 +45,7 @@ type ErrType = '' | 'validate' | 'conflict' | 'server' | 'google';
 
 const RegisterPage = () => {
     const { t } = useTranslation();
+    const { theme } = useTheme();
     const { setAuth, setPersist } = useAuth();
     const navigate = useNavigate();
     const emailRef = useRef<HTMLInputElement>(null);
@@ -347,20 +349,14 @@ const RegisterPage = () => {
                     <div className={styles['divider']}><span>{t('auth.register.orDivider')}</span></div>
 
                     <div className={styles['google-login']}>
-                        <div className={styles['google-btn-wrap']}>
-                            <div className={styles['google-btn-face']} aria-hidden="true">
-                                <span className={styles['google-mark']}>G</span>
-                                {t('auth.register.googleRegister')}
-                            </div>
-                            <div className={styles['google-btn-real']}>
-                                <GoogleLogin
-                                    onSuccess={handleGoogleLogin}
-                                    onError={() => setErr('google')}
-                                    text="signup_with"
-                                    width={400}
-                                />
-                            </div>
-                        </div>
+                        <GoogleLogin
+                            onSuccess={handleGoogleLogin}
+                            onError={() => setErr('google')}
+                            text="signup_with"
+                            theme={theme === 'light' ? 'outline' : 'filled_black'}
+                            shape="square"
+                            width={320}
+                        />
                     </div>
                 </div>
             </div>

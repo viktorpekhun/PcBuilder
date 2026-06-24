@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import useAuth from '../../hooks/useAuth';
+import { useTheme } from '../../hooks/useTheme';
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import styles from './LoginPage.module.css';
@@ -32,6 +33,7 @@ type ErrType = '' | 'empty' | 'server' | 'auth' | 'google';
 
 const LoginPage = () => {
     const { t } = useTranslation();
+    const { theme } = useTheme();
     const { setAuth, setPersist } = useAuth();
 
     const navigate = useNavigate();
@@ -207,20 +209,14 @@ const LoginPage = () => {
                     <div className={styles['divider']}><span>{t('auth.login.orDivider')}</span></div>
 
                     <div className={styles['google-login']}>
-                        <div className={styles['google-btn-wrap']}>
-                            <div className={styles['google-btn-face']} aria-hidden="true">
-                                <span className={styles['google-mark']}>G</span>
-                                {t('auth.login.googleSignIn')}
-                            </div>
-                            <div className={styles['google-btn-real']}>
-                                <GoogleLogin
-                                    onSuccess={handleGoogleLogin}
-                                    onError={() => setErr('google')}
-                                    text="signin_with"
-                                    width={400}
-                                />
-                            </div>
-                        </div>
+                        <GoogleLogin
+                            onSuccess={handleGoogleLogin}
+                            onError={() => setErr('google')}
+                            text="signin_with"
+                            theme={theme === 'light' ? 'outline' : 'filled_black'}
+                            shape="square"
+                            width={320}
+                        />
                     </div>
                 </div>
             </div>
