@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { authService } from '../../api/auth.service';
 import useAuth from "../../hooks/useAuth";
+import { useTheme } from "../../hooks/useTheme";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import styles from './RegisterPage.module.css';
@@ -44,6 +45,7 @@ type ErrType = '' | 'validate' | 'conflict' | 'server' | 'google';
 
 const RegisterPage = () => {
     const { t } = useTranslation();
+    const { theme } = useTheme();
     const { setAuth, setPersist } = useAuth();
     const navigate = useNavigate();
     const emailRef = useRef<HTMLInputElement>(null);
@@ -351,7 +353,7 @@ const RegisterPage = () => {
                             onSuccess={handleGoogleLogin}
                             onError={() => setErr('google')}
                             text="signup_with"
-                            theme="filled_black"
+                            theme={theme === 'light' ? 'outline' : 'filled_black'}
                             shape="square"
                             width={320}
                         />

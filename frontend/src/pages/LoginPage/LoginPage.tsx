@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import useAuth from '../../hooks/useAuth';
+import { useTheme } from '../../hooks/useTheme';
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import styles from './LoginPage.module.css';
@@ -32,6 +33,7 @@ type ErrType = '' | 'empty' | 'server' | 'auth' | 'google';
 
 const LoginPage = () => {
     const { t } = useTranslation();
+    const { theme } = useTheme();
     const { setAuth, setPersist } = useAuth();
 
     const navigate = useNavigate();
@@ -211,7 +213,7 @@ const LoginPage = () => {
                             onSuccess={handleGoogleLogin}
                             onError={() => setErr('google')}
                             text="signin_with"
-                            theme="filled_black"
+                            theme={theme === 'light' ? 'outline' : 'filled_black'}
                             shape="square"
                             width={320}
                         />
