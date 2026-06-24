@@ -357,7 +357,7 @@ const RegisterPage = () => {
                                     onSuccess={handleGoogleLogin}
                                     onError={() => setErr('google')}
                                     text="signup_with"
-                                    width="100%"
+                                    width={400}
                                 />
                             </div>
                         </div>

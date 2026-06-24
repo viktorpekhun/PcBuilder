@@ -217,7 +217,7 @@ const LoginPage = () => {
                                     onSuccess={handleGoogleLogin}
                                     onError={() => setErr('google')}
                                     text="signin_with"
-                                    width="100%"
+                                    width={400}
                                 />
                             </div>
                         </div>
